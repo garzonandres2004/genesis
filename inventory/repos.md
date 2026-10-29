@@ -6,6 +6,7 @@ remote-only until a task needs them.
 
 | Repo | Visibility | Language | Default | Last pushed | Notes |
 |---|---|---|---|---|---|
+| genesis | Private | JavaScript | main | 2026-10-29 |  |
 | substation-rush-hour | Public | TypeScript | main | 2026-10-29 | Hard Tech Week / Torus bounty entry. Live at torus-green.vercel.app (Vercel project `torus`). Deploy-on-merge + Vercel Cron refresh live. |
 | tyburon-estimator | Private | TypeScript | main | 2026-10-28 | Tyburon Painting estimator, public launch on branch `public-launch`, live at tyburon-public.vercel.app. Main untouched by public work. |
 | tradingbot | Private | Python | main | 2026-10-17 | Research-to-paper-trading lab. Development research only; no live trading. Never touch trading accounts. |
