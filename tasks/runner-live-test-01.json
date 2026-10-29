@@ -1,1 +1,33 @@
-{"acceptance":["Tick runs preflight step 0 and proceeds (no FAILED report)","Claim CLI returns WON and the claim branch carries startRun + task_started","Builder works only on the isolated claim branch","Orchestrator verification (tests, diff, secrets) passes and CI is green","Adopt CLI returns null (no prior PR) and exactly one PR is created","Task record on main is completed with evidence + PR link, attempts = 1","No duplicate PR, no direct main commit, no branch-protection bypass"],"attempts":0,"blockers":[],"branch":"runner/live-test-01","created":"2026-10-29","evidence":[],"id":"runner-live-test-01","idempotency_keys":[],"objective":"Prove the wired runner path live with a small reversible docs-only task: add docs/live-runner-proof.md recording the live-run evidence. The task is docs-only so it changes no behavior and can be reverted via PR if needed.","project":"genesis","repo":"garzonandres2004/genesis","report":true,"role":"implementation","runs":[],"status":"queued","title":"Live runner test: wired claim + adopt path","updated":"2026-10-29"}
+{
+  "acceptance": [
+    "Tick runs preflight step 0 and proceeds (no FAILED report)",
+    "Claim CLI returns WON and the claim branch carries startRun + task_started",
+    "Builder works only on the isolated claim branch",
+    "Orchestrator verification (tests, diff, secrets) passes and CI is green",
+    "Adopt CLI returns null (no prior PR) and exactly one PR is created",
+    "Task record on main is completed with evidence + PR link, attempts = 1",
+    "No duplicate PR, no direct main commit, no branch-protection bypass"
+  ],
+  "attempts": 1,
+  "blockers": [],
+  "branch": "runner/live-test-01",
+  "created": "2026-10-29",
+  "evidence": [],
+  "id": "runner-live-test-01",
+  "idempotency_keys": [],
+  "objective": "Prove the wired runner path live with a small reversible docs-only task: add docs/live-runner-proof.md recording the live-run evidence. The task is docs-only so it changes no behavior and can be reverted via PR if needed.",
+  "project": "genesis",
+  "repo": "garzonandres2004/genesis",
+  "report": true,
+  "role": "implementation",
+  "runs": [
+    {
+      "id": "runner-live-test-01/run-1-2026-10-29T14:17:34.194Z",
+      "started_at": "2026-10-29T14:17:34.194Z",
+      "outcome": null
+    }
+  ],
+  "status": "in_progress",
+  "title": "Live runner test: wired claim + adopt path",
+  "updated": "2026-10-29"
+}

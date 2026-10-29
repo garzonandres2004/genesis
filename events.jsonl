@@ -7,3 +7,4 @@
 {"type":"task_requeued","task_id":"overnight-03","run_id":"overnight-03/run-1-2026-10-29T07:17:15.913Z","timestamp":"2026-10-29T07:47:28.415Z","detail":"re-queued after interruption (attempt 1 of 3 used)"}
 {"type":"task_started","task_id":"overnight-03","run_id":"overnight-03/run-2-2026-10-29T07:47:44.833Z","timestamp":"2026-10-29T07:47:44.833Z","detail":"overnight runner tick started retry run after interruption recovery"}
 {"type":"task_completed","task_id":"overnight-03","run_id":"overnight-03/run-2-2026-10-29T07:47:44.833Z","timestamp":"2026-10-29T07:48:49.732Z","detail":"overnight-03 verified by orchestrator and completed"}
+{"type":"task_started","task_id":"runner-live-test-01","run_id":"runner-live-test-01/run-1-2026-10-29T14:17:34.194Z","timestamp":"2026-10-29T14:17:34.194Z","detail":"live runner tick started run"}
