@@ -18,7 +18,7 @@
     "Orchestrator re-ran npm test in worktree: 82 tests, 81 pass, 0 fail, 1 skipped (matches builder report)",
     "Orchestrator read the diff: 1 file, +34/-0 (docs/live-runner-proof.md only); secret-pattern scan clean; builder did not touch tasks/*.json or events.jsonl",
     "Doc records only build-time evidence; PR, CI, verification, merge listed as open items, not claimed",
-    "PR https://github.com/garzonandres2004/genesis/pull/25 (runner/live-test-01 -> main)"
+    "PR https://github.com/garzonandres2004/genesis/pull/25 (runner/live-test-01 -> main); test check green on head 425e129 before merge"
   ],
   "id": "runner-live-test-01",
   "idempotency_keys": [],
