@@ -10,7 +10,13 @@
   "blockers": [],
   "branch": "m10/f4-reliability",
   "created": "2026-10-29",
-  "evidence": [],
+  "evidence": [
+    "Claim CLI returned WON, claim commit 805ff6deda2b0775a8fcfb5795f8234fd6c735b2 pushed to origin/m10/f4-reliability",
+    "Builder commit 2c755c7b3b24a31d8fdee18e19da1dee8c373579 pushed to origin/m10/f4-reliability (remote SHA confirmed by orchestrator)",
+    "Orchestrator re-ran npm test in worktree: 84 tests, 83 pass, 0 fail, 1 skipped (matches builder report)",
+    "Orchestrator read the diff: 3 files, +119/-40 (docs/policy.md, docs/runner-reliability.md, docs/runner-regression.md only); secret-pattern scan clean; builder did not touch tasks/*.json or events.jsonl",
+    "Builder report: docs-only change, no merge, no PR by builder"
+  ],
   "id": "m10-01-f4-reliability",
   "idempotency_keys": [],
   "objective": "M10 series task 1 (F4): reconcile docs/runner-reliability.md with the actual wired runner and correct the attempt-backoff claim in docs/policy.md section 7. The reliability doc still describes the pre-wiring runner; bring it in line with claim-first dispatch, adopt-before-create, preflight step 0, and the operations doc, and fix policy section 7 so it does not claim backoff exists unless the live implementation proves it.",
@@ -22,10 +28,10 @@
     {
       "id": "m10-01-f4-reliability/run-1-2026-10-29T15:47:29.739Z",
       "started_at": "2026-10-29T15:47:29.739Z",
-      "outcome": null
+      "outcome": "completed"
     }
   ],
-  "status": "in_progress",
+  "status": "completed",
   "title": "M10-01: Reconcile reliability doc (F4) + policy backoff correction",
   "updated": "2026-10-29"
 }
