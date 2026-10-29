@@ -1,1 +1,31 @@
-{"acceptance":["docs/overnight-test-plan.md no longer states the job is removed in the morning report: it records that the job REMAINS as the standing runner per F3","Its Known limits section matches the wired runner: preflight wired as step 0, claim-first dispatch replacing the manual path, adopt-before-create wired, silent no-op ticks","Dated notes distinguish what was true when the plan was written (a pre-run plan) from what is true now; history is not rewritten","npm test passes with 0 failures (docs-only change; suite totals unchanged or better)","Builder works only on the isolated claim branch; no task record or events file touched by the builder; no merge and no PR by the builder"],"attempts":0,"blockers":[],"branch":"m10/overnight-plan","created":"2026-10-29","evidence":[],"id":"m10-03-overnight-plan","idempotency_keys":[],"objective":"M10 series task 3: reconcile docs/overnight-test-plan.md with the wired runner. Its lifetime statements and Known limits are stale (written before the runner was wired): the job was not removed in the morning report, it remains as the standing runner, and the manual startRun-push path is retired in favor of claim-first dispatch and adopt-before-create.","project":"genesis","repo":"garzonandres2004/genesis","report":false,"role":"implementation","runs":[],"status":"queued","title":"M10-03: Reconcile overnight-test-plan staleness","updated":"2026-10-29"}
+{
+  "acceptance": [
+    "docs/overnight-test-plan.md no longer states the job is removed in the morning report: it records that the job REMAINS as the standing runner per F3",
+    "Its Known limits section matches the wired runner: preflight wired as step 0, claim-first dispatch replacing the manual path, adopt-before-create wired, silent no-op ticks",
+    "Dated notes distinguish what was true when the plan was written (a pre-run plan) from what is true now; history is not rewritten",
+    "npm test passes with 0 failures (docs-only change; suite totals unchanged or better)",
+    "Builder works only on the isolated claim branch; no task record or events file touched by the builder; no merge and no PR by the builder"
+  ],
+  "attempts": 1,
+  "blockers": [],
+  "branch": "m10/overnight-plan",
+  "created": "2026-10-29",
+  "evidence": [],
+  "id": "m10-03-overnight-plan",
+  "idempotency_keys": [],
+  "objective": "M10 series task 3: reconcile docs/overnight-test-plan.md with the wired runner. Its lifetime statements and Known limits are stale (written before the runner was wired): the job was not removed in the morning report, it remains as the standing runner, and the manual startRun-push path is retired in favor of claim-first dispatch and adopt-before-create.",
+  "project": "genesis",
+  "repo": "garzonandres2004/genesis",
+  "report": false,
+  "role": "implementation",
+  "runs": [
+    {
+      "id": "m10-03-overnight-plan/run-1-2026-10-29T16:49:44.060Z",
+      "started_at": "2026-10-29T16:49:44.060Z",
+      "outcome": null
+    }
+  ],
+  "status": "in_progress",
+  "title": "M10-03: Reconcile overnight-test-plan staleness",
+  "updated": "2026-10-29"
+}
