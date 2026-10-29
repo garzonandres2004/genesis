@@ -1,1 +1,31 @@
-{"acceptance":["docs/runner-reliability.md matches the live wired runner: claim-first dispatch, adopt-before-create with four cases, preflight as step 0, silent no-op ticks, single-worker policy (sources: docs/runner-operations.md, docs/runner-regression.md)","docs/policy.md section 7 no longer claims attempt backoff exists: it states plainly that no programmatic or exponential backoff exists and retries occur on subsequent ticks at the 30-minute cadence, unless backoff is implemented as code plus tests","Dated correction notes are present wherever a historical claim changed; history is not rewritten","npm test passes with 0 failures (docs-only change; suite totals unchanged or better)","Builder works only on the isolated claim branch; no task record or events file touched by the builder; no merge and no PR by the builder"],"attempts":0,"blockers":[],"branch":"m10/f4-reliability","created":"2026-10-29","evidence":[],"id":"m10-01-f4-reliability","idempotency_keys":[],"objective":"M10 series task 1 (F4): reconcile docs/runner-reliability.md with the actual wired runner and correct the attempt-backoff claim in docs/policy.md section 7. The reliability doc still describes the pre-wiring runner; bring it in line with claim-first dispatch, adopt-before-create, preflight step 0, and the operations doc, and fix policy section 7 so it does not claim backoff exists unless the live implementation proves it.","project":"genesis","repo":"garzonandres2004/genesis","report":false,"role":"implementation","runs":[],"status":"queued","title":"M10-01: Reconcile reliability doc (F4) + policy backoff correction","updated":"2026-10-29"}
+{
+  "acceptance": [
+    "docs/runner-reliability.md matches the live wired runner: claim-first dispatch, adopt-before-create with four cases, preflight as step 0, silent no-op ticks, single-worker policy (sources: docs/runner-operations.md, docs/runner-regression.md)",
+    "docs/policy.md section 7 no longer claims attempt backoff exists: it states plainly that no programmatic or exponential backoff exists and retries occur on subsequent ticks at the 30-minute cadence, unless backoff is implemented as code plus tests",
+    "Dated correction notes are present wherever a historical claim changed; history is not rewritten",
+    "npm test passes with 0 failures (docs-only change; suite totals unchanged or better)",
+    "Builder works only on the isolated claim branch; no task record or events file touched by the builder; no merge and no PR by the builder"
+  ],
+  "attempts": 1,
+  "blockers": [],
+  "branch": "m10/f4-reliability",
+  "created": "2026-10-29",
+  "evidence": [],
+  "id": "m10-01-f4-reliability",
+  "idempotency_keys": [],
+  "objective": "M10 series task 1 (F4): reconcile docs/runner-reliability.md with the actual wired runner and correct the attempt-backoff claim in docs/policy.md section 7. The reliability doc still describes the pre-wiring runner; bring it in line with claim-first dispatch, adopt-before-create, preflight step 0, and the operations doc, and fix policy section 7 so it does not claim backoff exists unless the live implementation proves it.",
+  "project": "genesis",
+  "repo": "garzonandres2004/genesis",
+  "report": false,
+  "role": "implementation",
+  "runs": [
+    {
+      "id": "m10-01-f4-reliability/run-1-2026-10-29T15:47:29.739Z",
+      "started_at": "2026-10-29T15:47:29.739Z",
+      "outcome": null
+    }
+  ],
+  "status": "in_progress",
+  "title": "M10-01: Reconcile reliability doc (F4) + policy backoff correction",
+  "updated": "2026-10-29"
+}
