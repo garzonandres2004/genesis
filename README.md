@@ -49,6 +49,7 @@ the next task, without waiting for a new prompt.
 ## Repo map
 
 - `docs/architecture.md` — architecture decisions and tradeoffs.
+- `docs/policy.md` — safety and operations policy: roles, allow/deny rules, isolation, secrets, retries, and honest limits.
 - `docs/capability-matrix.md` — Phase 0 audit: what actually works, verified.
 - `inventory/repos.md` — registered repositories (regenerate with the
   inventory script when it lands; see the demo task).
