@@ -55,6 +55,10 @@ failed, so block the task") are prose and are not tested here.
 - `docs/policy.md` section 7 says attempts back off; no code implements
   backoff. Not a regression-table item, listed so nobody assumes it is tested.
 
+- Resolved 2026-10-29 (M10-01 / F4): `docs/runner-reliability.md` was
+  reconciled with the wired runner and `docs/policy.md` section 7 now states
+  that no backoff exists. The two notes above are kept as written.
+
 ## How to run
 
 `npm test` runs everything above. Baseline on main was 81 pass, 0 fail,
