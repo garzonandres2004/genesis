@@ -10,8 +10,10 @@ this doc did not read it. Its description here comes from the orchestrator's
 report (rewritten and verified via `cron.view`): preflight step 0, claim-first
 dispatch, adopt-before-create with four cases, one task per tick,
 single-worker policy, `report:true` exception to silent no-op ticks, 30-minute
-cadence. The old manual startRun-push path is retired. Anything not in that
-description or in the repo docs is labeled as missing.
+cadence. The old manual startRun-push path is retired. Orchestrator correction
+2026-10-29: the step order in section 1 and the attempt-counting rule in
+section 2 were checked against the live cron body via `cron.view`. Anything
+not in that description or in the repo docs is labeled as missing.
 
 ## 1. The live execution path
 
@@ -20,16 +22,16 @@ One task per tick, every 30 minutes. In order:
 | Step | Action | Stops the tick when |
 |---|---|---|
 | 0 | `node scripts/preflight.mjs` (`docs/runner-preflight-wiring.md`) | exit != 0: report the `preflight FAILED:` line, change nothing |
-| 0a | `node scripts/reconcile.mjs`: recover interrupted runs (section 2). Per `docs/overnight-test-plan.md`, reconcile is the first action of a tick; its exact position relative to preflight in the cron body is **not read** by this doc's author | n/a |
-| 1 | Pick the next `queued` task (lowest id first). None: silent no-op (section 5) | queue done |
-| 2 | Claim CLI in the task worktree (`scripts/claim.mjs`) | LOST or error: no dispatch |
-| 3 | Dispatch the builder in that worktree, only after `WON` | n/a |
-| 4 | Orchestrator verifies independently: re-run tests, read the diff, secret scan | verification fails: no PR, task not merged (section 3) |
-| 5 | Push the task branch (fast-forward of the claim) | n/a |
-| 6 | Adopt CLI (`scripts/pr-recovery.mjs`): create, adopt, surface, or stop | any case except "create" |
-| 7 | `gh pr create`, only when adopt returned `url: null` | n/a |
-| 8 | Wait for CI (bounded, section 3), then merge only if green | CI red or pending: no merge |
-| 9 | Orchestrator writes outcome and PR link into the task record | n/a |
+| 1 | Fetch, then read the queue from `origin/main` (lowest `queued` id first). Also check each non-completed task's branch for pushed `in_progress` state needing reconcile. None queued and nothing to reconcile: silent no-op (section 5) | queue done |
+| 2 | `node scripts/reconcile.mjs` on any branch with an open run (section 2); commit and push reconcile outputs to that branch. A re-queued task becomes eligible in this same tick; a newly blocked task does not | n/a |
+| 3 | Claim CLI in the task worktree (`scripts/claim.mjs`) | LOST or error: no dispatch |
+| 4 | Dispatch the builder in that worktree, only after `WON` | n/a |
+| 5 | Orchestrator verifies independently: re-run tests, read the diff, secret scan | verification fails: task blocked with reason, no PR |
+| 6 | Orchestrator records the run outcome (`completed`, evidence with commit SHA and test counts) in the task record and pushes to the task branch | n/a |
+| 7 | Adopt CLI (`scripts/pr-recovery.mjs`): create, adopt, surface, or stop | any case except "create" |
+| 8 | `gh pr create`, only when adopt returned `url: null`; then record the adopted or created PR URL in the task record and push to the task branch | anomaly or `gh` failure: no create, no merge |
+| 9 | Wait for CI (bounded, section 3), then merge only if green and verified | CI red or pending: no merge |
+| 10 | If the record carries `report: true`, send one brief completion note after merging; otherwise end silently | n/a |
 
 Exact commands, arguments, output shapes and exit codes: `docs/runner-wiring.md`
 sections 1 to 4. Only the orchestrator writes task records and opens PRs
@@ -76,7 +78,7 @@ Stale claim branches are never reused and never deleted.
 | Symptom | Run has `task_started`, no terminal event; no PR | `gh pr create` succeeded; runner died before the URL was recorded; task record says no PR |
 | Mechanism | Reconcile: `run_interrupted` + `task_requeued`; retry on a new attempt-scoped branch | Adopt CLI finds the open PR for the same branch and the runner records its URL |
 | Branch | New flat attempt-scoped branch | Same branch as the original |
-| Counts an attempt | Yes (re-queue consumes one) | No new run is implied by adoption itself; **how the cron body counts attempts here is missing (not read)** |
+| Counts an attempt | Yes (re-queue consumes one) | No. Attempts are counted at claim (`startRun`, attempts +1) and never changed by adoption; adoption records only the PR URL. In the crash-after-PR case the run was already completed at verification before adopt |
 | Proven | Fixture test (d); real builder kill (overnight-03) | Fixture (create count stays 1); live adopt on a real open PR (scratch #26). A live crash-after-create was **not** reproduced |
 
 ## 3. Retry limits
@@ -84,13 +86,14 @@ Stale claim branches are never reused and never deleted.
 - **Task attempts: 3** (initial + 2 retries), then `blocked` with a recorded
   reason (`docs/policy.md` section 7).
 - **Builder: 20-minute interrupt rule.** A builder run exceeding 20 minutes is
-  treated as interrupted and handled by reconcile. (Figure taken from the
-  orchestrator's rules for this task; not stated in any repo doc.)
+  treated as interrupted and handled by reconcile. (Stated in the live cron
+  body, orchestrator-verified; not in any repo doc.)
 - **Preflight: one reinstall, never a loop.** `MAX_REINSTALL_ATTEMPTS = 1`,
   inside the script only. The runner never reinstalls separately or re-runs
   preflight to try again.
 - **CI wait: about 5 minutes, bounded.** If checks are still pending, the PR
-  is left open, not merged, and not polled indefinitely.
+  is left open, not merged, and not polled indefinitely. (Stated in the live
+  cron body, orchestrator-verified.)
 - **No silent retries of failures.** Failed verification becomes `blocked`
   with the exact reason and evidence, or is fixed within the budget with a
   recorded reason. Nothing that may already have had an external side effect
@@ -180,7 +183,6 @@ The closest valid alternatives, all tested:
 
 ## Missing or unverified
 
-- Cron body text (not read by this doc's author).
 - A live two-tick race (ticks are 30 minutes apart; a small task finishes in
   one tick) and a live crash-after-create were not staged.
 - Long-term reliability: one live task is not a series.
