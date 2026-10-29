@@ -2,3 +2,4 @@
 {"type":"task_completed","task_id":"overnight-01","run_id":"overnight-01/run-1-2026-10-29T06:17:26.486Z","timestamp":"2026-10-29T06:19:25.213Z","detail":"overnight-01 verified by orchestrator and completed"}
 {"type":"task_started","task_id":"overnight-02","run_id":"overnight-02/run-1-2026-10-29T06:47:08.268Z","timestamp":"2026-10-29T06:47:08.268Z","detail":"overnight runner tick started run"}
 {"type":"task_completed","task_id":"overnight-02","run_id":"overnight-02/run-1-2026-10-29T06:47:08.268Z","timestamp":"2026-10-29T06:49:08.350Z","detail":"overnight-02 verified by orchestrator and completed"}
+{"type":"task_started","task_id":"overnight-03","run_id":"overnight-03/run-1-2026-10-29T07:17:15.913Z","timestamp":"2026-10-29T07:17:15.913Z","detail":"overnight runner tick started run (controlled interruption test: this run will be killed mid-run)"}
