@@ -68,6 +68,13 @@ workflow and do not conflict (different files, different branches).
   nothing except confirm the queue is done. The job itself is
   removed in the morning report. A tick that finds nothing eligible
   is a no-op, never busywork.
+  *Dated note 2026-10-29 (superseded):* the "removed in the morning
+  report" sentence above was true of this pre-run plan only. The
+  orchestrator's morning-report decision (F3, `docs/phase-2-plan.md`
+  D5) is **REMAIN**: the job was not removed and stays in place as the
+  standing runner. A tick that finds nothing eligible is now a
+  **silent no-op** (no message, no commit). Current behavior is in
+  `docs/runner-operations.md`.
 - **Time budget.** The test runs one night only. If the queue is not
   done by morning, the morning report says so plainly, with
   per-task status — a short successful run is never described as
@@ -99,3 +106,25 @@ workflow and do not conflict (different files, different branches).
   simulate a VM replacement. VM-replacement recovery (reinstall the
   builder binary, re-fetch state from git) is a separate test, to be
   run deliberately, not claimed from this one.
+
+### Status as of 2026-10-29 (runner now wired)
+
+The three limits above were written before the runner was wired and are
+kept as the record of the pre-run plan. They were not about the wiring,
+which has since changed (sources: `docs/runner-wiring.md`,
+`docs/runner-operations.md`, `docs/runner-reliability.md`,
+`docs/runner-regression.md`, `docs/policy.md` section 7). What is true now:
+
+| Topic | When the plan was written | Now (2026-10-29) |
+|---|---|---|
+| Job lifetime | Removed in the morning report | Remains as the standing runner (F3: REMAIN); schedule stays in place |
+| Preflight | Not part of the tick | Wired as step 0 of every tick (`node scripts/preflight.mjs`); nonzero exit stops the tick and reports the `preflight FAILED:` line. Residual: it proves a past login, not a valid token |
+| Dispatch | Manual `startRun`-push path | Retired. Claim-first dispatch: the claim CLI (`scripts/claim.mjs`) must return `WON` before any builder is dispatched |
+| PR creation | Check by hand whether a PR exists | Adopt-before-create is wired (`scripts/pr-recovery.mjs`, four cases); `gh pr create` runs only when adopt returns `url: null` |
+| Empty queue | "No-op" stated as intent | Ticks with nothing queued and nothing to reconcile are silent no-ops (exception: a task record with `report: true` gets one completion note) |
+
+Still true and unchanged: one night (or one live task) does not prove
+long-term reliability, ticks do not fire if the runtime is down, and
+builder-kill is not a VM-replacement test. The empty-queue selector
+("lowest queued id first") lives in the cron body, not in tested code
+(`docs/runner-regression.md` row 8).
