@@ -3,6 +3,8 @@
 // and crashed before recording the URL), adopt it instead of creating a second.
 // This script never creates a PR.
 import { execFileSync } from 'node:child_process';
+import { parseArgs } from 'node:util';
+import { pathToFileURL } from 'node:url';
 import { findExistingPr } from './pr-adopt.mjs';
 
 const defaultGhRunner = (args) => execFileSync('gh', args, { encoding: 'utf8' });
@@ -25,4 +27,28 @@ export function adoptPr({ branch, expectedHeadSha, ghRunner = defaultGhRunner })
     problems.push(`open PR ${url} head ${headSha} does not match expected ${expectedHeadSha}`);
   }
   return { url, headSha, anomaly: problems.length ? problems.join('; ') : null };
+}
+
+// CLI for the scheduled worker. Prints exactly one JSON line
+// {"url","headSha","anomaly"} and exits 0 when gh succeeded (null url and null
+// anomaly = no open PR, caller may create). Exits 1 when gh (or the arguments)
+// failed: the caller must NOT create a PR.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    const { values } = parseArgs({
+      args: process.argv.slice(2),
+      options: { branch: { type: 'string' }, 'expected-head': { type: 'string' } },
+      strict: true,
+    });
+    if (!values.branch) throw new Error('usage: node scripts/pr-recovery.mjs --branch <name> [--expected-head <sha>]');
+    const r = adoptPr({ branch: values.branch, expectedHeadSha: values['expected-head'] }) ?? {
+      url: null,
+      headSha: null,
+      anomaly: null,
+    };
+    console.log(JSON.stringify({ url: r.url, headSha: r.headSha, anomaly: r.anomaly }));
+  } catch (e) {
+    console.error(`adopt failed: ${String(e.message).split('\n')[0]}`);
+    process.exit(1);
+  }
 }
