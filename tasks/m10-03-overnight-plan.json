@@ -15,7 +15,8 @@
     "Builder commit b144fe07c27da8d755356b0fee087bb8a5f94938 pushed to origin/m10/overnight-plan (remote SHA confirmed by orchestrator)",
     "Orchestrator re-ran npm test in worktree: 89 tests, 88 pass, 0 fail, 1 skipped (matches builder report)",
     "Orchestrator read the diff: 1 file, +29/-0 (docs/overnight-test-plan.md only); credential-value scan clean; builder did not touch tasks/*.json or events.jsonl",
-    "Builder report: docs-only change, no merge, no PR by builder"
+    "Builder report: docs-only change, no merge, no PR by builder",
+    "PR https://github.com/garzonandres2004/genesis/pull/33 (m10/overnight-plan -> main)"
   ],
   "id": "m10-03-overnight-plan",
   "idempotency_keys": [],
