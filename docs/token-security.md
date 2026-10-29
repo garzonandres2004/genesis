@@ -29,9 +29,17 @@ generator that is not on the runner path.
 
 ## 2. Conclusion
 
-The minimum OAuth scope for the runner is **`repo` alone**: it covers
-private-repo read and write, pull requests, and checks. `gist`, `read:org`
-and `workflow` are unused by the runner.
+The runner itself needs only **`repo`**: it covers private-repo read and
+write, pull requests, and checks. `gist`, `read:org` and `workflow` are
+unused by the runner.
+
+**Orchestrator correction 2026-10-29 (verified from `gh auth refresh
+--help`, not from the builder's draft):** for this OAuth flow, `repo`,
+`read:org` and `gist` are a minimum set that **cannot be removed** via
+refresh. So the practical floor for this credential is
+`repo` + `read:org` + `gist`, with `workflow` as the only droppable scope.
+Getting to `repo` alone means switching credential types (the fine-grained
+PAT in section 4), not a refresh.
 
 **Caveat.** The same token also serves the user's other VM repos
 (`tyburon-estimator`, `substation-rush-hour`) through git and `gh`. Dropping
@@ -50,14 +58,15 @@ Run only after the user approves. The user performs steps 3 and 6 themselves.
    reads (`read:org`, such as org or team listings), or workflow management
    (editing `.github/workflows` files through the token, or dispatching
    workflows). If anything does, stop here and report which.
-3. **Refresh the scopes.** The user runs `gh auth refresh -s repo` in a
-   terminal and completes the web OAuth step themselves. The token is never
-   pasted anywhere and never shown in chat. Note: check the `gh auth refresh`
-   help first, because `-s` adds scopes and may not remove existing ones. If
-   it only adds, removing `gist`, `read:org` and `workflow` needs a fresh
-   `gh auth login` with `repo` only (or revoking the old authorization in the
-   GitHub settings after logging in again). The user decides which; do not
-   improvise.
+3. **Remove the one droppable scope.** The user runs
+   `gh auth refresh --remove-scopes workflow` in a terminal and completes
+   the web OAuth step themselves. The token is never pasted anywhere and
+   never shown in chat. Scope removal is idempotent, and the resulting set
+   should be `repo` + `read:org` + `gist` (the flow's non-removable minimum).
+   Do NOT expect `gh auth refresh -s repo` to drop `read:org` and `gist`:
+   the refresh help states the minimum set cannot be removed. If `repo`
+   alone is wanted, that is the section 4 credential-type switch, not a
+   refresh. The user decides which; do not improvise.
 4. **Verify.** `gh auth status` (it lists scopes and does not display the
    token), then a read-only `gh pr list` on genesis. Preflight should also
    pass on the next tick.
@@ -66,8 +75,9 @@ Run only after the user approves. The user performs steps 3 and 6 themselves.
    repository settings, branch rules). The rule itself is the evidence. Do not
    test-push to `main`.
 6. **Rollback.** If any step fails, stop and restore the previous scopes by
-   re-running the refresh with them (`gist`, `read:org`, `repo`, `workflow`).
-   Record what failed and the rollback in the task record. Do not improvise.
+   re-adding `workflow` (`gh auth refresh -s workflow`, or `--scopes` with
+   the full previous list). Record what failed and the rollback in the task
+   record. Do not improvise.
 
 ## 4. Optional stronger follow-up (not executed)
 
