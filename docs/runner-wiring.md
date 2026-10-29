@@ -1,7 +1,6 @@
 # Runner wiring: invoking the guards from the cron worker
 
-Task: `phase2-runner-wiring` (supports milestones M5 and M6 in
-`docs/phase-2-plan.md`). This doc is for the orchestrator's cron-body rewrite.
+Supports milestones M5 and M6 in `docs/phase-2-plan.md`. This doc is for the orchestrator's cron-body rewrite.
 It covers only how a shell-driving worker calls the guard scripts. It does not
 change the schedule. The task-record write ownership rules are unchanged.
 
@@ -82,11 +81,18 @@ node -e 'process.exit(JSON.parse(process.argv[1]).status==="WON"?0:3)' "$out" \
 The claim fails with `branch_exists` while a previous attempt's claim branch
 is still on the remote, including an interrupted run's. After
 `node scripts/reconcile.mjs` re-queues a task, the retry must claim a
-different branch name (the test uses `task/<id>-attempt-2`; note that
+different, flat attempt-scoped branch name: `<task-branch>-attempt-2`, then
+`-attempt-3` (the test uses `task/<id>-attempt-2`; note that
 `task/<id>/attempt-2` would NOT work, since git cannot create a ref beneath an
-existing ref of the same name), or the orchestrator must delete the stale
-claim branch first. Choosing between those is an orchestrator decision and is
-not made here.
+existing ref of the same name). The stale claim branch stays on the remote as
+evidence: it is never reused and never deleted (`docs/policy.md` section 3
+and `docs/runner-operations.md` section 2).
+
+> Correction 2026-10-29 (stabilization gate): this section used to add "or the
+> orchestrator must delete the stale claim branch first." That option
+> contradicted the no-deletion rule and was removed. The header's reference to
+> a `phase2-runner-wiring` task, which has no record in `tasks/`, was also
+> removed.
 
 ## 3. Adopt CLI: `scripts/pr-recovery.mjs`
 

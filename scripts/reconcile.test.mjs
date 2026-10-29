@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { reconcile, runReconcile } from './reconcile.mjs';
 import { appendEvent, readEvents } from './events.mjs';
+import { startRun, finishRun, transition } from './task-state.mjs';
 
 const NOW = '2026-10-28T12:00:00.000Z';
 const run = (n) => ({ id: `t-1/run-${n}-2026-10-28T10:0${n}:00.000Z`, started_at: '2026-10-28T10:00:00.000Z', outcome: null });
@@ -123,4 +124,67 @@ test('the real completed demo task is never rewritten', () => {
   const { tasks, newEvents } = reconcile([demo], [{ ...events[0], task_id: demo.id, run_id: demo.runs[0].id }], NOW);
   assert.equal(tasks[0], demo);
   assert.equal(newEvents.length, 0);
+});
+
+// Stabilization gate regression tests (docs/runner-regression.md rows 3, 4, 6).
+// Fixture-level: they exercise the state machine and reconciler only. Which step
+// of a live tick decides "builder failed" or "verification failed" is cron-body
+// prose; these tests cover what the code does once that outcome is recorded.
+
+test('retry exhaustion end to end: attempt 3 interrupted => blocked, a further reconcile is a no-op', () => {
+  const root = fixture([{ id: 't-1', status: 'queued', attempts: 0, runs: [], blockers: [] }]);
+  const taskFile = join(root, 'tasks', 't-1.json');
+  const eventsFile = join(root, 'events.jsonl');
+  const read = () => JSON.parse(readFileSync(taskFile, 'utf8'));
+  for (let n = 1; n <= 3; n++) {
+    const begun = startRun(read(), `2026-10-28T1${n}:00:00.000Z`);
+    writeFileSync(taskFile, JSON.stringify(begun));
+    appendEvent({ type: 'task_started', task_id: 't-1', run_id: begun.runs.at(-1).id }, eventsFile);
+    runReconcile({ root, now: `2026-10-28T1${n}:30:00.000Z` });
+    assert.equal(read().attempts, n);
+    assert.equal(read().status, n < 3 ? 'queued' : 'blocked');
+  }
+  const final = read();
+  assert.deepEqual(final.runs.map((r) => r.outcome), ['interrupted', 'interrupted', 'interrupted']);
+  assert.match(final.blockers.at(-1), /retry budget exhausted/);
+  assert.equal(readEvents(eventsFile).filter((e) => e.type === 'retry_exhausted').length, 1);
+  assert.equal(readEvents(eventsFile).filter((e) => e.type === 'task_requeued').length, 2);
+
+  // the next reconcile changes nothing, and a blocked task cannot start a run
+  const taskBefore = readFileSync(taskFile, 'utf8');
+  const eventsBefore = readFileSync(eventsFile, 'utf8');
+  const again = runReconcile({ root, now: '2026-10-28T20:00:00.000Z' });
+  assert.equal(again.newEvents.length, 0);
+  assert.equal(readFileSync(taskFile, 'utf8'), taskBefore);
+  assert.equal(readFileSync(eventsFile, 'utf8'), eventsBefore);
+  assert.throws(() => startRun(final), /Cannot start a run on a blocked task/);
+});
+
+test('failed run (builder or verification failure) => outcome failed, blocked with a reason, never re-queued by reconcile', () => {
+  const begun = startRun({ id: 't-1', status: 'queued', attempts: 0, runs: [], blockers: [] }, '2026-10-28T10:00:00.000Z');
+  const runId = begun.runs[0].id;
+
+  // The run finishes as failed and the task moves in_progress -> blocked. The
+  // reason string is written by the orchestrator (prose); the code only keeps it.
+  const failed = finishRun(begun, 'failed');
+  assert.equal(failed.runs[0].outcome, 'failed');
+  const blocked = { ...transition(failed, 'blocked'), blockers: ['verification failed: 2 tests red'] };
+  assert.equal(blocked.status, 'blocked');
+  assert.equal(blocked.attempts, 1);
+
+  // reconcile leaves it alone, whether or not the task_failed event was appended
+  const failedEvent = { type: 'task_failed', task_id: 't-1', run_id: runId, timestamp: NOW, detail: 'x' };
+  for (const events of [[], [failedEvent]]) {
+    const { tasks, newEvents } = reconcile([blocked], events, NOW);
+    assert.equal(tasks[0], blocked);
+    assert.equal(newEvents.length, 0);
+  }
+  // a task still in_progress with an already-failed run is not treated as interrupted
+  const { tasks: t2, newEvents: e2 } = reconcile([failed], [], NOW);
+  assert.equal(t2[0], failed);
+  assert.equal(e2.length, 0);
+
+  // a failure never re-queues on its own: only blocked -> queued by an explicit decision
+  assert.throws(() => transition(failed, 'queued'), /reconciliation/);
+  assert.equal(transition(blocked, 'queued').status, 'queued');
 });

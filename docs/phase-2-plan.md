@@ -268,6 +268,43 @@ missing.
   with its trigger or dependency, or recorded as already covered, with a
   source. Not startable until the document exists.
 
+### M10. Reliability series on real work (PROPOSED; not committed)
+
+**Status: PROPOSED 2026-10-29 by the orchestrator, pending founder approval.**
+It is not scheduled, M7, M8 and M9 keep the statuses above, and nothing here
+is a commitment.
+
+- **Where things stand (orchestrator's summary).** All 12 task records are
+  completed except `overnight-blocked` (the estimator product name, his
+  decision). Open: M7 (F6 numeric target unset), M8 (no on-demand VM
+  replacement trigger), M9 (Step 7 document missing, needs the founder), F4
+  (`docs/runner-reliability.md` is still unedited; `docs/runner-operations.md`
+  now covers the live behavior), F5, and the roadmap item "checkpoint files
+  before long steps" (not described as implemented anywhere).
+- **Proposal.** The live runner completes real, useful tasks (not busywork)
+  over consecutive ticks under a pre-registered numeric target. The target is
+  reliability plus useful end-to-end work. It is explicitly **not** agents, a
+  dashboard, an engine migration, or parallel execution. Parallel stays OFF
+  until trigger T1's GitHub-server race test, which has not fired.
+- **Proposed acceptance criteria** (proposed, pending founder approval):
+  - (a) The F6 numeric target is recorded in this plan BEFORE the series
+    starts and is not moved after the fact.
+  - (b) At least 3 real tasks are completed via the live runner, each merged
+    only after a green `test` check and independent verification, with 0
+    duplicate PRs, 0 direct main commits and 0 silent retries.
+  - (c) At least 1 of the 3 tasks includes a code and test change (not
+    docs-only), proving the runner on code work.
+  - (d) 7 consecutive days of ticks with zero runner-caused failures. Silent
+    no-ops count; any failure is diagnosed with a recorded cause before the
+    milestone closes.
+  - (e) Every anomaly or `gh` failure during the series surfaces the same
+    tick with no create and no merge, per the four-case adopt rule.
+- **Done only when** all five criteria are met with evidence from `origin/main`
+  and cron run records. A single live task is not a series.
+- **Suggested first tasks** (suggestions, not assignments): F4 (reconcile
+  `docs/runner-reliability.md` with the stabilization-gate outcomes) and the
+  roadmap's checkpoint-files-before-long-steps item.
+
 ### Gated, not scheduled
 
 - **Parallel execution.** Not a milestone of this plan. Needs a separate

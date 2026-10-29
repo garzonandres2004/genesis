@@ -58,7 +58,10 @@ mechanisms, never to sneak past it.
 ## 4. Isolation
 
 - One task, one branch. Never two builders on the same branch.
-- Parallel tasks use separate worktrees, never a shared checkout.
+- Parallel tasks use separate worktrees, never a shared checkout. (Note
+  2026-10-29: this is an isolation rule for when parallelism is authorized.
+  The runner's parallel execution is currently OFF: one worker, one task
+  per tick. See `docs/atomic-claim.md` section 5.)
 - Never run two test suites against the same database concurrently.
 - Builders work only in their assigned repository; cross-repo changes
   require an orchestrator-approved task per repository.

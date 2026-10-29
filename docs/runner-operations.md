@@ -37,6 +37,29 @@ Exact commands, arguments, output shapes and exit codes: `docs/runner-wiring.md`
 sections 1 to 4. Only the orchestrator writes task records and opens PRs
 (`docs/policy.md` sections 1 and 5).
 
+**Additions from the stabilization-gate audit (2026-10-29).** The orchestrator
+audited the live cron body (`cron.view`, job `genesis-overnight-test`, 08:47)
+against this doc and found no material discrepancies. A repo-side read of this
+doc against the same claims found no contradictions but three omissions, added
+here. They are cron-body facts reported by the orchestrator; this repo cannot
+confirm them.
+
+- The cron body numbers its steps 0 to 4 and 5a to 5j; the table above groups
+  the same actions into steps 0 to 10. The order is the same.
+- **Builder failure** (distinct from verification failure): the run is recorded
+  as `task_failed` and the task becomes `blocked` with the reason recorded.
+  There is no PR, and nothing is retried silently. (A builder that exceeds 20
+  minutes is the interrupted path instead, section 3.) The code half of this is
+  tested (`docs/runner-regression.md`, rows 3 and 4); the decision to record a
+  failure is cron-body prose.
+- **Claim files.** Before the claim CLI runs, the worker prepares the claim
+  commit's files: the task record after `startRun` (attempts +1, an open run),
+  the full `events.jsonl`, and a `task_started` event. This is why attempts are
+  counted at claim (section 2).
+- **Hard rules** in the cron body: no push to `main`, no force-push, never
+  delete a branch, one task per tick, parallel execution OFF, never print
+  credentials.
+
 First live run: PR #25, merged `b8501d2` (tick 08:16 MDT, 2026-10-29). See
 the evidence table at the end of this doc.
 
@@ -121,12 +144,11 @@ plan), not a handled case.
 
 ### Source-doc notes (not edited)
 
-- `docs/runner-wiring.md` section 2 says that after reconcile the orchestrator
-  may either use a different branch name "or delete the stale claim branch
-  first." Current practice is the flat attempt-scoped name with no deletion;
-  treat the deletion option as superseded.
-- `docs/runner-wiring.md` names task `phase2-runner-wiring`; no such task
-  record exists in `tasks/` at this commit.
+- Resolved 2026-10-29 (stabilization gate): `docs/runner-wiring.md` section 2
+  used to offer "or delete the stale claim branch first," and its header named
+  a `phase2-runner-wiring` task with no record in `tasks/`. Both were removed
+  from that doc (dated correction note there). Retries use flat
+  attempt-scoped names and nothing is deleted.
 - `docs/runner-reliability.md` and `docs/overnight-test-plan.md` are partly
   outdated by the live wiring (already tracked as D2, D3, D5 in
   `docs/phase-2-plan.md`).
