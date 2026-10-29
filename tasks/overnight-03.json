@@ -1,1 +1,44 @@
-{"acceptance":["A builder session is started on branch overnight/interruption-test and deliberately killed mid-run before any commit (runner-controlled, isolated branch, no production state)","The next runner tick's reconcile detects the open run: events.jsonl shows run_interrupted followed by task_requeued for the killed run","The retry completes the task's deliverable (docs/interruption-recovery-proof.md, stating the killed run id and the recovery evidence) and merges via PR after verification","No partial commit from the killed run exists on the branch; no duplicate branch or PR exists for this task","The task record shows the interrupted run and the completed retry run"],"attempts":0,"blockers":[],"branch":"overnight/interruption-test","created":"2026-10-28","evidence":[],"id":"overnight-03","idempotency_keys":[],"objective":"Controlled interruption test for the overnight run: prove the reconciler recovers a killed worker. The runner kills a builder mid-run on an isolated branch; recovery (not the deliverable) is the point being tested.","project":"genesis","repo":"garzonandres2004/genesis","role":"implementation","runs":[],"status":"queued","title":"Overnight 03: controlled interruption and recovery","updated":"2026-10-28"}
+{
+  "acceptance": [
+    "A builder session is started on branch overnight/interruption-test and deliberately killed mid-run before any commit (runner-controlled, isolated branch, no production state)",
+    "The next runner tick's reconcile detects the open run: events.jsonl shows run_interrupted followed by task_requeued for the killed run",
+    "The retry completes the task's deliverable (docs/interruption-recovery-proof.md, stating the killed run id and the recovery evidence) and merges via PR after verification",
+    "No partial commit from the killed run exists on the branch; no duplicate branch or PR exists for this task",
+    "The task record shows the interrupted run and the completed retry run"
+  ],
+  "attempts": 2,
+  "blockers": [],
+  "branch": "overnight/interruption-test",
+  "created": "2026-10-28",
+  "evidence": [
+    "Killed run overnight-03/run-1-2026-10-29T07:17:15.913Z (orchestrator record commit ef060c3, no builder commit)",
+    "Reconcile commit 1b92e5d appended run_interrupted + task_requeued to events.jsonl at 2026-10-29T07:47:28.415Z; task re-queued (attempt 1 of 3 used)",
+    "Retry run overnight-03/run-2-2026-10-29T07:47:44.833Z (orchestrator start commit fb492ee)",
+    "Builder commit c9bddf1bcada44c2219132d26c4a7490493b4463 pushed to origin/overnight/interruption-test (remote SHA confirmed by orchestrator)",
+    "Orchestrator re-ran npm test in worktree: 24 pass, 0 fail (matches builder report)",
+    "Orchestrator read the diff: 1 file, +43/-0 (docs/interruption-recovery-proof.md only); secret-pattern scan clean; builder did not touch tasks/*.json or events.jsonl",
+    "Proof doc states killed run id, reconcile commit + event timestamps, no-partial-commit evidence, and retry run id — all verified against events.jsonl and git log",
+    "PR https://github.com/garzonandres2004/genesis/pull/17 (overnight/interruption-test -> main); test check green on head before merge"
+  ],
+  "id": "overnight-03",
+  "idempotency_keys": [],
+  "objective": "Controlled interruption test for the overnight run: prove the reconciler recovers a killed worker. The runner kills a builder mid-run on an isolated branch; recovery (not the deliverable) is the point being tested.",
+  "project": "genesis",
+  "repo": "garzonandres2004/genesis",
+  "role": "implementation",
+  "runs": [
+    {
+      "id": "overnight-03/run-1-2026-10-29T07:17:15.913Z",
+      "started_at": "2026-10-29T07:17:15.913Z",
+      "outcome": "interrupted"
+    },
+    {
+      "id": "overnight-03/run-2-2026-10-29T07:47:44.833Z",
+      "started_at": "2026-10-29T07:47:44.833Z",
+      "outcome": "completed"
+    }
+  ],
+  "status": "completed",
+  "title": "Overnight 03: controlled interruption and recovery",
+  "updated": "2026-10-29"
+}
