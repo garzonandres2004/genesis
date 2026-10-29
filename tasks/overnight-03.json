@@ -17,7 +17,8 @@
     "Builder commit c9bddf1bcada44c2219132d26c4a7490493b4463 pushed to origin/overnight/interruption-test (remote SHA confirmed by orchestrator)",
     "Orchestrator re-ran npm test in worktree: 24 pass, 0 fail (matches builder report)",
     "Orchestrator read the diff: 1 file, +43/-0 (docs/interruption-recovery-proof.md only); secret-pattern scan clean; builder did not touch tasks/*.json or events.jsonl",
-    "Proof doc states killed run id, reconcile commit + event timestamps, no-partial-commit evidence, and retry run id — all verified against events.jsonl and git log"
+    "Proof doc states killed run id, reconcile commit + event timestamps, no-partial-commit evidence, and retry run id — all verified against events.jsonl and git log",
+    "PR https://github.com/garzonandres2004/genesis/pull/17 (overnight/interruption-test -> main); test check green on head before merge"
   ],
   "id": "overnight-03",
   "idempotency_keys": [],
