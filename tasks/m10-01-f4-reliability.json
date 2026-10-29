@@ -15,7 +15,8 @@
     "Builder commit 2c755c7b3b24a31d8fdee18e19da1dee8c373579 pushed to origin/m10/f4-reliability (remote SHA confirmed by orchestrator)",
     "Orchestrator re-ran npm test in worktree: 84 tests, 83 pass, 0 fail, 1 skipped (matches builder report)",
     "Orchestrator read the diff: 3 files, +119/-40 (docs/policy.md, docs/runner-reliability.md, docs/runner-regression.md only); secret-pattern scan clean; builder did not touch tasks/*.json or events.jsonl",
-    "Builder report: docs-only change, no merge, no PR by builder"
+    "Builder report: docs-only change, no merge, no PR by builder",
+    "PR https://github.com/garzonandres2004/genesis/pull/31 (m10/f4-reliability -> main)"
   ],
   "id": "m10-01-f4-reliability",
   "idempotency_keys": [],
