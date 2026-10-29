@@ -225,6 +225,7 @@ original acceptance text below is preserved as written.
 **Status note (2026-10-29): stays OPEN.** One live task (PR #25) plus silent
 no-op ticks with 0 consecutive failures is not a reliability series; repeated
 runs are still needed, and the numeric target (F6) is still unset.
+**Update (2026-10-29):** F6 is now defined (section 5); status above unchanged.
 
 
 - **Depends on:** M1, and the orchestrator's decision on the overnight cron
@@ -268,11 +269,13 @@ missing.
   with its trigger or dependency, or recorded as already covered, with a
   source. Not startable until the document exists.
 
-### M10. Reliability series on real work (PROPOSED; not committed)
+### M10. Reliability series on real work (ACTIVE)
 
-**Status: PROPOSED 2026-10-29 by the orchestrator, pending founder approval.**
-It is not scheduled, M7, M8 and M9 keep the statuses above, and nothing here
-is a commitment.
+**Status: ACTIVE 2026-10-29, authorized by the founder directive 2026-10-29
+("Authorize M10").** Originally PROPOSED 2026-10-29 by the orchestrator. M7,
+M8 and M9 keep the statuses above. F6 defined in this amendment BEFORE the
+first series task begins; the window starts at the first tick after this
+amendment merges.
 
 - **Where things stand (orchestrator's summary).** All 12 task records are
   completed except `overnight-blocked` (the estimator product name, his
@@ -281,12 +284,13 @@ is a commitment.
   (`docs/runner-reliability.md` is still unedited; `docs/runner-operations.md`
   now covers the live behavior), F5, and the roadmap item "checkpoint files
   before long steps" (not described as implemented anywhere).
-- **Proposal.** The live runner completes real, useful tasks (not busywork)
+- **Scope.** The live runner completes real, useful tasks (not busywork)
   over consecutive ticks under a pre-registered numeric target. The target is
   reliability plus useful end-to-end work. It is explicitly **not** agents, a
   dashboard, an engine migration, or parallel execution. Parallel stays OFF
   until trigger T1's GitHub-server race test, which has not fired.
-- **Proposed acceptance criteria** (proposed, pending founder approval):
+- **Active acceptance criteria** (proposed 2026-10-29, now active per the
+  founder directive; wording unchanged):
   - (a) The F6 numeric target is recorded in this plan BEFORE the series
     starts and is not moved after the fact.
   - (b) At least 3 real tasks are completed via the live runner, each merged
@@ -425,10 +429,114 @@ Carried from `docs/roadmap.md`, `docs/architecture.md`, and
 | F3 | Overnight cron: remain, pause, or remove | **Orchestrator, morning review. PENDING. This plan does not pre-decide it** | The morning-review evidence | **Recommendation recorded 2026-10-29: REMAIN** (standing runner, silent cheap no-op ticks), per the orchestrator's morning report; the schedule remains in place. F3 stays open only for a future decision to change that, not for the remain/pause/remove question itself. Decision D5 |
 | F4 | Reconcile `docs/runner-reliability.md` with P3/P4 outcomes (section 3.1 here does so in the plan only; the source doc is unedited) | A future builder on a docs task, assigned by the orchestrator | none | OPEN, optional |
 | F5 | Provide the Step 7 plan document, or confirm it was never written | **Orchestrator / founder** (only they can say where it was meant to live) | none | OPEN. Unblocks M9 |
-| F6 | Set the numeric target for repeated-run reliability | **Orchestrator** | F3 | OPEN. Unblocks M7 |
+| F6 | Set the numeric target for repeated-run reliability | **Orchestrator** | F3 | **DEFINED 2026-10-29.** The target is frozen per the F6 section below. Unblocks M7 |
 
 Order recommendation (not a decision): F3 first because M7 hangs on it; F1
 before F2 only to keep reviews single-purpose.
+
+### F6. Repeated-run reliability target (DEFINED 2026-10-29; target FROZEN on merge)
+
+This section defines F6. It is a definition and a pre-registered target, not a
+result. Nothing here claims the target has been met or that the runner has
+improved.
+
+**Primary metric.** Runner-caused failures per tick over the window. A tick
+counts as a runner-caused failure ONLY if one of these happens:
+
+1. A preflight script defect or false pass/fail.
+2. The claim CLI returns a wrong WON/LOST.
+3. The adopt CLI returns a wrong URL or anomaly.
+4. Reconcile corrupts state or misclassifies a run.
+5. A tick crashes with no recorded cause.
+6. The runner creates a duplicate PR.
+7. The runner commits directly to main.
+8. The runner silently retries a failed task.
+
+Everything else is NOT a runner-caused failure.
+
+**Explicitly NOT runner-caused failures** (correct behavior or task-side
+causes; record them as such, not as failures):
+
+- A builder exiting nonzero on task content.
+- Verification failing on task content.
+- CI red on task content.
+- A task blocked by design or by a founder decision.
+- An anomaly or `gh` failure that stops PR creation/merging in that tick
+  exactly per the four-case adopt rule (record it as an anomaly event, not a
+  failure).
+
+**Secondary metrics** (all counted at close):
+
+- Task success rate = tasks completed via the runner / tasks attempted via
+  the runner in the window. Blocked-by-design tasks (such as
+  `overnight-blocked`) are excluded from both counts.
+- Retries consumed = attempts used per task.
+- Recovery time = ticks from an interrupted run's reconcile
+  (`run_interrupted` event) to that task's retry completion.
+- Repeated failure categories = counts grouped by blocker text and event type
+  (`task_failed`, `run_interrupted`, `retry_exhausted`, anomaly surfaced).
+- Human interventions = orchestrator manual fixes per task and per tick.
+  Verification itself is by design and does NOT count as an intervention;
+  only fixes beyond verification count.
+
+**Measurement method.** Counted at series close from immutable sources only:
+`origin/main` task records, `events.jsonl`, cron run records, and GitHub
+PR/check records. No recount adjustments and no manual reclassification after
+the fact; the classification above is the only classifier.
+
+**Baseline (pre-series, verified history).**
+
+- New claim-first path: 1 task (`runner-live-test-01`, PR #25 merged
+  `b8501d2`): completed, 1 attempt, 0 runner-caused failures, 0 duplicate PRs,
+  0 direct main commits; verification 82 tests / 81 pass / 0 fail / 1 skipped.
+- Old manual path: 3 tasks. `overnight-01` and `overnight-02`: 1 attempt each.
+  `overnight-03`: 2 attempts after a real builder kill, reconcile and retry.
+  All completed; 1 interruption recovered; 0 duplicate PRs; 0 direct main
+  commits.
+- Silent ticks: the 07:46 and 08:46 MDT ticks on 2026-10-29 ran the new body
+  as silent no-ops. No tick has recorded a consecutive failure; 0
+  runner-caused failures in any tick to date.
+- Recovery-time baseline: `overnight-03` run-1 was killed
+  2026-10-29T07:17:15Z; reconcile appended `run_interrupted` + `task_requeued`
+  at 07:47:28Z; the retry completed the same morning (PR #17 merged `854ae92`).
+  Detection-to-requeue was about one 30-minute tick; requeue-to-completion was
+  the next dispatch tick.
+- Human-intervention baseline: every merge was independently verified by the
+  orchestrator (by design, not an intervention). Manual fixes beyond
+  verification: 1 docs correction by the orchestrator before the PR #27 merge
+  (ops-doc step order and attempt counting; not a runner failure) and 1
+  operator error (stale-checkout `MODULE_NOT_FOUND` on the first live adopt
+  attempt, recovered by redo from a fresh worktree; not a runner failure).
+
+**Numeric target (F6, FROZEN on merge).** 7 consecutive days (America/Denver,
+336 scheduled ticks at the 30-minute cadence) with ZERO runner-caused
+failures; task success rate 100% for tasks attempted in the window (at least 3
+tasks); 0 duplicate PRs; 0 direct main commits; 0 silent retries. The window
+starts at the first tick AFTER this amendment merges and ends exactly 7x24
+hours later. The target is FROZEN once merged: any change requires a new plan
+amendment plus founder approval, and restarts the window from zero.
+
+**Evidence source.** The same immutable sources as the measurement method. The
+close-out verdict cites task-record SHAs, PR numbers, check runs, and cron run
+records, not status labels.
+
+**Observed vs validated.**
+
+- VALIDATED (fixture + live evidence):
+  - Claim-first prevents duplicate dispatch: race test, 3 rounds per suite
+    execution, plus a live LOST on `runner/live-test-01`.
+  - Adopt-before-create prevents duplicate PRs: fixture create-count-1 plus a
+    live adopt on scratch PR #26.
+  - Reconcile recovers interrupted runs: fixture SIGKILL plus `overnight-03`.
+- OBSERVED ONLY (not validated):
+  - Long-term reliability: one live task on the new path is not a series.
+  - Recovery time on the new path: no interruption has happened under the
+    claim-first body.
+  - The runner's behavior under a real builder failure or verification
+    failure: code-half fixture only, no live staging.
+
+This milestone establishes the baseline. It does not claim self-improvement;
+improvement is demonstrated only by a LATER comparison against this baseline.
 
 ## 6. Revisit triggers
 
