@@ -1,1 +1,1 @@
-{"description":"Genesis: autonomous AI engineering operating system. Muse orchestrates, Claude Code builds.","name":"genesis","private":true,"scripts":{"status":"node scripts/status.mjs","test":"node --test scripts/"},"type":"module","version":"0.1.0"}
+{"description":"Genesis: autonomous AI engineering operating system. Muse orchestrates, Claude Code builds.","name":"genesis","private":true,"scripts":{"status":"node scripts/status.mjs","test":"node --test scripts/*.test.mjs"},"type":"module","version":"0.1.0"}
