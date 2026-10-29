@@ -10,7 +10,13 @@
   "blockers": [],
   "branch": "m10/overnight-plan",
   "created": "2026-10-29",
-  "evidence": [],
+  "evidence": [
+    "Claim CLI returned WON, claim commit a33059a083eb41fed486ad2a2f5a6649e7b0c4a6 pushed to origin/m10/overnight-plan",
+    "Builder commit b144fe07c27da8d755356b0fee087bb8a5f94938 pushed to origin/m10/overnight-plan (remote SHA confirmed by orchestrator)",
+    "Orchestrator re-ran npm test in worktree: 89 tests, 88 pass, 0 fail, 1 skipped (matches builder report)",
+    "Orchestrator read the diff: 1 file, +29/-0 (docs/overnight-test-plan.md only); credential-value scan clean; builder did not touch tasks/*.json or events.jsonl",
+    "Builder report: docs-only change, no merge, no PR by builder"
+  ],
   "id": "m10-03-overnight-plan",
   "idempotency_keys": [],
   "objective": "M10 series task 3: reconcile docs/overnight-test-plan.md with the wired runner. Its lifetime statements and Known limits are stale (written before the runner was wired): the job was not removed in the morning report, it remains as the standing runner, and the manual startRun-push path is retired in favor of claim-first dispatch and adopt-before-create.",
@@ -22,10 +28,10 @@
     {
       "id": "m10-03-overnight-plan/run-1-2026-10-29T16:49:44.060Z",
       "started_at": "2026-10-29T16:49:44.060Z",
-      "outcome": null
+      "outcome": "completed"
     }
   ],
-  "status": "in_progress",
+  "status": "completed",
   "title": "M10-03: Reconcile overnight-test-plan staleness",
   "updated": "2026-10-29"
 }
