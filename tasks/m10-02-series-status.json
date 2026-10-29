@@ -16,7 +16,8 @@
     "Orchestrator re-ran npm test in worktree: 89 tests, 88 pass, 0 fail, 1 skipped (baseline per m10-01 record: 83 pass; +5 new tests, matches builder report)",
     "Orchestrator read the diff: 2 new files only, +217 (scripts/series-status.mjs, scripts/series-status.test.mjs); no existing script changed; builder did not touch tasks/*.json or events.jsonl",
     "Orchestrator ran the tool: node scripts/series-status.mjs . --prefix m10- reports counts total 3, attempted 2, completed 1, blocked 0; no classification labels in output (non-classification test asserts this)",
-    "Builder report: no merge, no PR by builder"
+    "Builder report: no merge, no PR by builder",
+    "PR https://github.com/garzonandres2004/genesis/pull/32 (m10/series-status -> main)"
   ],
   "id": "m10-02-series-status",
   "idempotency_keys": [],
