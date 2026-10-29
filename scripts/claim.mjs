@@ -7,8 +7,10 @@
 // force-pushes. Callers dispatch only after it returns { status: 'WON' }.
 import { execFile } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { parseArgs } from 'node:util';
+import { pathToFileURL } from 'node:url';
 
 export const WON = 'WON';
 export const LOST = 'LOST';
@@ -117,4 +119,43 @@ export async function claim({ repoDir, remote = 'origin', branch, baseSha, messa
   await restore();
   if (!exists) throw new Error(`claim push failed and branch ${branch} is absent on ${remote}`);
   return { status: LOST, reason: 'push_rejected', sha: null };
+}
+
+// CLI for the scheduled worker: prints exactly one JSON line and exits 0 on
+// WON or LOST; on a thrown error prints the error on stderr and exits 1 with
+// nothing on stdout. Callers dispatch a builder only on WON.
+async function main(argv) {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      repo: { type: 'string' },
+      remote: { type: 'string', default: 'origin' },
+      branch: { type: 'string' },
+      base: { type: 'string' },
+      message: { type: 'string' },
+      files: { type: 'string' },
+    },
+    strict: true,
+  });
+  if (!values.repo || !values.branch || !values.base || !values.message) {
+    throw new Error('usage: node scripts/claim.mjs --repo <dir> [--remote <name>] --branch <name> --base <sha> --message <msg> [--files <json-file>]');
+  }
+  const writeFiles = values.files ? JSON.parse(readFileSync(values.files, 'utf8')) : [];
+  if (!Array.isArray(writeFiles)) throw new Error('--files must contain a JSON array of {path, content}');
+  const r = await claim({
+    repoDir: values.repo,
+    remote: values.remote,
+    branch: values.branch,
+    baseSha: values.base,
+    message: values.message,
+    writeFiles,
+  });
+  console.log(JSON.stringify({ status: r.status, reason: r.reason, sha: r.sha }));
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main(process.argv.slice(2)).catch((e) => {
+    console.error(e.message);
+    process.exit(1);
+  });
 }
