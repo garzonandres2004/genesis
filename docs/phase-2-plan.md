@@ -43,6 +43,15 @@ the plan, not caveats.
    body" is taken from the orchestrator's morning-directive outcome, not
    independently read. See M2.
 
+**Dated note (2026-10-29, later the same day):** item 5 is resolved by M5/M6
+(claim and adoption are now wired into the live runner; the orchestrator
+verified the rewritten cron body via `cron.view`; the builder still did not
+read it). Item 3 now has a recorded recommendation (REMAIN, see F3); the
+schedule remains in place. Item 4 is unchanged: still no live crash-after-PR
+reproduced, though `pr-recovery` adopted a real open PR (scratch PR #26).
+Items 1, 2 and 6's Step 7 and parallel-OFF limits are unchanged. The original
+wording above is preserved.
+
 ### Phase labels used below
 
 The brief refers to work as P2/P3/P4. These labels are not defined in any
@@ -145,7 +154,22 @@ milestone.
   empty-PATH guard proves no real `gh` spawned. PR #21 merged.
 - **Not proven:** no live GitHub crash reproduced (section 0, item 4).
 
-### M5. Claim-first dispatch in the runner (OPEN; follow-up F1)
+### M5. Claim-first dispatch in the runner (DONE, 2026-10-29; follow-up F1)
+
+**Status update (2026-10-29): DONE.** Evidence: PR #23 (merged `97b01fc`)
+added the claim/adopt CLIs, runner fixture, CLI tests and orchestration
+integration tests (suite 62 -> 82: 81 pass, 0 fail, 1 pre-existing root
+skip); the orchestrator rewrote the cron body (claim-first dispatch, preflight
+step 0, old manual startRun-push retired; verified via `cron.view`); live task
+PR #25 (merged `b8501d2`) ran claim WON (`1f03187`, branch
+`runner/live-test-01`) before dispatch; a live second claim returned
+`LOST` / `branch_exists` with the remote tip unchanged (`4073625`). Parallel
+execution stayed OFF. **Remaining gap:** a live two-tick race was not staged
+(ticks are 30 minutes apart and a small task completes within one tick);
+concurrency stays fixture-proven (`claim.test.mjs` race, 24 rounds, one winner
+each) plus live-LOST-proven. See `docs/runner-operations.md`. The original
+acceptance text below is preserved as written.
+
 
 - **Depends on:** M3, M2 (preflight stays step 0; claim comes after it).
 - **Delivers:** the runner replaces the manual startRun-push with
@@ -163,7 +187,22 @@ milestone.
   4. `npm test` count is at least 62 with 0 fail after any code change.
   5. The orchestrator's record states parallel execution remained OFF.
 
-### M6. Adopt-before-create in the runner (OPEN; follow-up F2)
+### M6. Adopt-before-create in the runner (DONE, 2026-10-29; follow-up F2)
+
+**Status update (2026-10-29): DONE.** Evidence: PR #23 (merged `97b01fc`)
+orchestration cases (c) crash-after-create => adopt finds it, create count
+stays 1; (e) several open PRs => first + anomaly, no create; (e2) `gh` failure
+at adopt => exit 1, no create. The cron body implements the four adopt cases
+(verified via `cron.view`). Live task PR #25: adopt CLI returned null =>
+exactly one PR created. Live adopt on a real open PR: scratch PR #26 on
+`scratch/adopt-test` returned url, `headSha`
+`aa78145012a03557a01d7ee88c4f67eff8e1dd70`, `anomaly: null`, exit 0; #26 then
+closed unmerged, branch left in place. **Remaining gap:** a live
+crash-after-create was not reproduced; adoption logic is fixture-proven
+(create count 1) plus live-adopt-proven on a real open PR. Acceptance item 3
+(URL recorded in the task record) is met for PR #25 per its task record. The
+original acceptance text below is preserved as written.
+
 
 - **Depends on:** M4. Independent of M5; either order is safe, but doing M5
   first keeps one change per review.
@@ -183,6 +222,11 @@ milestone.
 
 ### M7. Reliability beyond one night (OPEN; gated on the cron decision D5)
 
+**Status note (2026-10-29): stays OPEN.** One live task (PR #25) plus silent
+no-op ticks with 0 consecutive failures is not a reliability series; repeated
+runs are still needed, and the numeric target (F6) is still unset.
+
+
 - **Depends on:** M1, and the orchestrator's decision on the overnight cron
   (a recurring runner is the vehicle for repeated runs). If the cron is not
   continued, another repeated-run mechanism has to be chosen; the plan does
@@ -194,6 +238,14 @@ milestone.
   milestone has no numeric target, by design.
 
 ### M8. VM-replacement recovery test (OPEN; deliberate, not scheduled)
+
+**Status note (2026-10-29): stays OPEN.** The deliberate test has not been
+run, and there is no on-demand trigger for a platform VM replacement
+(`docs/runner-operations.md` section 7). Four alternatives are tested, none a
+VM replacement: fixture SIGKILL + reconcile + retry; real builder kill
+(overnight-03); tick continuity across restarts; binary-loss recovery via
+preflight's single reinstall (00:14 Oct 29 restart).
+
 
 - **Depends on:** M2 (preflight's reinstall path is part of what it
   exercises).
@@ -207,6 +259,9 @@ milestone.
   VM replacement.
 
 ### M9. Step 7 reconciliation (BLOCKED on a missing document)
+
+**Status note (2026-10-29): stays BLOCKED.** The Step 7 document is still
+missing.
 
 - **Depends on:** the Step 7 plan being supplied (section 7).
 - **Acceptance:** each Step 7 item is either present in `docs/roadmap.md`
@@ -262,11 +317,15 @@ pushes `startRun`).**
   tested on local bare remotes, not against GitHub; (c) `claimSideEffect`
   still protects only one orchestrator process at a time
   (`docs/durable-execution.md`).
-- **Status: NARROWED in code, OPEN in the live runner.** The plan follows
-  `docs/atomic-claim.md` on the nature of the primitive (it is tested) and
-  `docs/runner-reliability.md` on live status (nothing is wired). Parallel
-  stays OFF, so the exposure is also bounded by operations: one worker per
-  tick.
+- **Status (original, 2026-10-29 morning): NARROWED in code, OPEN in the live
+  runner.** The plan followed `docs/atomic-claim.md` on the nature of the
+  primitive (it is tested) and `docs/runner-reliability.md` on live status
+  (nothing was wired). Parallel stays OFF, so the exposure is also bounded by
+  operations: one worker per tick.
+- **Status update (2026-10-29): WIRED in the live runner; live-proven on one
+  task + fixture suite; long-term reliability still unproven.** Remaining (a)
+  is resolved (M5). Remaining (b) and (c) still stand. Resolves the "nothing
+  is wired" live-state note in D2 (dated note added there).
 
 **Window 2: duplicate PR (`gh pr create` returns, runner dies before the URL
 is recorded).**
@@ -283,7 +342,12 @@ is recorded).**
   yields `null` and a caller would create a new one, which is intended by
   design but worth a human glance if it happens; (d) `adoptPr` assumes `gh`
   succeeds, and the caller must not create on a throw (M6 item 2).
-- **Status: NARROWED in code, OPEN in the live runner.**
+- **Status (original): NARROWED in code, OPEN in the live runner.**
+- **Status update (2026-10-29): WIRED in the live runner; live-proven on one
+  task + fixture suite; long-term reliability still unproven.** Remaining (a)
+  is resolved (M6). (b) still stands: no live crash reproduced. (c) and (d)
+  are unchanged; (d) is now enforced by the four-case adopt rule (`gh`
+  failure => no create), proven by orchestration test (e2).
 
 ### 3.2 Other risks
 
@@ -319,9 +383,9 @@ Carried from `docs/roadmap.md`, `docs/architecture.md`, and
 
 | ID | Item | Owner | Depends on | Status |
 |---|---|---|---|---|
-| F1 | Wire `scripts/claim.mjs` into runner dispatch: replace the manual startRun-push with claim-first dispatch (`WON` dispatches; `LOST` or throw stops the tick) | **Orchestrator** owns the cron body and the decision to change it (`docs/atomic-claim.md` section 6: "A future cron-body step will replace the manual startRun-push"). A future builder may prepare any supporting repo code or docs on a branch; it must not edit the schedule | M3, M2 | OPEN. Milestone M5 |
-| F2 | Wire `scripts/pr-recovery.mjs` `adoptPr` into runner PR creation (adopt-before-create) | **Orchestrator** (`docs/crash-pr-recovery.md`: "owned by the orchestrator"); builder support as for F1. Policy section 5 already says only the orchestrator opens PRs | M4 | OPEN. Milestone M6 |
-| F3 | Overnight cron: remain, pause, or remove | **Orchestrator, morning review. PENDING. This plan does not pre-decide it** | The morning-review evidence | OPEN. Decision D5 |
+| F1 | Wire `scripts/claim.mjs` into runner dispatch: replace the manual startRun-push with claim-first dispatch (`WON` dispatches; `LOST` or throw stops the tick) | **Orchestrator** owns the cron body and the decision to change it (`docs/atomic-claim.md` section 6: "A future cron-body step will replace the manual startRun-push"). A future builder may prepare any supporting repo code or docs on a branch; it must not edit the schedule | M3, M2 | **DONE 2026-10-29.** Milestone M5 (evidence there) |
+| F2 | Wire `scripts/pr-recovery.mjs` `adoptPr` into runner PR creation (adopt-before-create) | **Orchestrator** (`docs/crash-pr-recovery.md`: "owned by the orchestrator"); builder support as for F1. Policy section 5 already says only the orchestrator opens PRs | M4 | **DONE 2026-10-29.** Milestone M6 (evidence there) |
+| F3 | Overnight cron: remain, pause, or remove | **Orchestrator, morning review. PENDING. This plan does not pre-decide it** | The morning-review evidence | **Recommendation recorded 2026-10-29: REMAIN** (standing runner, silent cheap no-op ticks), per the orchestrator's morning report; the schedule remains in place. F3 stays open only for a future decision to change that, not for the remain/pause/remove question itself. Decision D5 |
 | F4 | Reconcile `docs/runner-reliability.md` with P3/P4 outcomes (section 3.1 here does so in the plan only; the source doc is unedited) | A future builder on a docs task, assigned by the orchestrator | none | OPEN, optional |
 | F5 | Provide the Step 7 plan document, or confirm it was never written | **Orchestrator / founder** (only they can say where it was meant to live) | none | OPEN. Unblocks M9 |
 | F6 | Set the numeric target for repeated-run reliability | **Orchestrator** | F3 | OPEN. Unblocks M7 |
@@ -403,7 +467,9 @@ concurrency mitigation is "NOT implemented" and "analysis only", and that
 `pr-adopt` is not wired and has no live evidence. Since it was written,
 `claim.mjs` (PR #20) and `pr-recovery.mjs` (PR #21) exist. *Plan follows:*
 the later task records and design docs for code state, the reliability doc
-for live-runner state (nothing wired). Section 3.1.
+for live-runner state (nothing wired). Section 3.1. *Dated note
+2026-10-29:* the live-runner half is resolved: both guards are now wired (M5,
+M6); the reliability doc remains unedited and is still outdated on that point.
 
 **D3. Preflight "not yet wired".** `docs/runner-reliability.md` says
 preflight is not wired into the runner or cron. `docs/runner-preflight-wiring.md`
@@ -423,7 +489,10 @@ its own.
 **D5. Overnight cron lifetime.** `docs/overnight-test-plan.md` says the job
 "is removed in the morning report." The brief says remain, pause, or remove
 is the orchestrator's morning-review decision. *Plan follows:* the brief; the
-test-plan line is a pre-run plan. No outcome is stated here.
+test-plan line is a pre-run plan. No outcome is stated here. *Dated note
+2026-10-29:* the orchestrator's morning-report recommendation is REMAIN
+(standing runner); the schedule remains in place (F3). The test-plan line is
+therefore stale, and `docs/overnight-test-plan.md` is unedited.
 
 **D6. Vercel previews.** `docs/architecture.md` lists "Vercel preview
 deployments via the existing GitHub–Vercel integration" and
