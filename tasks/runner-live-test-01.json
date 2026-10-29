@@ -12,7 +12,13 @@
   "blockers": [],
   "branch": "runner/live-test-01",
   "created": "2026-10-29",
-  "evidence": [],
+  "evidence": [
+    "Claim CLI returned WON, claim commit 1f0318793223dfb7be1381075677a5f48f191f8a pushed to origin/runner/live-test-01",
+    "Builder commit ad1475bdc4f0ba89d6d8109f85cff53c8d632465 pushed to origin/runner/live-test-01 (remote SHA confirmed by orchestrator)",
+    "Orchestrator re-ran npm test in worktree: 82 tests, 81 pass, 0 fail, 1 skipped (matches builder report)",
+    "Orchestrator read the diff: 1 file, +34/-0 (docs/live-runner-proof.md only); secret-pattern scan clean; builder did not touch tasks/*.json or events.jsonl",
+    "Doc records only build-time evidence; PR, CI, verification, merge listed as open items, not claimed"
+  ],
   "id": "runner-live-test-01",
   "idempotency_keys": [],
   "objective": "Prove the wired runner path live with a small reversible docs-only task: add docs/live-runner-proof.md recording the live-run evidence. The task is docs-only so it changes no behavior and can be reverted via PR if needed.",
@@ -24,10 +30,10 @@
     {
       "id": "runner-live-test-01/run-1-2026-10-29T14:17:34.194Z",
       "started_at": "2026-10-29T14:17:34.194Z",
-      "outcome": null
+      "outcome": "completed"
     }
   ],
-  "status": "in_progress",
+  "status": "completed",
   "title": "Live runner test: wired claim + adopt path",
   "updated": "2026-10-29"
 }
