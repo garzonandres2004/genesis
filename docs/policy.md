@@ -94,9 +94,17 @@ mechanisms, never to sneak past it.
 
 ## 7. Bounded retries, timeouts, and resource limits
 
-- Maximum 3 attempts per task (initial attempt + 2 retries), with
-  backoff between attempts. A task that exhausts its attempts becomes
-  `blocked` with a recorded reason; unrelated work continues.
+- Maximum 3 attempts per task (initial attempt + 2 retries). No
+  programmatic or exponential backoff exists: a re-queued task is
+  retried on a subsequent tick at the 30-minute cadence, and that
+  cadence is the only spacing between attempts. A task that exhausts
+  its attempts becomes `blocked` with a recorded reason; unrelated work
+  continues.
+  *Correction note (2026-10-29, M10-01): this bullet previously said
+  attempts back off. No code implements backoff (see
+  `docs/runner-regression.md`, "Other notes"); the claim was removed
+  rather than implemented. If backoff is added later it must land as
+  code plus tests.*
 - Builder executions are time-bounded; a run that exceeds its budget
   is stopped and its task marked `interrupted`, not left running.
 - Scheduled runs carry an explicit `timeout_secs` and a stop
