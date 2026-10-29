@@ -37,8 +37,8 @@ line reported verbatim.
 
 | Failure | Check | What happened | Stop behavior |
 |---|---|---|---|
-| Missing binary | `claude-binary` | claude not on PATH; the script's one reinstall was attempted | Only reachable via the next row; if the reinstall succeeds the run continues normally |
-| Failed reinstall | `claude-binary` (detail `missing dependency: claude. One reinstall attempted and failed. Manual recovery: npm install -g ...`) | Reinstall did not produce a binary | Stop; a human runs the manual recovery command. The runner does not |
+| Missing binary | `claude-binary` | claude not on PATH; the script attempts its one reinstall | Not a stop by itself: if the reinstall succeeds the run continues normally; if it fails, see Failed reinstall below |
+| Failed reinstall | `claude-binary` (detail `missing dependency: claude. One reinstall attempted and failed. Manual recovery: npm install -g ...`) | Reinstall did not produce a binary | Stop; a human runs the manual recovery command. The runner does not retry or reinstall again |
 | Failed auth | `claude-auth` | No credentials marker and no `oauthAccount` key | Stop; a human runs `claude` to log in |
 | Unavailable repo | `repo-state` | Not a git repo, no `origin` remote, or `git ls-remote origin HEAD` failed | Stop; a human fixes the checkout or network |
 | Failed GitHub access | `github-auth` | `gh auth status` non-zero | Stop; a human runs `gh auth login` |
