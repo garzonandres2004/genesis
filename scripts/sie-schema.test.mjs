@@ -50,7 +50,14 @@ const openInc = (n) => createIncident({
 const fixedInc = (n) => transition(openInc(n), 'FIXED', {
   reason: 'SYNTHETIC fix', evidence: 'test-only://pr/1', date: at(RC, 1), fix_reference: 'test-only://pr/1', fix_description: 'SYNTHETIC change',
 });
-const watchInc = (n) => transition(fixedInc(n), 'WATCH', {
+const watchInc = (n) => transition(recordValidationEvidence(fixedInc(n), {
+  // DV-2 (0.5-draft, Founder clarification): FIXED -> WATCH requires the
+  // fix-verified check — VAL-1 (1) reproduced failure + (2) regression test
+  // that fails before the fix and passes after it. Recorded here so the
+  // helper's FIXED record passes the gate; absence would refuse (FIX_NOT_VERIFIED).
+  reproduction_evidence: { kind: 'reproduced-failure', pointer: 'test-only://repro/1' },
+  regression_test: { id: 't', before: { result: 'fail', pointer: 'test-only://run/0' }, after: { result: 'pass', pointer: 'test-only://run/1' } },
+}, { reason: 'SYNTHETIC evidence', evidence: 'test-only://ev', date: at(FP, 2) }), 'WATCH', {
   reason: 'SYNTHETIC fix present', evidence: 'test-only://presence/1', date: FP,
   fix_presence_evidence: { pointer: 'test-only://presence/1', time: FP },
   watch_window: watchWindow(null, null, FP, RC, 'W-C', SIE02_UNQUALIFIED),
