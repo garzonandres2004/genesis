@@ -173,6 +173,9 @@ approval.
    decide F-07.
 5. Does the register need a per-project register for each project plus a
    Genesis-level register, or one register? The Register is silent.
+6. The Genesis repo is public (see `11-records-separation.md`, "Known
+   risks"). Under the F-14 proposal, decision records stored in it would be
+   public. Is that acceptable? The Register is silent.
 
 ## Explicitly NOT decided here
 

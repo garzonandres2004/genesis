@@ -120,7 +120,7 @@ in `08-ownership-amendment.md`. Applied to authorization records:
 |---|---|
 | Grant a new authorization; widen scope, targets, limits, budget or duration; remove an exclusion; change the executor | Founder only |
 | Narrow an authorization (add a limit, shorten expiry, remove a target) | Founder, or a delegated reviewer whose written permission covers it; recorded and reported to the Founder |
-| Suspend an authorization for a safety reason | Any role may stop work immediately (D8: "never delay safety action"); recording the suspension is required; resumption is Founder only (F-29 default) |
+| Suspend an authorization for a safety reason | Any role may stop work immediately (by analogy with D8, which for Stage 5 measurement windows says "never delay safety action"; the Register states no general rule); recording the suspension is required; resumption is Founder only (F-29 default, Open) |
 | Correct a clerical error that does not change meaning (typo, broken reference) | Recorder (Muse), labeled as a correction, with before/after shown; reviewed per D2 |
 | Record that an authorization's exit criteria were met | Recorder, with the verification report as evidence; acceptance stays with the Founder |
 
