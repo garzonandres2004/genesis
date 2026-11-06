@@ -56,8 +56,28 @@
 //   (app.log:garbage). URLs and local record paths are judged differently:
 //   a URL's first segment after the scheme is its host, never an item; a
 //   local path has no host, so a root-level record file
-//   (INC-2026-001.json) counts. The check closes the shape cases it
-//   covers; it does NOT rewire T2's exposure/eligibility path.
+//   (INC-2026-001.json) counts. Fix round 2 (F-T6-4): a recognized query
+//   selector key alone does NOT count — the value must match the selector's
+//   expected shape (QUERY VALUE RULES, named here so the next reviewer can
+//   check them): line/entry keys require a numeric value, optionally a
+//   range (4521, 4521-4530); commit/sha keys require a hash-like value
+//   (7-40 hex chars) or an id-prefixed value; id/record/event/test/run/
+//   task/incident/lesson keys require a hash-like, numeric, or id-prefixed
+//   value; any other key passes only when its value is hash-like, numeric,
+//   or id-prefixed. A bare key (?line), an empty value (?line=), or a value
+//   that does not match the selector's expected shape (?line=garbage,
+//   ?commit=) is refused. Fix round 2 (F-T6-5): the whole-log (.log last
+//   segment) and whole-repository (.git last segment) refusals run BEFORE
+//   any ancestor-segment specificity can produce a pass — a numeric (or
+//   hash-like, or id-prefixed) ancestor directory never selects an entry
+//   within a whole log or repository. A pointer ending in .log or .git
+//   passes only when it carries an actual item selector within it: a
+//   numeric :line/:entry suffix on the file itself, a validated query pair
+//   (per the QUERY VALUE RULES), or a fragment naming an entry. A
+//   genuinely selected entry inside a log therefore still passes
+//   (app.log:4521, app.log?line=4521, app.log#L10); a bare numeric ancestor
+//   directory never does. The check closes the shape cases it covers; it
+//   does NOT rewire T2's exposure/eligibility path.
 // - S-T6-6: N-HIST takes a validation-attempt descriptor (seed records carry
 //   no creation time or incident fields, T5).
 // - S-T6-7: N-REU applicability is caller-judged (within_applicability);
@@ -137,15 +157,22 @@ function badInput(what) {
 // exposure or eligibility path — T2 still counts a general pointer, and
 // this check is what refuses it.
 //
-// Specificity requires a VALIDATED selector (fix round 1, F-T6-1). The old
-// shape errors are corrected: an empty query/fragment, a query/fragment
-// naming a view (?tab=readme, #readme), a `.git` repository suffix, and a
-// non-numeric colon suffix (app.log:garbage) are NOT specificity —
-// arbitrary query, fragment, extension, or colon presence never counts.
-// URLs and local record paths are judged differently: a URL's first segment
-// after the scheme is its host, never an item; a local path has no host, so
-// a root-level record file (INC-2026-001.json) counts — the spec does not
-// require every evidence pointer to contain a host or directory.
+// Specificity requires a VALIDATED selector (fix round 1, F-T6-1; fix
+// round 2, F-T6-4/F-T6-5). The old shape errors are corrected: an empty
+// query/fragment, a query/fragment naming a view (?tab=readme, #readme), a
+// `.git` repository suffix, and a non-numeric colon suffix
+// (app.log:garbage) are NOT specificity — arbitrary query, fragment,
+// extension, or colon presence never counts. A recognized query selector
+// key alone is NOT specificity either: its value must match the selector's
+// expected shape (QUERY VALUE RULES in S-T6-5 above). And the whole-log /
+// whole-repository refusals run BEFORE any ancestor-segment specificity can
+// produce a pass: a numeric ancestor directory never selects an entry
+// within a whole log or repository — only an actual item selector within
+// the file itself does. URLs and local record paths are judged
+// differently: a URL's first segment after the scheme is its host, never
+// an item; a local path has no host, so a root-level record file
+// (INC-2026-001.json) counts — the spec does not require every evidence
+// pointer to contain a host or directory.
 
 const PLACEHOLDER_POINTERS = new Set(['todo', 'tbd', 'placeholder', 'example', 'n/a', 'none', 'null']);
 
@@ -181,17 +208,30 @@ const hasLineSuffix = (segment) => {
   return /^\d+(-\d+)?$/.test(segment.slice(idx + 1));
 };
 
-// A query counts only when a pair names a specific item: a selector key
-// (id/commit/sha/line/entry/record/event/test/run/task/incident/lesson),
-// or a hash-like, numeric, or id-prefixed value. `?tab=readme` names a
-// repository view, not an item; an empty query names nothing.
+// A query counts only when a pair names a specific item — and (fix round
+// 2, F-T6-4) the value must match the selector key's expected shape
+// (QUERY VALUE RULES, S-T6-5): line/entry keys require a numeric value,
+// optionally a range (4521, 4521-4530); commit/sha keys require a hash-like
+// or id-prefixed value; id/record/event/test/run/task/incident/lesson keys
+// require a hash-like, numeric, or id-prefixed value; any other key passes
+// only when its value is hash-like, numeric, or id-prefixed. A bare key
+// (?line), an empty value (?line=), or a value of the wrong shape
+// (?line=garbage, ?commit=) is refused — the key alone names nothing.
+// `?tab=readme` names a repository view, not an item; an empty query
+// names nothing.
 const SELECTOR_QUERY_KEYS = new Set(['id', 'commit', 'sha', 'line', 'entry', 'record', 'event', 'test', 'run', 'task', 'incident', 'lesson']);
+const LINE_ENTRY_QUERY_KEYS = new Set(['line', 'entry']);
+const HASH_QUERY_KEYS = new Set(['commit', 'sha']);
 const hasSpecificQuery = (query) => {
   if (query === '') return false;
   return query.split('&').some((pair) => {
     if (pair === '') return false;
-    const [k = '', v = ''] = pair.split('=');
-    if (SELECTOR_QUERY_KEYS.has(k.toLowerCase())) return true;
+    const eq = pair.indexOf('=');
+    const k = eq === -1 ? pair : pair.slice(0, eq);
+    const v = eq === -1 ? '' : pair.slice(eq + 1);
+    const key = k.toLowerCase();
+    if (LINE_ENTRY_QUERY_KEYS.has(key)) return /^\d+(-\d+)?$/.test(v);
+    if (HASH_QUERY_KEYS.has(key)) return HASH_LIKE.test(v) || ID_PREFIX.test(v);
     return HASH_LIKE.test(v) || NUMERIC_ID.test(v) || ID_PREFIX.test(v);
   });
 };
@@ -244,6 +284,31 @@ export function refuseUnverifiableEvidenceLink(link) {
   const itemSegments = scheme ? segments.slice(1) : segments;
   const last = itemSegments[itemSegments.length - 1] ?? '';
   const lastBase = last.split(':')[0];
+  // Whole-log / whole-repository refusal runs BEFORE any ancestor-segment
+  // specificity can produce a pass (fix round 2, F-T6-5). A pointer ending
+  // in .log or .git names a whole log file or a whole repository, and a
+  // numeric (or hash-like, or id-prefixed) ancestor directory never selects
+  // an entry within it — the deleted implementation rejected a pointer
+  // ending in .log before evaluating specific-item markers, and the
+  // round-1 ordering (ancestor check first) was a regression for
+  // https://example.com/2026/app.log. Only an actual item selector within
+  // the file itself escapes: a numeric :line/:entry suffix on the file, a
+  // validated query pair (QUERY VALUE RULES, S-T6-5), or a fragment naming
+  // an entry. A genuinely selected entry inside a log therefore still
+  // passes (app.log:4521, app.log?line=4521, app.log#L10).
+  const lastIsWholeLog = /\.log$/i.test(lastBase);
+  const lastIsWholeRepo = /\.git$/i.test(lastBase);
+  if (lastIsWholeLog || lastIsWholeRepo) {
+    if (hasLineSuffix(last) || hasSpecificQuery(query) || hasSpecificFragment(fragment)) {
+      return { verifiable: true, pointer: p, basis: 'names a specific record, event, commit, test result, or log entry (EVL-3); shape check only, the link was not followed (no I/O)' };
+    }
+    if (lastIsWholeLog) {
+      throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
+        `${what} refused: pointer ${JSON.stringify(p)} names a whole log file, not a specific log entry (EVL-3)`);
+    }
+    throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
+      `${what} refused: pointer ${JSON.stringify(p)} names a whole repository (.git suffix), not a specific record, event, commit, test result, or log entry (EVL-3)`);
+  }
   if (
     itemSegments.some(isSpecificSegment)
     || isSpecificFile(last)
@@ -252,14 +317,6 @@ export function refuseUnverifiableEvidenceLink(link) {
     || hasSpecificFragment(fragment)
   ) {
     return { verifiable: true, pointer: p, basis: 'names a specific record, event, commit, test result, or log entry (EVL-3); shape check only, the link was not followed (no I/O)' };
-  }
-  if (/\.log$/i.test(lastBase)) {
-    throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
-      `${what} refused: pointer ${JSON.stringify(p)} names a whole log file, not a specific log entry (EVL-3)`);
-  }
-  if (/\.git$/i.test(lastBase)) {
-    throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
-      `${what} refused: pointer ${JSON.stringify(p)} names a whole repository (.git suffix), not a specific record, event, commit, test result, or log entry (EVL-3)`);
   }
   if (scheme && segments.length <= 1) {
     throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',

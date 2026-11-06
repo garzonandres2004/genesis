@@ -390,6 +390,94 @@ test('N-VAL (f) failing input: general pointers with incidental markers — empt
   safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'github.com' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'bare host');
 });
 
+test('N-VAL (f) failing input: query selector keys with a missing, empty, or malformed value — the key alone names nothing (F-T6-4)', () => {
+  // Failing inputs (Codex round 2, F-T6-4): a recognized selector key with
+  // no value, an empty value, or a value that does not match the selector's
+  // expected shape. The round-1 hasSpecificQuery returned true for the key
+  // alone, so every one of these passed as "specific" — none names an item.
+  // QUERY VALUE RULES (S-T6-5): line/entry require a numeric value
+  // (optionally a range); commit/sha require a hash-like or id-prefixed
+  // value; id/record/event/test/run/task/incident/lesson require a
+  // hash-like, numeric, or id-prefixed value.
+  const badQueries = [
+    'https://github.com/org/repo?line', // bare key, no value at all
+    'https://github.com/org/repo?line=', // empty value
+    'https://github.com/org/repo?line=garbage', // line value must be numeric
+    'https://github.com/org/repo?line=0123abcd', // line value must be numeric, not hash-like
+    'https://github.com/org/repo?entry=', // empty value
+    'https://github.com/org/repo?entry=abc', // entry value must be numeric
+    'https://github.com/org/repo?commit=', // empty value
+    'https://github.com/org/repo?commit=garbage', // commit value must be hash-like or id-shaped
+    'https://github.com/org/repo?sha=', // empty value
+    'https://github.com/org/repo?id=', // empty value
+    'https://github.com/org/repo?id=garbage', // id value must be hash-like, numeric, or id-shaped
+    'https://github.com/org/repo?record=', // empty value
+  ];
+  for (const pointer of badQueries) {
+    safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer }), 'UNVERIFIABLE_EVIDENCE_LINK', 'EVL-3');
+  }
+  // The reasons name the shape: a bare key / empty / malformed query is a
+  // general location, not a specific item.
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://github.com/org/repo?line=garbage' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole repository or general location');
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://github.com/org/repo?commit=' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole repository or general location');
+  // Positive controls for the same keys, validated values: the value — not
+  // the key — is what names the item. A range is a numeric line value; a
+  // second pair cannot rescue a bad first pair, but a valid pair anywhere
+  // in the query does name an item.
+  for (const pointer of [
+    'https://github.com/org/repo?line=4521',
+    'https://github.com/org/repo?line=4521-4530',
+    'https://github.com/org/repo?entry=12',
+    'https://github.com/org/repo?commit=0123abcd',
+    'https://github.com/org/repo?sha=0123abcd',
+    'https://github.com/org/repo?id=INC-2026-001',
+    'https://github.com/org/repo?record=123',
+    'https://github.com/org/repo?test=test-1',
+    'https://github.com/org/repo?line=garbage&commit=0123abcd',
+  ]) {
+    assert.equal(refuseUnverifiableEvidenceLink({ pointer }).verifiable, true, `${pointer} names a specific item`);
+  }
+});
+
+test('N-VAL (f) failing input: whole log file / whole repository with a specific-looking ancestor directory — a numeric ancestor never selects an entry within it (F-T6-5)', () => {
+  // Failing inputs (Codex round 2, F-T6-5): the last segment is a whole log
+  // file or a whole repository, and the only "specific" marker is an
+  // ancestor directory. The round-1 ordering let itemSegments.some
+  // (isSpecificSegment) pass on the numeric ancestor before the whole-log /
+  // whole-repository refusal ran — https://example.com/2026/app.log is a
+  // demonstrable regression against the deleted implementation, which
+  // rejected a pointer ending in .log first. A numeric ancestor does not
+  // select an entry within a whole log.
+  const ancestorBypass = [
+    'https://example.com/2026/app.log',
+    'https://example.com/123/repo.git',
+    'https://example.com/0123abcd/app.log', // hash-like ancestor is no selector either
+    'https://example.com/INC-2026-001/repo.git', // id-prefixed ancestor is no selector either
+  ];
+  for (const pointer of ancestorBypass) {
+    safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer }), 'UNVERIFIABLE_EVIDENCE_LINK', 'EVL-3');
+  }
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://example.com/2026/app.log' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole log file');
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://example.com/123/repo.git' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole repository');
+  // Positive controls: a genuinely selected entry inside a log still
+  // passes — the whole-log refusal is escaped only by an actual item
+  // selector within the file itself: a numeric :line suffix, a validated
+  // query pair, or a fragment naming an entry. The same escape applies to
+  // a whole repository with a commit selector naming a specific commit.
+  for (const pointer of [
+    'https://example.com/2026/app.log:4521',
+    'https://example.com/2026/app.log?line=4521',
+    'https://example.com/2026/app.log#L10',
+    'https://example.com/123/repo.git?commit=0123abcd',
+  ]) {
+    assert.equal(refuseUnverifiableEvidenceLink({ pointer }).verifiable, true, `${pointer} names a specific entry within the file/repository`);
+  }
+  // The escape requires a VALIDATED selector: a malformed query value on a
+  // whole log does not rescue it (F-T6-4 meets F-T6-5).
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://example.com/2026/app.log?line=garbage' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole log file');
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://example.com/123/repo.git?commit=' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole repository');
+});
+
 test('N-VAL guard: fixture evidence alone never validates (VAL-3)', () => {
   // Failing input: the only exposure item is synthetic/fixture evidence.
   const w = structuredClone(watchInc(9));

@@ -54,7 +54,7 @@ and stated explicitly below (S-T6-5).
 | `refuseReuseClaim(claim)` | N-REU (a)–(c) | Returns `{ outcome: 'REFUSED', reuse_demonstrated: false, … }` naming the violated rule: (a) staged lesson; (b) no task, or a task created primarily to produce a reuse metric; (c) outside applicability, or applicability never judged (S-T6-7). The clean case returns `{ outcome: 'NO_REFUSAL', reuse_demonstrated: false }` — NOT a reuse demonstration (S-T6-2). Designed against the proposed legitimate-task-only rule, assumption marked (`LEGITIMATE_TASK_ASSUMPTION`; DV-7, C-19 unverified) |
 | `assessImprovementClaim(claim)` | N-EVAL | Returns `{ outcome: 'REFUSED' \| 'DOWNGRADED', improvement_claim_supported: false, claim: 'no improvement claim supported', … }`. Staged-lesson-only → REFUSED; unvalidated-incident-only → DOWNGRADED; no lesson → REFUSED (S-T6-1). A validated-lesson citation → REFUSED as a Group C guard (S-T6-8). No outcome ever supports an improvement claim |
 | `checkGovernanceChange(change)` + `isRecordedFounderApproval(approval)` | GOV (a)–(c) | Returns `PASS` / `HELD_PENDING_FOUNDER_DECISION` / `REFUSED` / `NOT_GOVERNANCE_ADJACENT`. (a)/(b) governance-adjacent or scope-expanding changes without recorded Founder approval → HELD; with it → PASS naming the approval reference. (c) waiver by builder/verifier → REFUSED (S-T6-3). A recorded Founder approval is `{ recorded: true, by: 'Founder', reference: non-empty, date: valid }` (S-T6-4); missing/empty/ambiguous approval is never a pass. A waiver passes only on a recorded Founder approval granted by the Founder (S-T6-9). The function recognizes an approval; it never grants one |
-| `refuseUnverifiableEvidenceLink(link)` | N-VAL (f) — thin named check | **The one gap found (stated explicitly).** T2's `exposureInWindow` refuses only the EMPTY-pointer case ("link cannot be followed to specific evidence (EVL-3)"). A NON-EMPTY but general pointer — whole repository, whole log file, directory, bare host, general claim — is counted as exposure by T2, although EVL-3 requires a specific record, event, commit, test result, or log entry and says a link that cannot be followed to the specific evidence is treated as missing. This thin check closes the shape cases it covers: it throws `UNVERIFIABLE_EVIDENCE_LINK` for empty/placeholder/fixture/whole-repo/whole-log-file/directory/general-claim pointers, and returns `{ verifiable: true }` only for pointers carrying a VALIDATED selector — a commit-hash-like, numeric, or id-prefixed path segment; a specific file as the last path segment (not `.log`, not `.git`, not a host-like TLD suffix); a numeric `:line`/`:entry` suffix; a query pair naming a specific item; or a fragment naming a specific item. Incidental markers do NOT count: an empty query/fragment, a query/fragment naming a view (`?tab=readme`, `#readme`), a `.git` repository suffix, or a non-numeric colon suffix (`app.log:garbage`). URLs and local record paths are judged differently: a URL's first segment after the scheme is its host, never an item; a local path has no host, so a root-level record file (`INC-2026-001.json`) counts (fix round 1, F-T6-1). It is a SHAPE check only (S-T6-5): no I/O can follow a link, and it does NOT rewire T2's exposure/eligibility path — T2 still counts a general pointer; this check is what refuses it |
+| `refuseUnverifiableEvidenceLink(link)` | N-VAL (f) — thin named check | **The one gap found (stated explicitly).** T2's `exposureInWindow` refuses only the EMPTY-pointer case ("link cannot be followed to specific evidence (EVL-3)"). A NON-EMPTY but general pointer — whole repository, whole log file, directory, bare host, general claim — is counted as exposure by T2, although EVL-3 requires a specific record, event, commit, test result, or log entry and says a link that cannot be followed to the specific evidence is treated as missing. This thin check closes the shape cases it covers: it throws `UNVERIFIABLE_EVIDENCE_LINK` for empty/placeholder/fixture/whole-repo/whole-log-file/directory/general-claim pointers, and returns `{ verifiable: true }` only for pointers carrying a VALIDATED selector — a commit-hash-like, numeric, or id-prefixed path segment; a specific file as the last path segment (not `.log`, not `.git`, not a host-like TLD suffix); a numeric `:line`/`:entry` suffix; a query pair naming a specific item; or a fragment naming a specific item. A query pair names a specific item only when its value matches the selector key's expected shape (QUERY VALUE RULES, S-T6-5 — fix round 2, F-T6-4): line/entry keys require a numeric value (optionally a range); commit/sha keys require a hash-like or id-prefixed value; id/record/event/test/run/task/incident/lesson keys require a hash-like, numeric, or id-prefixed value; any other key passes only when its value is hash-like, numeric, or id-prefixed. A bare key (`?line`), an empty value (`?line=`), or a value of the wrong shape (`?line=garbage`, `?commit=`) is refused — the key alone names nothing. Incidental markers do NOT count: an empty query/fragment, a query/fragment naming a view (`?tab=readme`, `#readme`), a `.git` repository suffix, or a non-numeric colon suffix (`app.log:garbage`). The whole-log (`.log` last segment) and whole-repository (`.git` last segment) refusals run BEFORE any ancestor-segment specificity can produce a pass (fix round 2, F-T6-5): a numeric ancestor directory never selects an entry within a whole log or repository — only an actual item selector within the file itself escapes (a numeric `:line`/`:entry` suffix, a validated query pair, or a fragment naming an entry), so a genuinely selected entry inside a log still passes (`app.log:4521`, `app.log?line=4521`, `app.log#L10`). URLs and local record paths are judged differently: a URL's first segment after the scheme is its host, never an item; a local path has no host, so a root-level record file (`INC-2026-001.json`) counts (fix round 1, F-T6-1). It is a SHAPE check only (S-T6-5): no I/O can follow a link, and it does NOT rewire T2's exposure/eligibility path — T2 still counts a general pointer; this check is what refuses it |
 
 No other N-VAL or N-LES refusal was missing. In particular, N-VAL (a)–(e)
 and (g) are all enforced by T2 (`checkFixVerified`, `checkValidationEligibility`,
@@ -95,6 +95,8 @@ throws), `WRONG_STATUS`, and `STAGED_IN_SECTION_1`.
 | N-VAL (d) everything except independent verification (D2 pending) | T2 `checkValidationEligibility`, `transition` | "N-VAL (d) failing input: everything except independent verification (D2 role pending) — only c3 fails" |
 | N-VAL (e) window end not reached, non-empty exposure (CR-01) | T2 `checkValidationEligibility`, `watchOutcome`, `transition` | "N-VAL (e) [AC-T6-5] failing input: non-empty exposure, but window end condition not reached (CR-01) — refused even with non-empty exposure" |
 | N-VAL (f) general pointers with incidental markers — empty query/fragment, view query/fragment, `.git`, non-numeric colon suffix (F-T6-1) | NEW `refuseUnverifiableEvidenceLink` (S-T6-5 gap) | "N-VAL (f) failing input: general pointers with incidental markers — empty query/fragment, a view query/fragment, .git suffix, non-numeric colon suffix — refused (F-T6-1)" |
+| N-VAL (f) query selector keys with a missing, empty, or malformed value — the key alone names nothing (F-T6-4) | NEW `refuseUnverifiableEvidenceLink` (S-T6-5 gap) | "N-VAL (f) failing input: query selector keys with a missing, empty, or malformed value — the key alone names nothing (F-T6-4)" |
+| N-VAL (f) whole log file / whole repository with a specific-looking ancestor directory — a numeric ancestor never selects an entry within it (F-T6-5) | NEW `refuseUnverifiableEvidenceLink` (S-T6-5 gap) | "N-VAL (f) failing input: whole log file / whole repository with a specific-looking ancestor directory — a numeric ancestor never selects an entry within it (F-T6-5)" |
 | N-VAL (f) unverifiable evidence link, empty pointer (EVL-3) | T2 `exposureInWindow`, `checkValidationEligibility` + new `refuseUnverifiableEvidenceLink` | "N-VAL (f) failing input: exposure link that cannot be followed to specific evidence — empty pointer is excluded by T2 naming EVL-3" |
 | N-VAL (f) general-but-nonempty pointer (whole repo / log file / directory / claim) | NEW `refuseUnverifiableEvidenceLink` (S-T6-5 gap) | "N-VAL (f) failing input: general-but-nonempty pointer (whole repository / whole log file / directory / general claim) — T2 alone counts it, the thin check refuses it (S-T6-5 gap)" |
 | N-VAL guard: fixture evidence alone (VAL-3) | T2 `exposureInWindow`, `checkValidationEligibility` | "N-VAL guard: fixture evidence alone never validates (VAL-3)" |
@@ -146,27 +148,28 @@ throws), `WRONG_STATUS`, and `STAGED_IN_SECTION_1`.
 
 No existing file was modified by the original build. `git status` showed
 only these three new files. Fix round 1 (Codex round 1, F-T6-1..F-T6-3)
-modified exactly these three files and no others; `git status` shows only
-these three modified files.
+modified exactly these three files and no others. Fix round 2 (Codex round
+2, F-T6-4, F-T6-5) modifies exactly these three files and no others;
+`git status` shows only these three modified files.
 
 ## Tests and results (builder-observed; re-run required by the verifier)
 
-T6 suite alone (after fix round 1):
+T6 suite alone (after fix round 2):
 
 ```
 node --test scripts/sie-safety.test.mjs
-ℹ tests 45
-ℹ pass 45
+ℹ tests 47
+ℹ pass 47
 ℹ fail 0
 ```
 
-Full suite (after fix round 1):
+Full suite (after fix round 2):
 
 ```
 npm test
-ℹ tests 323
+ℹ tests 325
 ℹ suites 0
-ℹ pass 322
+ℹ pass 324
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 1
@@ -174,7 +177,9 @@ npm test
 
 Baseline at the starting commit was 278 tests (277 pass / 0 fail / 1
 pre-existing skip); the 42 original T6 tests plus the 3 fix-round-1 tests
-account for the increase to 323, with the same 1 pre-existing root skip.
+plus the 2 fix-round-2 tests account for the increase to 325, with the same
+1 pre-existing root skip. (Fix round 1 observed 323 / 322 pass / 45 T6;
+fix round 2 adds exactly 2 tests, both in the T6 suite.)
 
 `node scripts/status.mjs` exits 0 (15 Genesis tasks listed; no change from
 this build).
@@ -271,6 +276,83 @@ finding; the T6 suite was re-run after each. Every mutation was caught.
 Temp copy verified identical to the repo after restoring each mutation
 (45/45 pass) and deleted. No mutation survived into the repo.
 
+## Fix round 2 (Codex round 2, F-T6-4, F-T6-5)
+
+Codex round 2 (verdict 2026-11-06 ~14:17 MST, commit `6df68c0`) returned
+NEEDS FIXES with two MAJOR findings, both in `refuseUnverifiableEvidenceLink`.
+F-T6-2 and F-T6-3 are confirmed fixed; no additional definite over-tightening
+was established. This round fixes exactly those two, in the three T6 files
+only. No other file was modified; no existing assertion or test was weakened
+(only strengthened per the findings); no open finding was decided (F-36,
+F-10, F-14, F-21, C-8, C-16, C-19, C-20/DV-8, D2 untouched); no validated
+lesson or VALIDATED incident was created; the spec was not edited; C-7 and
+C-15 were not reopened.
+
+- **F-T6-4 (MAJOR) — query selector keys bypassed value validation.**
+  `hasSpecificQuery` returned true for a recognized key regardless of its
+  value, so `?line`, `?line=`, `?line=garbage`, and `?commit=` all passed as
+  "specific". Fixed by requiring a value matching the selector's expected
+  shape — the QUERY VALUE RULES, named in the module header (S-T6-5) and in
+  this report so the next reviewer can check them: line/entry keys require a
+  numeric value, optionally a range (`4521`, `4521-4530`); commit/sha keys
+  require a hash-like value (7–40 hex chars) or an id-prefixed value;
+  id/record/event/test/run/task/incident/lesson keys require a hash-like,
+  numeric, or id-prefixed value; any other key passes only when its value is
+  hash-like, numeric, or id-prefixed (unchanged from round 1 — a query pair
+  whose value itself names an item still counts). A bare key, an empty value,
+  or a value that does not match the selector's expected shape is refused.
+  New test: "N-VAL (f) failing input: query selector keys with a missing,
+  empty, or malformed value — the key alone names nothing (F-T6-4)" — 12
+  negative controls (`?line`, `?line=`, `?line=garbage`, `?line=0123abcd`,
+  `?entry=`, `?entry=abc`, `?commit=`, `?commit=garbage`, `?sha=`, `?id=`,
+  `?id=garbage`, `?record=`) plus 9 positive controls proving the value —
+  not the key — is what names the item (`?line=4521`, `?line=4521-4530`,
+  `?entry=12`, `?commit=0123abcd`, `?sha=0123abcd`, `?id=INC-2026-001`,
+  `?record=123`, `?test=test-1`, and `?line=garbage&commit=0123abcd`, where
+  the valid pair names the item). The report's "VALIDATED selector" claim
+  (function table row and S-T6-5) is updated accordingly: a query pair
+  counts only when its value matches the selector's expected shape.
+- **F-T6-5 (MAJOR) — early success return let whole log files and
+  repositories pass when an ancestor segment looked specific.**
+  `itemSegments.some(isSpecificSegment)` accepted the numeric directory in
+  `https://example.com/2026/app.log` and `https://example.com/123/repo.git`
+  before the whole-log/repository refusal executed — the first is a
+  demonstrable regression against the deleted implementation, which rejected
+  a pointer ending in `.log` before evaluating specific-item markers. Fixed
+  by moving the whole-log (`.log` last segment) and whole-repository (`.git`
+  last segment) refusals BEFORE the general pass condition: a pointer ending
+  in `.log` or `.git` is refused unless it carries an actual item selector
+  within the file itself — a numeric `:line`/`:entry` suffix on the file, a
+  validated query pair (per the QUERY VALUE RULES), or a fragment naming an
+  entry. A bare numeric ancestor directory is never such a selector. New
+  test: "N-VAL (f) failing input: whole log file / whole repository with a
+  specific-looking ancestor directory — a numeric ancestor never selects an
+  entry within it (F-T6-5)" — 4 negative controls (`2026/app.log`,
+  `123/repo.git`, `0123abcd/app.log`, `INC-2026-001/repo.git`) plus positive
+  controls proving a genuinely selected entry inside a log still passes:
+  `2026/app.log:4521`, `2026/app.log?line=4521`, `2026/app.log#L10`, and
+  `123/repo.git?commit=0123abcd` (a commit selector naming a specific commit
+  within the repository). The escape requires a VALIDATED selector: the test
+  also asserts `2026/app.log?line=garbage` and `123/repo.git?commit=` are
+  still refused (F-T6-4 meets F-T6-5). Stated explicitly: yes, a genuinely
+  selected entry inside a log CAN still pass under this design — the three
+  log positive controls above — because the escape is an actual item selector
+  within the file, not inherited ancestor specificity.
+
+### Fix-round-2 mutation check (builder-observed)
+
+Two single breaking edits, applied one at a time in a temp copy of the
+repo (`/tmp/t6-fix2-mutation`, deleted afterwards), one per fixed finding;
+the T6 suite was re-run after each. Every mutation was caught.
+
+| # | Mutation (temp copy only) | Finding | Result |
+|---|---|---|---|
+| M12 | `hasSpecificQuery` restored to key-only acceptance (any recognized selector key returns true regardless of value) | F-T6-4 | query-value (f) test failed, plus the ancestor-bypass (f) test via its malformed-query cross-checks on a whole log/repo (45 pass / 2 fail) |
+| M13 | Whole-log / whole-repository refusal moved back after the general pass condition (ancestor-bypass ordering restored) | F-T6-5 | ancestor-bypass (f) test failed (46 pass / 1 fail) |
+
+Temp copy verified identical to the repo after restoring each mutation
+(47/47 pass) and deleted. No mutation survived into the repo.
+
 ## Acceptance-criteria self-check (claims — the verifier decides)
 
 - **AC-T6-1** (each Group B test has a stated failing input whose acceptance
@@ -350,22 +432,40 @@ None decides an open finding.
   path segment; a specific file as the last path segment (not `.log`, not
   `.git`, not a host-like TLD suffix); a numeric `:line`/`:entry` suffix; a
   query pair naming a specific item; or a fragment naming a specific item.
-  Incidental markers do NOT count: an empty query/fragment, a query/fragment
-  naming a view (`?tab=readme`, `#readme`), a `.git` repository suffix, or a
-  non-numeric colon suffix (`app.log:garbage`) (fix round 1, F-T6-1: the
-  original heuristic equated arbitrary query/fragment/extension/colon
-  presence with specificity). URLs and local record paths are judged
-  differently: a URL's first segment after the scheme is its host, never an
-  item; a local path has no host, so a root-level record file
-  (`INC-2026-001.json`) counts — the spec does not require every evidence
-  pointer to contain a host or directory (fix round 1, F-T6-1: the original
-  host exclusion applied `.slice(1)` to every pointer, refusing root-level
-  records). The check closes the shape cases it covers; it does NOT rewire
-  T2's exposure/eligibility path — the thin check stays a standalone named
-  check. A general-looking pointer with a validated selector could still
-  pass — the check is conservative on the refusal side only. Basis: EVL-3;
-  the alternative (leaving the whole-repo case unenforced) would leave a
-  specified refusal with no enforcement.
+  A query pair names a specific item only when its value matches the
+  selector key's expected shape — the QUERY VALUE RULES (fix round 2,
+  F-T6-4), named here and in the module header so the next reviewer can
+  check them: line/entry keys require a numeric value, optionally a range
+  (`4521`, `4521-4530`); commit/sha keys require a hash-like value (7–40 hex
+  chars) or an id-prefixed value; id/record/event/test/run/task/incident/
+  lesson keys require a hash-like, numeric, or id-prefixed value; any other
+  key passes only when its value is hash-like, numeric, or id-prefixed. A
+  bare key (`?line`), an empty value (`?line=`), or a value that does not
+  match the selector's expected shape (`?line=garbage`, `?commit=`) is
+  refused — the key alone names nothing. Incidental markers do NOT count: an
+  empty query/fragment, a query/fragment naming a view (`?tab=readme`,
+  `#readme`), a `.git` repository suffix, or a non-numeric colon suffix
+  (`app.log:garbage`) (fix round 1, F-T6-1: the original heuristic equated
+  arbitrary query/fragment/extension/colon presence with specificity).
+  The whole-log (`.log` last segment) and whole-repository (`.git` last
+  segment) refusals run BEFORE any ancestor-segment specificity can produce
+  a pass (fix round 2, F-T6-5): a numeric (or hash-like, or id-prefixed)
+  ancestor directory never selects an entry within a whole log or repository
+  — only an actual item selector within the file itself escapes (a numeric
+  `:line`/`:entry` suffix, a validated query pair, or a fragment naming an
+  entry), so a genuinely selected entry inside a log still passes
+  (`app.log:4521`, `app.log?line=4521`, `app.log#L10`). URLs and local
+  record paths are judged differently: a URL's first segment after the
+  scheme is its host, never an item; a local path has no host, so a
+  root-level record file (`INC-2026-001.json`) counts — the spec does not
+  require every evidence pointer to contain a host or directory (fix round
+  1, F-T6-1: the original host exclusion applied `.slice(1)` to every
+  pointer, refusing root-level records). The check closes the shape cases it
+  covers; it does NOT rewire T2's exposure/eligibility path — the thin check
+  stays a standalone named check. A general-looking pointer with a validated
+  selector could still pass — the check is conservative on the refusal side
+  only. Basis: EVL-3; the alternative (leaving the whole-repo case
+  unenforced) would leave a specified refusal with no enforcement.
 - **S-T6-6 — N-HIST descriptor shape.** Seed records carry no creation time
   and no incident lifecycle status (T5), so the function takes a
   validation-attempt descriptor `{ seed_id, corpus_item, status, attempt }`.
@@ -455,8 +555,8 @@ None decides an open finding.
 cd ~/workspace/repos/genesis
 git status            # expect only the three new files, on stage-3/sie-milestone-a
 git diff --stat       # expect no modifications to any existing file
-npm test              # expect 320 tests, 319 pass, 0 fail, 1 pre-existing skip
-node --test scripts/sie-safety.test.mjs   # expect 42 pass, 0 fail
+npm test              # expect 325 tests, 324 pass, 0 fail, 1 pre-existing skip
+node --test scripts/sie-safety.test.mjs   # expect 47 pass, 0 fail
 node scripts/status.mjs   # expect exit 0
 ```
 
