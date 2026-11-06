@@ -61,7 +61,7 @@ table caption) label every row beneath them unless a row states otherwise.
 | Label | Meaning in this document |
 |---|---|
 | **[DECIDED]** | Founder-decided. Used only for: the approved wording of D1–D8 (Register §10), quoted; B1/B2; or the Stage 3 authorization of 2026-11-06 (the brief's §10 hard limits and §11 boundary as approved). The specific decision is named each time. |
-| **[REF]** | Attributed to WP-04 v1.1. A [REF] label on a rule is the prep draft's reconstruction, not a quotation. **Revision of 2026-11-06 (Stage 3 resume step 1):** WP-04 v1.1 text is now quoted in §2 from the filed retrieval (§0.4). Verbatim quotations appear only in the §2 "Quoted from WP-04 v1.1 (retrieval 2026-11-06)" subsections, and those are verified quotations of the retrieval file. Every [REF] label outside those subsections is still a reconstruction and is still UNVERIFIED as wording. Where §2 quotes the matching WP-04 passage, the reader can now check the reconstruction against it. §2.9 lists where they diverge. A [REF] rule with no matching passage in the retrieval stays unverified in substance too (§2.9, DV-7). |
+| **[REF]** | Attributed to WP-04 v1.1. A [REF] label on a rule is the prep draft's reconstruction, not a quotation. **Revision of 2026-11-06 (Stage 3 resume step 1):** WP-04 v1.1 text is now quoted in §2 from the filed retrieval (§0.4). The full WP-04 source passages are quoted in the §2 "Quoted from WP-04 v1.1 (retrieval 2026-11-06)" subsections, and those are verified quotations of the retrieval file. Short excerpts are cross-referenced elsewhere in the document (including §1.3, WAT-1, WAT-2, and §17 C-15–C-18), each traceable to a §2 passage. Every [REF] label outside those subsections is still a reconstruction and is still UNVERIFIED as wording. Where §2 quotes the matching WP-04 passage, the reader can now check the reconstruction against it. §2.9 lists where they diverge. A [REF] rule with no matching passage in the retrieval stays unverified in substance too (§2.9, DV-7). |
 | **[P]** | Proposal, not decided. The source is named: "prep" (prep draft [P]), "addendum CR-0n" (governing correction, itself PROPOSED pending re-review), "Stage 2 spec NN" (Proposed), "advisor" (relayed advisor direction — a proposal), or "this spec" (introduced by this Specification to carry an input forward). |
 | **[OPEN]** | Undecided. Owner and what unblocks it are in §19. |
 
@@ -334,9 +334,12 @@ For each point, this section gives:
 - the updated gap.
 
 The text in "Available locally" is quoted from the prep draft, or from the
-Register where stated. **It is not WP-04 wording.** Only the "Quoted from
-WP-04 v1.1" subsections carry WP-04 wording. They are copied from the
-retrieval file exactly, including WP-04's own status tags (§0.2) and the
+Register where stated. **It is not WP-04 wording.** The full WP-04 source
+passages are quoted in the "Quoted from WP-04 v1.1" subsections. Short
+excerpts are cross-referenced elsewhere in the document (including §1.3,
+WAT-1, WAT-2, and §17 C-15–C-18), each traceable to a §2 passage. The
+"Quoted from WP-04 v1.1" subsections are copied from the retrieval file
+exactly, including WP-04's own status tags (§0.2) and the
 retrieval's own quotation marks. Where the retrieval itself labels a
 passage as something other than WP-04 text, this document labels it the
 same way. Divergences between the reconstructions and WP-04 are recorded
@@ -1780,9 +1783,12 @@ Nothing below is decided by this Specification.
 - No Runner change, database, service, daemon, deploy, spending, production
   contact, new model provider, or new infrastructure.
 - WP-04 wording **is quoted for 7 of 8 §2.2 points**. Every quotation comes
-  only from the filed retrieval `wp04-v1.1-retrieval-2026-11-06.md` (§0.3)
-  and appears in a §2 "Quoted from WP-04 v1.1 (retrieval 2026-11-06)"
-  subsection. **No WP-04 wording is invented.** The R4 event key is not in
+  only from the filed retrieval `wp04-v1.1-retrieval-2026-11-06.md` (§0.3).
+  The full WP-04 source passages are quoted in the §2 "Quoted from WP-04
+  v1.1 (retrieval 2026-11-06)" subsections; short excerpts are
+  cross-referenced elsewhere in the document (including §1.3, WAT-1, WAT-2,
+  and §17 C-15–C-18), each traceable to a §2 passage. **No WP-04 wording is
+  invented.** The R4 event key is not in
   WP-04 and is not supplied. Every [REF] label outside those subsections is
   still a reconstruction carried from the prep draft, unverified as wording
   (§0.2), and §2.9 records where it diverges from the quoted text.

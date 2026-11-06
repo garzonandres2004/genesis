@@ -152,8 +152,14 @@ records disagree.
 - Reconciling the Specification text with the disposition is for the
   coordinator/Founder.
 
-Until the WP-04 passages are quoted, T1's rules remain UNVERIFIED against
-WP-04, and T1 cannot support declaring Milestone A or any live-loop use.
+*Original sentence, kept as history:* "Until the WP-04 passages are quoted,
+T1's rules remain UNVERIFIED against WP-04, and T1 cannot support declaring
+Milestone A or any live-loop use." **Current status (2026-11-06):** the six
+rules are now quoted (Spec §2 point 1), so the "until quoted" condition is
+met for the six rules as wording. Divergences DV-2–DV-9 remain open (Spec
+§2.9) and the full WP-04 text is still not available locally, so the rules
+are not VERIFIED/settled. T1 still cannot support declaring Milestone A or
+any live-loop use on the affected points.
 
 ## R4 events — why no key was chosen
 
@@ -378,12 +384,21 @@ pointer. Evidence: the F-R4 test and the "DET-9 / R4…" test.
 ## WP-04 working-basis note
 
 The six rules are implemented from the Specification's **[REF]
-reconstructions**, which are carried from the prep draft. They are
-**UNVERIFIED against WP-04 v1.1 verbatim**, because the full WP-04 text is
-not available locally (Spec §0.4, §2 point 1). The R4 and R6 semantics come
-from addendum CR-04, a [P] proposal. No rule is presented as
-WP-04-verified. This is stated in the module header, in every candidate
-record (`rule_basis`), in the fixture README, and here.
+reconstructions**, which are carried from the prep draft. *Original
+wording, kept as history:* they are "**UNVERIFIED against WP-04 v1.1
+verbatim**, because the full WP-04 text is not available locally (Spec
+§0.4, §2 point 1)." That original working basis is stated in the module
+header, in every candidate record (`rule_basis`), in the fixture README,
+and here.
+
+**Current status (2026-11-06):** the six rules are now quoted from WP-04
+v1.1 (Spec §2 point 1), so the "until quoted" condition is met for the six
+rules as wording. Divergences DV-2–DV-9 remain open (Spec §2.9) and the
+full WP-04 text is still not available locally, so the rules are not
+VERIFIED/settled. T1 still cannot support declaring Milestone A or any
+live-loop use on the affected points. The R4 and R6 semantics still come
+from addendum CR-04, a [P] proposal. No rule beyond the quoted six is
+presented as WP-04-verified.
 
 ## Open items / known gaps
 
