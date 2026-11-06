@@ -73,7 +73,7 @@ place. Where this spec and the Register differ, the Register governs.
   cites the authorization that sets them; a brief without a stated limit is
   incomplete, not unlimited.
   *Test (CT-1–CT-3):* every Task Brief has every field, or "N/A" with reason
-  where the field cannot apply; limits are explicit numbers or named
+  where an applicability rule allows it; limits are explicit numbers or named
   authorization references.
 
 ### Builder Report — produced by builder, consumed by Muse and verifier
@@ -233,7 +233,7 @@ record)". This spec records that decision; it does not re-decide it.
 | CT-3 | Each limit is an explicit value or cites an authorization | Task Brief |
 | CT-6, CT-8 | No acceptance rests on a Builder Report alone; FAIL blocks | Delivery record; PR state |
 | CT-11–CT-13 | §7 referenced by exact version; register additions labeled | Evaluation Evidence Package (Stage S onward) |
-| CT-16, CT-17 | Result fields reference by id and use only their own vocabulary use only their own vocabulary | Verification and evaluation records |
+| CT-16, CT-17 | Result fields reference by id and use only their own vocabulary | Verification and evaluation records |
 
 ## Open questions
 

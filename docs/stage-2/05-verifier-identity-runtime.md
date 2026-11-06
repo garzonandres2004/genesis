@@ -183,9 +183,12 @@ This answers Stage 1 spec 09 AP-3 and open question 1 as a proposal.
   apply. An unclassified task is treated as High-risk (Stage 1 spec 03 AR-3,
   narrowest reading). The verifier may raise a class; only the Founder may
   lower one.
-- **VI-18 Human reviewer.** The Founder, or a delegated human reviewer whose
-  written permission covers the class (F-21 proposal, spec 07). None is
-  appointed today, so every human review is the Founder's.
+- **VI-18 Human reviewer.** For Routine and High-risk items: the Founder, or
+  a delegated human reviewer whose written permission covers the class (F-21
+  proposal, spec 07 §F-21(3)). For Governance, Security and First-product
+  items, human review and disputes are the Founder's only and never
+  delegable (spec 07 §F-21(4)). No delegate is appointed today, so every
+  human review is the Founder's.
 
 ## (f) Escalation and disagreement procedures
 

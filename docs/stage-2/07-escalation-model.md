@@ -117,6 +117,13 @@ rights over records (F-30; Stage 1 spec 08); safety-incident resumption rules
     authorized decision").
   A builder report, a `completed` task status, or schedule pressure is never
   an outcome (ADR-05).
+  - *Note — a Founder decision is not a corrected verdict.* A separate
+    Founder reconsideration is a governance decision about the FAIL; it does
+    not automatically extinguish the FAIL. The FAIL stays unresolved until a
+    corrected artifact passes re-verification or the verdict is shown
+    erroneous with evidence. A Founder decision to proceed despite an
+    unresolved FAIL is a separate, recorded decision, not a resolution of the
+    FAIL itself.
 - **ES-8 Who decides.** Muse and the builder never decide a disagreement. A
   delegate may decide only within written permission that names verification
   disputes and the risk class; a disagreement on a Governance, Security or
