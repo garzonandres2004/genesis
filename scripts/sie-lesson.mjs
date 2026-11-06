@@ -503,16 +503,23 @@ export function buildRetrievalQuery(input) {
     if (!isNonEmptyString(input.superseding_id)) {
       throw new LessonRefusal('MISSING_SUPERSEDING_ID', 'retrieval query refused: by-superseding-id needs a non-empty superseding_id');
     }
-    // Reverse lookup (fix round 1, F-T7-3): records superseded BY the given
-    // replacement id. Distinct kind and input from by-superseded-id, so the
-    // two directions can never be confused. The pattern is the LES-4
-    // annotation text itself; run over lesson record files it finds the
-    // annotated records, and the INDEX Section 6 command below finds the
-    // secondary references (IDX-2).
-    const pattern = `superseded-by: ${input.superseding_id}`;
+    // Reverse lookup (fix round 1, F-T7-3; pattern corrected fix round 2,
+    // F-T7-6): records superseded BY the given replacement id. Distinct
+    // kind and input from by-superseded-id, so the two directions can
+    // never be confused. The pattern matches the Section 6 log
+    // representation itself: a Section 6 entry reads
+    // "- <superseded-id> superseded by <superseding-id>, ...", so the
+    // pattern is "superseded by <id>" (space, no hyphen, no colon). The
+    // LES-4 annotation text "superseded-by: <id>" is what a lesson
+    // record file carries, and it does NOT appear in a Section 6 entry:
+    // the pre-fix pattern searched for it and missed every Section 6
+    // entry. Unlike the forward bare-id pattern, this pattern is
+    // directional: it matches only the superseding slot, never an entry
+    // where the queried id is the superseded id.
+    const pattern = `superseded by ${input.superseding_id}`;
     return { ...base, section: '6', mixed_sections: false, pattern,
       command: sectionScopedCommand(input.index_file, '6', `-n -F -- ${shellQuote(pattern)}`),
-      record_scope_note: 'The same fixed-string pattern is run over lesson record files by the operator to find the annotated records themselves; the INDEX Section 6 command above finds the secondary references (IDX-2).' };
+      record_scope_note: 'The INDEX Section 6 command above finds the secondary references (IDX-2). To find the annotated records themselves, the operator runs the LES-4 annotation text "superseded-by: <id>" over lesson record files — a different fixed string from this Section 6 pattern, which does not appear in record files.' };
   }
 
   // index-section: a whole-section lookup.

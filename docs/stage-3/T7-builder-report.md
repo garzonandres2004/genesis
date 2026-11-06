@@ -19,7 +19,7 @@ knowledge (LES-6/LES-7), and no compounding change was made (CMP-1).
 | Task and project identity | Stage 3, task T7 — Lesson staging + retrieval; project Genesis (`garzonandres2004/genesis`) |
 | Builder identity | Claude Code, builder role ("Claude (builder)") |
 | Starting commit | `e2e06b8` (branch `stage-3/sie-milestone-a`; T5 fix round 1, Codex PASS; PR #36 open, not merged) |
-| Resulting commit | "Stage 3 T7: lesson staging + grep retrieval (AC-T7-1..AC-T7-3)" on `stage-3/sie-milestone-a`, then fix round 1 (below). The verifier must take the exact SHA from the branch, not from this report |
+| Resulting commit | "Stage 3 T7: lesson staging + grep retrieval (AC-T7-1..AC-T7-3)" on `stage-3/sie-milestone-a`, then fix round 1 and fix round 2 (below). The verifier must take the exact SHA from the branch, not from this report |
 
 ## Fix round 1 (Codex round 1, F-T7-1–F-T7-5)
 
@@ -36,12 +36,25 @@ path — see the test comment).
 |---|---|
 | F-T7-1 MAJOR (S-8 effectively selected threshold 50) | `graphitiTriggerStatus` now uses a THREE-VALUED count predicate: below 50 it is false (below every threshold in the range); at or above 100 it is true (meets every threshold in the range); from 50 to 99 it is unresolved (`null`). Both readings are evaluated with three-valued logic; a verdict is reported only when both agree on a Boolean. A count in the 50–99 band with an acted-on superseded fact (or a grep-unanswerable query class) now reports `trigger_met: null`, status `UNDECIDED_THRESHOLD_OPEN_C8`, retrieval stays `grep`. The one band case that still settles: with neither conjunct nor disjunct true, both readings are false whatever the predicate is, so NOT met is reported. The "no single threshold chosen" test now asserts this semantic requirement (not just labels/band boundaries). The pre-fix claim that (60, true, false) met the trigger is withdrawn |
 | F-T7-2 MAJOR (T4-style supersession notes ignored) | One shared parser (`parseSupersededByNote` / `annotationSupersedingId`) reads the LES-4 note text from both the `annotation` and the `note` fields. It is used by BOTH `supersedingIdOf` (detection/classification) and the duplicate guard in `annotateSuperseded`, so a textual annotation without `superseding_lesson_id` is never missed in either place. New compatibility tests cover the T4 `{ note: … }` shape in detection, classification (superseded, never current guidance unflagged), and duplicate refusal |
-| F-T7-3 MAJOR (lookup by superseded ID searched for the superseding ID) | `by-superseded-id` now searches Section 6 for the OLD record's identity (pattern = the superseded id itself). The pre-fix form searched for `superseded-by: <superseded id>`, which is the annotation text of records superseded BY that id — the reverse direction. A new distinct kind, `by-superseding-id` (input `superseding_id`, pattern `superseded-by: <id>`), is the reverse lookup. The old test (which asserted the constructed string) is replaced by a test verifying retrieval against a synthetic Section 6 supersession log, plus a reverse-lookup test against synthetic annotated-record content |
+| F-T7-3 MAJOR (lookup by superseded ID searched for the superseding ID) | `by-superseded-id` now searches Section 6 for the OLD record's identity (pattern = the superseded id itself). The pre-fix form searched for `superseded-by: <superseded id>`, which is the annotation text of records superseded BY that id — the reverse direction. A new distinct kind, `by-superseding-id` (input `superseding_id`, pattern `superseded-by: <id>`), is the reverse lookup. The old test (which asserted the constructed string) is replaced by a test verifying retrieval against a synthetic Section 6 supersession log, plus a reverse-lookup test against synthetic annotated-record content — CORRECTED in fix round 2 (F-T7-6): the reverse pattern is now `superseded by <id>`, matching the Section 6 log form, and the reverse test now exercises the built command's pattern against synthetic Section 6 entries; see Fix round 2 |
 | F-T7-4 MAJOR (LES-3 completeness overstated) | `createValidatedLesson` now checks two T7-level LES-3 requirements alongside the delegated T2 elements: the source incident's status must be `VALIDATED` (element `validated_incident_status`; LES-3's first requirement, which T2 does not require) and `validation_reference.incident_id` must name the same incident as the source (element `validation_reference_incident_identity`; T2 reads only the sufficiency judgment, and T4 requires the id to be present but does not cross-check it). The "every LES-3 element except independent verification" test now uses a VALIDATED-status SYNTHETIC literal (the pre-fix version supplied a WATCH incident, so the D2-only refusal was reported without the validated-status element ever being checked); new tests show a WATCH source refused naming `validated_incident_status` and a mismatched reference refused naming `validation_reference_incident_identity` |
 | F-T7-5 MINOR (section ranges include the next section's heading) | `sectionRange` now deletes the terminating heading line (`{ /^## Section N+1:/d; p; }`) instead of printing it. The index-section test now runs the range the query actually builds against inline synthetic INDEX content and asserts the next section's heading and entries are absent; the same range scopes the keyword queries, so a heading can no longer match them either |
 
 Also added (Codex round 1, S-11): a dedicated test asserting staging
 refuses non-empty caller-supplied `annotations`.
+
+## Fix round 2 (Codex round 2, F-T7-6–F-T7-7)
+
+Codex round 2 (verdict 2026-11-06 ~13:49 MST, on commit `a48bc50`) returned
+NEEDS FIXES with two findings. This round fixes exactly those two, in the
+same three T7 files only, and changes no open-finding status: C-8 (grouping
+and threshold) stays open; F-36, F-10, F-14, C-16, C-19, C-20, and D2 are
+untouched; no validated lesson or VALIDATED incident is created.
+
+| Finding | Fix |
+|---|---|
+| F-T7-6 MAJOR (reverse lookup misses Section 6 supersession entries) | Route taken: fix the reverse Section 6 lookup (the preferred route), not the re-scoping alternative. `by-superseding-id` now searches Section 6 for the pattern `superseded by <id>`, matching the Section 6 log representation itself — a Section 6 entry reads `- <superseded-id> superseded by <superseding-id>, ...` (space, no hyphen, no colon). The pre-fix pattern `superseded-by: <id>` is the LES-4 annotation text a lesson record file carries; it does not appear in a Section 6 entry, so the old command missed every Section 6 entry. The replacement test exercises the built command's pattern against synthetic Section 6 entries (same log shape as the forward test, plus an entry where the queried id is itself superseded, so direction is observable both ways) and asserts the pre-fix pattern finds nothing in that log. Unlike the forward bare-id pattern, the reverse pattern is directional: it matches only the superseding slot. The record scope note now names the separate annotation text (`superseded-by: <id>`) for record files instead of claiming the same pattern finds the annotated records. The corresponding report claims are corrected in this round: grep form (c2) and its note, the F-T7-3 row, the `buildRetrievalQuery` row, S-7, the retrieval-coverage bullet, the verification checklist, and the evidence mapping |
+| F-T7-7 NOTE (report mutation count mismatch) | The fix-round-1 mutation introduction said "applied 6 single breaking edits" while its table and conclusion report seven. Changed to seven |
 | Risk class | **Routine** (Brief §9 T7) |
 | Authorization reference | Founder approval of the Stage 3 Execution Brief §11 boundary, 2026-11-06 ~09:40 MST (coordinator record); Founder Amendment 2026-11-06 ~10:39 MST |
 | Specification | `docs/stage-3/00-sie-specification.md`, version 0.5-draft (§9.1 LES-1–LES-8, §9.2, §12 IDX-1–IDX-6, §16 RET-1/RET-2, §2 point 6, §14 N-LES, §10 EVL-1–EVL-7, §11 LOC-1–LOC-4, §6.2, §1.4) |
@@ -77,7 +90,7 @@ mechanism (see below).
 | `annotateSuperseded(stagedLesson, newLessonId, { date }?)` | LES-4. Returns a NEW frozen record with `"superseded-by: <id>"` appended to `annotations`; the input object is unchanged and its header status stays `UNVALIDATED-STAGED` forever. Refuses a non-staged record (`NOT_STAGED_LESSON`), a self-supersession, a malformed superseding id, and a duplicate annotation of the same id (`ALREADY_SUPERSEDED`). The duplicate guard uses the shared "superseded-by" parser (fix round 1, F-T7-2), so a textual annotation without `superseding_lesson_id` still counts as an existing supersession |
 | `supersedingIdOf(lesson)` | Reads the superseding id from a record's annotations (or `null`), through the shared parser: the LES-4 note text is read from either the `annotation` or the `note` field, so T4's `{ note: 'superseded-by: …' }` shape is accepted as well as T7's own shape (fix round 1, F-T7-2) |
 | `createValidatedLesson({ lesson, source, watch })` | LES-3 / LES-5 / LES-8. NEVER returns a validated lesson in Stage 3. Refusal order: staged source (`STAGED_LESSON_SOURCE`, LES-5) → non-VALIDATED lesson status (`WRONG_STATUS`, LES-4) → T4 structure failure (`LESSON_STRUCTURE`) → source-incident mismatch (`SOURCE_MISMATCH`) → missing watch computation (`MISSING_WATCH_COMPUTATION`) → incomplete LES-3 reference via T2's `checkValidationEligibility` PLUS two T7-level LES-3 requirements (fix round 1, F-T7-4): source incident status must be `VALIDATED` (`validated_incident_status`) and `validation_reference.incident_id` must name the same incident as the source (`validation_reference_incident_identity`) → `INCOMPLETE_VALIDATION_REFERENCE`, naming the failing elements; `INCOMPLETE_RECORD` if the incident itself is incomplete) → only independent verification missing (`INDEPENDENT_VERIFICATION_NOT_SATISFIED`, D2 pending) → defensive final refusal (`NO_VALIDATED_LESSON_IN_STAGE_3`, LES-8) even for a fully eligible reference |
-| `buildRetrievalQuery(input)` | The five grep query forms (see "Grep command forms"). Section scoping: lesson queries must name `"1"`, `"4"`, or explicitly `"both"`; a missing/invalid section is refused (`MISSING_SECTION_SCOPE`), never silently mixed. `"both"` returns two separate section-scoped commands. `index_file` is required — no default path is invented (F-14). Patterns are passed to `grep -F` (fixed strings). `by-superseded-id` searches Section 6 for the OLD record's id (fix round 1, F-T7-3); `by-superseding-id` is the distinct reverse lookup. Section ranges exclude the terminating heading (fix round 1, F-T7-5) |
+| `buildRetrievalQuery(input)` | The five grep query forms (see "Grep command forms"). Section scoping: lesson queries must name `"1"`, `"4"`, or explicitly `"both"`; a missing/invalid section is refused (`MISSING_SECTION_SCOPE`), never silently mixed. `"both"` returns two separate section-scoped commands. `index_file` is required — no default path is invented (F-14). Patterns are passed to `grep -F` (fixed strings). `by-superseded-id` searches Section 6 for the OLD record's id (fix round 1, F-T7-3); `by-superseding-id` is the distinct reverse lookup, with pattern `superseded by <id>` matching the Section 6 log form (fix round 2, F-T7-6). Section ranges exclude the terminating heading (fix round 1, F-T7-5) |
 | `classifyRetrievalResult(result, { as_current_guidance }?)` / `classifyRetrievalResults(results, opts?)` | Marks every result `CANDIDATE_MATERIAL_FOR_JUDGMENT_ONLY`, `automatic_reuse: false`, `automatic_promotion: false` (RET-2, AC-T7-3). A result annotated `superseded-by` is flagged `superseded: true` with the superseding id surfaced and `current_guidance: false`. Asking for a superseded record as current guidance is refused (`SUPERSEDED_AS_CURRENT_GUIDANCE`) |
 | `graphitiTriggerStatus(recordCount, actedOnSupersededFact, grepUnanswerableQueryClass)` | Evaluates the WP-04 trigger exactly as written (see "Graphiti re-examination condition"). The count predicate is three-valued (fix round 1, F-T7-1): below 50 false, at or above 100 true, 50–99 unresolved (`null`). Both operator groupings are evaluated side by side with three-valued logic; a verdict is reported only when they agree on a Boolean. Bad inputs are refused (`BAD_INPUT`) |
 | `countSentences(text)` | Naive terminal-punctuation sentence counter for the §9.2 1–3 sentence rule (decision S-2) |
@@ -138,8 +151,10 @@ Additional coverage asked for by the task brief:
 - **Retrieval queries:** all five forms, section restriction never mixing
   Sections 1 and 4, `index_file` required, `BAD_SECTION` for an invalid
   section number; the by-superseded-id form verified against a synthetic
-  Section 6 log (F-T7-3), the index-section form verified by running its
-  range against synthetic INDEX content (F-T7-5).
+  Section 6 log (F-T7-3), the by-superseding-id form verified against a
+  synthetic Section 6 log (fix round 2, F-T7-6: pattern `superseded by
+  <id>`, not the annotation text), the index-section form verified by
+  running its range against synthetic INDEX content (F-T7-5).
 - **Graphiti trigger:** each conjunct/disjunct evaluated as written; the
   tri-state count predicate and the unresolved 50–99 band (F-T7-1); the
   current low record count does not meet it; the split-readings case is
@@ -164,7 +179,7 @@ keyword search is case-insensitive (`-i`); id searches are exact.
 | (a) Lessons by applicability keyword, Section 4 (staged) | `sed -n '/^## Section 4:/,/^## Section 5:/{ /^## Section 5:/d; p; }' 'INDEX.md' \| grep -n -i -F -- 'runner choice'` |
 | (b) Lessons by source incident id, Section 4 (staged) | `sed -n '/^## Section 4:/,/^## Section 5:/{ /^## Section 5:/d; p; }' 'INDEX.md' \| grep -n -F -- 'INC-2026-001'` |
 | (c) Superseded records by id, Section 6 | `sed -n '/^## Section 6:/,$/p' 'INDEX.md' \| grep -n -F -- 'LES-2026-001'` |
-| (c2) Records superseded BY an id (reverse lookup), Section 6 | `sed -n '/^## Section 6:/,$/p' 'INDEX.md' \| grep -n -F -- 'superseded-by: LES-2026-002'` |
+| (c2) Records superseded BY an id (reverse lookup), Section 6 | `sed -n '/^## Section 6:/,$/p' 'INDEX.md' \| grep -n -F -- 'superseded by LES-2026-002'` |
 | (d) INDEX-section-scoped lookup, Section 4 | `sed -n '/^## Section 4:/,/^## Section 5:/{ /^## Section 5:/d; p; }' 'INDEX.md'` |
 
 Notes:
@@ -178,9 +193,16 @@ Notes:
   field; results are candidate material for judgment (RET-2). The same
   id run over lesson record files finds the annotated record itself (its
   header carries its own lesson_id).
-- Form (c2) is the distinct reverse lookup (F-T7-3): records superseded
-  BY the given replacement id. The same fixed-string pattern run over
-  lesson record files finds the annotated records themselves.
+- Form (c2) is the distinct reverse lookup (F-T7-3; pattern corrected in
+  fix round 2, F-T7-6): records superseded BY the given replacement id.
+  The pattern is `superseded by <id>`, matching the Section 6 entry form
+  `- <superseded-id> superseded by <superseding-id>, ...` — not the LES-4
+  annotation text `superseded-by: <id>`, which is what a lesson record
+  file carries and which appears nowhere in a Section 6 entry (the
+  pre-fix pattern searched for it and missed every entry). To find the
+  annotated records themselves, the operator runs `superseded-by: <id>`
+  over lesson record files instead. Unlike form (c), the reverse pattern
+  is directional: it matches only the superseding slot.
 - Forms (a), (b), (d) exclude the terminating heading: the `sed` range
   deletes the next section's heading line instead of printing it
   (F-T7-5), so a Section 4 dump no longer includes `## Section 5: ...`
@@ -275,7 +297,7 @@ its comments as `SILENT-SPEC DECISION S-n`. None decides an open finding.
 | S-4 | LES-4 annotation entry shape is `{ annotation: 'superseded-by: <id>', superseding_lesson_id: <id>, date? }`; the date is included only when supplied. The READER accepts both this shape and T4's fixture shape (`{ note: 'superseded-by: …' }`) through one shared parser, used by both detection and the duplicate guard (fix round 1, F-T7-2) | LES-4 fixes only the note text. This differs from T4's fixture shape (`{ note: 'superseded-by: …' }`); T4's `checkLessonStructure` requires only that `annotations` be a list, so both shapes pass structure. `supersedingIdOf` accepts both shapes |
 | S-5 | Permitted uses are a module-level constant (`PERMITTED_USES`), not a record field | §9.2 fixes the record fields, and T4's `checkLessonStructure` refuses unknown fields — an early version of this module put `permitted_uses` on the record and the T4 structure check failed. The record carries the prohibition (`citation_use`); the procedure carries the permitted-uses list |
 | S-6 | `createValidatedLesson` refuses on every path in Stage 3, including a defensive `NO_VALIDATED_LESSON_IN_STAGE_3` refusal for a fully eligible reference | LES-8 forbids creating a validated lesson in Stage 3, whatever the reference. The D2 refusal is the operative ground today (c3 always fails while D2 is pending); the final refusal keeps LES-8 enforced even if D2 were decided |
-| S-7 | Retrieval: `index_file` is required (no default path invented); section `"both"` is allowed only as an explicit request and returns two separate commands; the superseded-id query scopes to Section 6 (IDX-2) and searches for the OLD record's id, with `by-superseding-id` as the distinct reverse lookup (fix round 1, F-T7-3); section ranges exclude the terminating heading (fix round 1, F-T7-5); patterns use `grep -F`, case-insensitive only for applicability keywords | F-14 OPEN (no record location decided); "never silently mix" Sections 1 and 4; §12 Section 6 is the supersessions log. The `grep -F` choice avoids regex-escaping questions |
+| S-7 | Retrieval: `index_file` is required (no default path invented); section `"both"` is allowed only as an explicit request and returns two separate commands; the superseded-id query scopes to Section 6 (IDX-2) and searches for the OLD record's id, with `by-superseding-id` as the distinct reverse lookup (fix round 1, F-T7-3; pattern `superseded by <id>` matching the Section 6 log form, fix round 2, F-T7-6); section ranges exclude the terminating heading (fix round 1, F-T7-5); patterns use `grep -F`, case-insensitive only for applicability keywords | F-14 OPEN (no record location decided); "never silently mix" Sections 1 and 4; §12 Section 6 is the supersessions log. The `grep -F` choice avoids regex-escaping questions |
 | S-8 | Graphiti range: the count predicate is three-valued — below 50 false, at or above 100 true, 50–99 unresolved (`null`); verdict only when both groupings agree on a Boolean; otherwise `UNDECIDED_THRESHOLD_OPEN_C8` (in-band) or `UNDECIDED_GROUPING_OPEN_C8` (readings disagree as Booleans), with `trigger_met: null` and retrieval staying `grep` (fix round 1, F-T7-1) | C-8: grouping and threshold recorded, not interpreted. Only counts outside the whole stated range settle the predicate; a count inside the range settles nothing. The pre-fix form (lower bound 50 as a Boolean) silently decided the threshold at 50 and is withdrawn |
 | S-9 | Classification: section `'4'` → `staged: true`, `citable_as_authority: false`, `counts_toward_milestone_b: false`; section `'1'` → `staged: false`; any other section → those three fields are `null` (not claimed) | LES-2 fixes the staged prohibitions; the spec says nothing about what a Section 1 result implies for citability/counting beyond being validated, so the module does not claim it |
 | S-10 | `annotateSuperseded` refuses a duplicate annotation of the same id (`ALREADY_SUPERSEDED`) and requires the superseding id to match `LES-YYYY-NNN` | LES-4 annotations are append-only; a second identical annotation would be a second supersession. The id-format check mirrors the §9.2 `lesson_id` form |
@@ -297,6 +319,19 @@ before committing fix round 1:
 - `npm test` (`node --test scripts/*.test.mjs`): **278 tests, 277 pass,
   0 fail, 1 skipped.** The skip is the pre-existing one. 233 pre-T7 + 45
   T7 = 278.
+- `node scripts/status.mjs`: **exit 0**. It prints "Genesis tasks: 15
+  total" (blocked 1, completed 14), unchanged.
+
+### Fix round 2 tests and results
+
+The builder re-ran these from the repo root on the uncommitted tree just
+before committing fix round 2 (same totals — the reverse test is replaced,
+not added or removed):
+
+- `node --test scripts/sie-lesson.test.mjs`: **45 tests, 45 pass, 0 fail,
+  0 skipped.**
+- `npm test` (`node --test scripts/*.test.mjs`): **278 tests, 277 pass,
+  0 fail, 1 skipped.** The skip is the pre-existing one.
 - `node scripts/status.mjs`: **exit 0**. It prints "Genesis tasks: 15
   total" (blocked 1, completed 14), unchanged.
 
@@ -328,7 +363,7 @@ repo (`git status` shows only the three new files).
 
 The builder repeated the same procedure for the fix round: copied
 `scripts/sie-lesson.mjs` and `scripts/sie-lesson.test.mjs` to a temp
-directory outside the repo (`/tmp/t7-fix1-mutation/`), applied 6 single
+directory outside the repo (`/tmp/t7-fix1-mutation/`), applied 7 single
 breaking edits to the temp module copy, and ran the T7 suite against each.
 The temp copy was deleted afterwards; nothing was left in the repo.
 
@@ -345,13 +380,30 @@ The temp copy was deleted afterwards; nothing was left in the repo.
 **7 of 7 fix-round-1 mutations caught by the new tests.** (The
 pre-existing round-0 mutation table above is unchanged.)
 
+### Fix round 2 mutation check
+
+The builder repeated the same procedure for the fix round: copied
+`scripts/sie-lesson.mjs`, `scripts/sie-lesson.test.mjs`,
+`scripts/sie-incident.mjs`, and `scripts/sie-schema.mjs` to a temp
+directory outside the repo (`/tmp/t7-fix2-mutation/`), applied 2 single
+breaking edits to the temp module copy, and ran the T7 suite against each
+(the temp copy passes unmutated: 45 pass, 0 fail). The temp copy was
+deleted afterwards; nothing was left in the repo.
+
+| # | Breaking edit (temp copy only) | Result |
+|---|---|---|
+| 1 | `by-superseding-id`: restore the pre-fix `superseded-by: ${input.superseding_id}` pattern (F-T7-6) | T7 suite fails (44 pass, 1 fail: the synthetic Section 6 log test) |
+| 2 | `by-superseding-id`: break the Section 6 pattern to `replaced by ${input.superseding_id}` (F-T7-6) | T7 suite fails (44 pass, 1 fail: the synthetic Section 6 log test) |
+
+**2 of 2 fix-round-2 mutations caught by the new tests.**
+
 ## Files written
 
 | File | Lines |
 |---|---|
-| `scripts/sie-lesson.mjs` | 637 |
-| `scripts/sie-lesson.test.mjs` | 666 |
-| `docs/stage-3/T7-builder-report.md` | 432 |
+| `scripts/sie-lesson.mjs` | 644 |
+| `scripts/sie-lesson.test.mjs` | 693 |
+| `docs/stage-3/T7-builder-report.md` | 485 |
 
 No fixture files were added to the repository. Every test input is a
 SYNTHETIC record or INDEX built inline. No other file was modified,
@@ -402,7 +454,8 @@ a verification outcome.
    - confirm `supersedingIdOf` and the duplicate guard share one parser
      that reads both the `annotation` and the `note` fields;
    - confirm `by-superseded-id` searches for the old record's id and
-     `by-superseding-id` is the distinct reverse lookup;
+     `by-superseding-id` is the distinct reverse lookup, with pattern
+     `superseded by <id>` matching the Section 6 log form (F-T7-6);
    - confirm the LES-3 check requires the source incident status
      VALIDATED and the reference identity to match;
    - confirm section ranges exclude the terminating heading.
@@ -426,7 +479,7 @@ a verification outcome.
 | AC-T7-3 | `buildRetrievalQuery` (`disposition`, `automatic_reuse: false`, `automatic_promotion: false` on every form), `classifyRetrievalResult` / `classifyRetrievalResults` (same fields on every result; superseded flagging); the two "AC-T7-3" tests |
 | Staging refusals (LES-2) | `stageLesson` `STAGING_REFUSED` with named problems; the twelve refusal tests |
 | Validated-lesson refusals (LES-3/LES-5/LES-8) | `createValidatedLesson` (`STAGED_LESSON_SOURCE`, `WRONG_STATUS`, `INCOMPLETE_VALIDATION_REFERENCE` incl. the T7-level `validated_incident_status` and `validation_reference_incident_identity` elements, `INDEPENDENT_VERIFICATION_NOT_SATISFIED`, `SOURCE_MISMATCH`, `MISSING_WATCH_COMPUTATION`); the seven refusal tests, incl. the WATCH-source and mismatched-reference tests (F-T7-4) |
-| Retrieval query forms (RET-2) | `buildRetrievalQuery` (five kinds, section scoping, `index_file` required); the seven query tests, incl. the synthetic Section 6 log test (F-T7-3) and the synthetic-INDEX exact-section test (F-T7-5) |
+| Retrieval query forms (RET-2) | `buildRetrievalQuery` (five kinds, section scoping, `index_file` required); the seven query tests, incl. the synthetic Section 6 log tests for both directions (F-T7-3 forward, F-T7-6 reverse) and the synthetic-INDEX exact-section test (F-T7-5) |
 | Graphiti trigger (§2 pt 6, C-8, DV-7) | `graphitiTriggerStatus` (both readings, three-valued count predicate, provenance label); the six Graphiti tests, incl. the rewritten "no single threshold chosen" semantic test (F-T7-1) |
 | Staging refusal, non-empty annotations (S-11) | `stageLesson` `STAGING_REFUSED` on caller-supplied `annotations`; the dedicated S-11 test |
 | Tests green / scope | `npm test`; `node scripts/status.mjs`; `git diff --stat e2e06b8..<head>` |

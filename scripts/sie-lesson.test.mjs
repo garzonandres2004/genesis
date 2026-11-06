@@ -466,21 +466,48 @@ test('retrieval query: by-superseded-id finds the old record in a synthetic Sect
     'MISSING_SUPERSEDED_ID', 'superseded_id');
 });
 
-test('retrieval query: by-superseding-id is the distinct reverse lookup (F-T7-3)', () => {
+test('retrieval query: by-superseding-id finds the records superseded BY an id in a synthetic Section 6 supersession log (F-T7-3, F-T7-6)', () => {
+  // Synthetic Section 6 supersession log (inline, SYNTHETIC), same log
+  // shape as the forward test: LES-2026-001 superseded by LES-2026-002,
+  // a second entry where LES-2026-001 is the SUPERSEDING id instead, and
+  // a third entry where LES-2026-002 is itself the SUPERSEDED id — so
+  // the direction of the lookup is observable in both directions.
+  const section6Log = [
+    '## Section 6: Supersessions and corrections',
+    '- LES-2026-001 superseded by LES-2026-002, reason: corrected guidance, date: 2026-06-02, evidence: test-only://ev/1',
+    '- LES-2026-003 superseded by LES-2026-001, reason: corrected guidance, date: 2026-06-03, evidence: test-only://ev/2',
+    '- LES-2026-002 superseded by LES-2026-004, reason: corrected guidance, date: 2026-06-04, evidence: test-only://ev/3',
+  ].join('\n');
   const q = buildRetrievalQuery({ kind: 'by-superseding-id', superseding_id: 'LES-2026-002', index_file: IDX });
   assert.equal(q.section, '6');
-  assert.equal(q.pattern, 'superseded-by: LES-2026-002');
+  // Lookup matches the Section 6 log representation ("superseded by
+  // <id>"), not the LES-4 annotation text ("superseded-by: <id>").
+  assert.equal(q.pattern, 'superseded by LES-2026-002');
+  assert.notEqual(q.pattern, 'superseded-by: LES-2026-002');
   assert.match(q.command, /Section 6:/);
-  assert.match(q.command, /superseded-by: LES-2026-002/);
-  // Retrieval against synthetic annotated-record content: the pattern
-  // finds the record superseded BY LES-2026-002 and no other.
+  assert.match(q.command, /superseded by LES-2026-002/);
+  assert.doesNotMatch(q.command, /superseded-by: LES-2026-002/);
+  // Retrieval against the synthetic log: the fixed-string pattern matches
+  // only the entry whose SUPERSEDING id is LES-2026-002 — not the entry
+  // where LES-2026-002 is the superseded id, and not the entry where
+  // LES-2026-001 is the superseding id.
+  const hits = section6Log.split('\n').filter((line) => line.includes(q.pattern));
+  assert.deepEqual(hits, ['- LES-2026-001 superseded by LES-2026-002, reason: corrected guidance, date: 2026-06-02, evidence: test-only://ev/1']);
+  // The pre-fix pattern would have found nothing at all in the log: the
+  // log contains no "superseded-by: LES-2026-002" text, so the old
+  // pattern missed the supersession entirely.
+  assert.equal(section6Log.split('\n').filter((line) => line.includes('superseded-by: LES-2026-002')).length, 0);
+  // The Section 6 pattern is not the record-file pattern: annotated
+  // records carry the hyphenated LES-4 form, which the Section 6
+  // pattern does not match, so the record scope note names the separate
+  // annotation text for record files.
   const recordLines = [
     'lesson_id: LES-2026-001',
     'superseded-by: LES-2026-002',
-    'lesson_id: LES-2026-003',
-    'superseded-by: LES-2026-001',
   ];
-  assert.deepEqual(recordLines.filter((line) => line.includes(q.pattern)), ['superseded-by: LES-2026-002']);
+  assert.deepEqual(recordLines.filter((line) => line.includes(q.pattern)), []);
+  assert.match(q.record_scope_note, /superseded-by: <id>/);
+  assert.match(q.record_scope_note, /secondary references/);
   refusesWith(() => buildRetrievalQuery({ kind: 'by-superseding-id', index_file: IDX }),
     'MISSING_SUPERSEDING_ID', 'superseding_id');
 });
