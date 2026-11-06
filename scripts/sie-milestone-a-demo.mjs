@@ -18,9 +18,9 @@
 // Every fixture is SYNTHETIC (spec §13, FXT-1/FXT-2): a passing test on
 // fixtures is "test mechanics verified on fixtures", never "system verified".
 //
-// Exit code: 0 only when every suite ran green AND every expected Group A /
-// Group B test was present exactly once AND no test was skipped AND no
-// unexpected test appeared. Any failure, missing test, unexpected test,
+// Exit code: 0 only when every suite ran green AND every expected test in
+// each of the six suites was present exactly once AND no test was skipped
+// AND no unexpected test appeared in any suite. Any failure, missing test, unexpected test,
 // unexpected skip, incomplete TAP plan, or non-zero suite exit code exits
 // non-zero WITHOUT writing a report (a failed run never writes a passing
 // report, and never overwrites an existing report with one).
@@ -50,10 +50,14 @@
 //   and validated-learning results are reported separately, never merged
 //   into a single pass claim).
 //
-// The EXPECTED manifest below lists every Group A and Group B test name
-// expected in the run. It is a manifest of NAMES, not of results: it exists
-// so the script can detect a test that went missing from a run (a dropped
-// test must fail the demo, not silently shrink the denominator). The names
+// The EXPECTED manifest below lists every test name expected in the run, for
+// all six suites: the three Group A/B files (sie-detector, sie-incident,
+// sie-safety) AND the three supporting suites (sie-schema, sie-lesson,
+// sie-seed). The missing-name and unexpected-name checks apply to every
+// suite alike. It is a manifest of NAMES, not of results: it exists so the
+// script can detect a test that went missing from a run (a dropped test —
+// Group A/B or supporting — must fail the demo, not silently shrink the
+// denominator, even when Node reports a correspondingly smaller TAP plan). The names
 // were extracted from the TAP output of the suites at authoring time; if a
 // test is renamed, added, or removed, this manifest must be updated
 // deliberately and the change recorded — the script fails rather than
@@ -203,16 +207,127 @@ const EXPECTED = {
     "GOV [AC-T6-3] silence is never approval: missing, empty, ambiguous, or non-Founder approval is never a pass",
     "GOV control: a routine non-governance change is NOT_GOVERNANCE_ADJACENT — held for nothing, and granted nothing",
     "structural: sie-safety.mjs is a pure module — no file I/O, no network; evidence level stated (EVL-7)"
+  ],
+  "sie-schema": [
+    "AC-T4-3: the test design states its own limit in the module, the test file, and every result",
+    "Schema: the SYNTHETIC baseline set is structurally valid and its INDEX is consistent",
+    "Schema: incident structure is T2 validateRecord — missing field, unknown field, and bad status fail, naming the field",
+    "Schema: VALIDATED incident needs its §6.2 evidence fields present; EVL-1 empty or fixture link fails",
+    "Schema: lesson structure per §9.2 — non_applicability, status set, staged-only and validated-only rules",
+    "Schema: record descriptors need a file and a known kind",
+    "AC-T4-1: a structurally complete VALIDATED incident with empty sufficiency_judgment PASSES the schema test and FAILS the judgment test",
+    "AC-T4-1: judgment text must name who judged and when; the validation decision needs its own judgment text",
+    "AC-T4-1: a structurally complete validated lesson without sufficiency judgment text PASSES structure and FAILS judgment",
+    "AC-T4-1: the judgment test never passes on structure alone — no structurally valid record without judgment text is judged",
+    "AC-T4-1: neither check substitutes for the other — judgment present does not make a broken record structurally valid",
+    "AC-T4-2: a staged lesson in Section 1 (validated lessons) fails",
+    "AC-T4-2: a validated record in Section 4 (UNVALIDATED-STAGED) fails — validated lesson and validated incident",
+    "INDEX: a record with zero primary entries fails; a record with two primary entries fails",
+    "INDEX: every entry resolves to an existing record file whose id matches",
+    "INDEX: a section value that is not a list is refused as MALFORMED_SECTION, never treated as empty (F-T4-1)",
+    "INDEX: Section 6 references are secondary, not duplicate primary entries (IDX-2)",
+    "INDEX: Section 3 holds OPEN, FIXED, WATCH, and REOPENED incidents only; Section 2 holds VALIDATED incidents only (IDX-3)",
+    "INDEX: fixtures never appear in Sections 1-3 or any INDEX under test (IDX-4, FXT-1)",
+    "IDX-5 design choice: detector candidates get no INDEX entry; a candidate in Sections 1-6 fails; no CANDIDATE section exists",
+    "INDEX Markdown: parsed sections match the in-memory INDEX; stray entries and unknown headings are refused",
+    "INDEX in a temporary SYNTHETIC directory: entries resolve to files on disk; a deleted file fails resolution",
+    "Boundary: no file I/O in the module; incident fields and status machine imported from T2, not copied; inputs never mutated"
+  ],
+  "sie-lesson": [
+    "staging success: valid unvalidated material stages with all LES-2 fields fixed",
+    "staging success: omitted staged-only fields are set by the procedure, not defaulted silently from the caller",
+    "staging success: one-sentence and three-sentence statements stage; counting helper agrees",
+    "staging refusal: wrong status (VALIDATED) is refused, never staged",
+    "staging refusal: CANDIDATE status is refused (reserved and unused, VOC-6, F-10)",
+    "staging refusal: validation_claim != NONE is refused",
+    "staging refusal: wrong index_section is refused",
+    "staging refusal: citation_use other than forbidden is refused",
+    "staging refusal: counting other than never is refused",
+    "staging refusal: empty non_applicability is a schema failure for a staged lesson",
+    "staging refusal: missing required field is refused and named",
+    "staging refusal: lesson_statement outside 1-3 sentences is refused",
+    "staging refusal: lesson_id outside LES-YYYY-NNN is refused",
+    "staging refusal: provenance without the staged-vs-validated derivation note is refused",
+    "staging refusal: unknown field is refused, never silently kept",
+    "staging refusal: non-empty caller-supplied annotations are refused at staging (S-11)",
+    "AC-T7-2: a staged record's INDEX entry lives only in the unvalidated-staged section (Section 4)",
+    "AC-T7-1: annotateSuperseded appends the note, leaves the original unchanged, and the header status stays UNVALIDATED-STAGED",
+    "annotateSuperseded refuses a non-staged record, a self-supersession, and a duplicate annotation",
+    "supersedingIdOf reads the T4 note shape as well as the T7 annotation shape (F-T7-2)",
+    "annotateSuperseded refuses a duplicate when the existing annotation is a textual note without superseding_lesson_id (F-T7-2)",
+    "AC-T7-1: creating a validated lesson from a staged lesson is refused (LES-5)",
+    "AC-T7-1: creating a validated lesson with a staged-status lesson is refused, never upgraded in place (LES-4)",
+    "validated-lesson creation without the complete LES-3 reference is refused, naming the missing elements",
+    "validated-lesson creation with every LES-3 element except independent verification is refused on D2 (LES-3, LES-8)",
+    "validated-lesson creation with a WATCH source is refused naming the missing validated-status element (F-T7-4)",
+    "validated-lesson creation refuses a validation reference naming a different incident (F-T7-4)",
+    "validated-lesson creation refuses a source incident id mismatch and a missing watch computation",
+    "retrieval query: by-applicability forms are section-scoped and never silently mix Sections 1 and 4",
+    "retrieval query: by-source-incident form searches the named section for the incident id",
+    "retrieval query: by-superseded-id finds the old record in a synthetic Section 6 supersession log (F-T7-3)",
+    "retrieval query: by-superseding-id finds the records superseded BY an id in a synthetic Section 6 supersession log (F-T7-3, F-T7-6)",
+    "retrieval query: index-section form dumps exactly the requested section, excluding the next section heading (F-T7-5)",
+    "retrieval query: index_file is required; no default record location is invented (F-14)",
+    "AC-T7-3: every retrieval result is candidate material for judgment only, never automatic reuse or promotion",
+    "AC-T7-3: a T4-shaped supersession note flags the result superseded, never current guidance (F-T7-2)",
+    "AC-T7-3: a superseded result is flagged with the superseding id and is never current guidance unflagged",
+    "Graphiti trigger: the current Stage 3 record count does not meet it under either recorded reading",
+    "Graphiti trigger: a count at or above the top of the range plus an acted-on superseded fact meets it under both readings",
+    "Graphiti trigger: count in range plus a grep-unanswerable query class meets it under both readings",
+    "Graphiti trigger: below-range count with a grep-unanswerable query class splits the readings, so the verdict is UNDECIDED (C-8)",
+    "Graphiti trigger: no single threshold is chosen, so no count in the unresolved 50-99 band can report the trigger met (C-8, F-T7-1)",
+    "Graphiti trigger: bad inputs are refused, never defaulted",
+    "module boundary: no file I/O, no record location, no network; evidence level stated (EVL-7)",
+    "module boundary: the module imports T2/T4, it does not copy their logic"
+  ],
+  "sie-seed": [
+    "T5: the seed directory holds exactly the 11 drafted records and the Section 5 INDEX draft",
+    "T5 SEED-01: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-01: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-01: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-02: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-02: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-02: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-03: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-03: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-03: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-04: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-04: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-04: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-05: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-05: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-05: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-06: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-06: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-06: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-07: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-07: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-07: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-08: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-08: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-08: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-09: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-09: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-09: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-10: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-10: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-10: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-SHA: DRAFT, seed id, corpus item, status \"historical observation\", provenance, shows / does not show",
+    "T5 SEED-SHA: AC-T5-1 no validated status and no independent-validation label, except inside a negation",
+    "T5 SEED-SHA: AC-T5-2 canonical fixed-not-validated sentence present",
+    "T5 SEED-SHA: AC-T5-3 UNVERIFIED CANDIDATE, hypotheses separate, independent evidence required, never a confirmed runner-caused failure",
+    "T5 INDEX Section 5 draft: all 11 seed ids, status historical observation, NOT VALIDATED line; consistent under the T4 INDEX check",
+    "T5 scan honesty: the negation scan flags affirmative forms and allows denials"
   ]
 };
 
 const SUITES = [
-  { file: 'scripts/sie-detector.test.mjs', scope: 'A', label: 'Detector (DET)' },
-  { file: 'scripts/sie-incident.test.mjs', scope: 'A', label: 'Incident / diagnosis / fix (INC / DIA / FIX)' },
-  { file: 'scripts/sie-safety.test.mjs', scope: 'B', label: 'Safety / negative (all six Group B cases)' },
-  { file: 'scripts/sie-schema.test.mjs', scope: 'SUPPORTING', label: 'Schema + INDEX (supporting)' },
-  { file: 'scripts/sie-lesson.test.mjs', scope: 'SUPPORTING', label: 'Lesson staging + retrieval (supporting)' },
-  { file: 'scripts/sie-seed.test.mjs', scope: 'SUPPORTING', label: 'Seed records (supporting)' },
+  { file: 'scripts/sie-detector.test.mjs', manifestKey: 'sie-detector', scope: 'A', label: 'Detector (DET)' },
+  { file: 'scripts/sie-incident.test.mjs', manifestKey: 'sie-incident', scope: 'A', label: 'Incident / diagnosis / fix (INC / DIA / FIX)' },
+  { file: 'scripts/sie-safety.test.mjs', manifestKey: 'sie-safety', scope: 'B', label: 'Safety / negative (all six Group B cases)' },
+  { file: 'scripts/sie-schema.test.mjs', manifestKey: 'sie-schema', scope: 'SUPPORTING', label: 'Schema + INDEX (supporting)' },
+  { file: 'scripts/sie-lesson.test.mjs', manifestKey: 'sie-lesson', scope: 'SUPPORTING', label: 'Lesson staging + retrieval (supporting)' },
+  { file: 'scripts/sie-seed.test.mjs', manifestKey: 'sie-seed', scope: 'SUPPORTING', label: 'Seed records (supporting)' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -338,13 +453,12 @@ function main() {
       if (count > 1) failures.push(`${suite.file}: test ran ${count} times — ${name}`);
     }
 
-    if (suite.scope === 'A' || suite.scope === 'B') {
-      const manifestKey = suite.file === 'scripts/sie-detector.test.mjs'
-        ? 'sie-detector'
-        : suite.file === 'scripts/sie-incident.test.mjs'
-          ? 'sie-incident'
-          : 'sie-safety';
-      const expected = EXPECTED[manifestKey];
+    // Missing / unexpected-name checks apply to all six suites (Group A,
+    // Group B, and supporting alike).
+    const expected = EXPECTED[suite.manifestKey];
+    if (!expected) {
+      failures.push(`${suite.file}: no expected-name manifest for this suite`);
+    } else {
       const parsedNames = new Set(tests.map((t) => t.name));
       for (const name of expected) {
         if (!parsedNames.has(name)) failures.push(`${suite.file}: MISSING expected test — ${name}`);
@@ -450,6 +564,13 @@ function main() {
     .join('\n\n');
 
   const commands = results.map((r) => `- \`${r.command}\``).join('\n');
+
+  const manifestCount = (scopes) => SUITES
+    .filter((s) => scopes.includes(s.scope))
+    .reduce((n, s) => n + EXPECTED[s.manifestKey].length, 0);
+  const manifestAB = manifestCount(['A', 'B']);
+  const manifestSupporting = manifestCount(['SUPPORTING']);
+  const manifestTotal = manifestAB + manifestSupporting;
 
   const report = `# Stage 3 — Milestone A demonstration report (T8)
 
@@ -577,11 +698,15 @@ asserted by this script (this script observes only its own six suites).
 
 ## Manifest completeness
 
-The demo script carries an expected-name manifest for every test in the
-three Group A/B files (131 tests: 130 Group A/B tests + 1 structural
-supporting check). This run contained every expected test exactly
-once and no unexpected test. The manifest is a list of NAMES, not results;
-all results above were observed in this run.
+The demo script carries an expected-name manifest for every test in all
+six suites (${manifestTotal} names: ${manifestAB} in the three Group A/B files —
+${milestoneATotal} Group A/B tests + ${structuralCount} structural supporting check — and
+${manifestSupporting} in the three supporting suites). The missing-name and
+unexpected-name checks apply to all six suites alike, so a dropped or added
+test in any suite fails the demo even when its TAP plan is internally
+consistent. This run contained every expected test exactly once and no
+unexpected test in any of the six suites. The manifest is a list of NAMES,
+not results; all results above were observed in this run.
 `;
 
   mkdirSync(dirname(outPath), { recursive: true });

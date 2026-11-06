@@ -4,12 +4,13 @@
 > if it needs a correction, fix the script and re-run it.
 > Generating command: `node scripts/sie-milestone-a-demo.mjs --out docs/stage-3/T8-demonstration-report.md`
 > (default --out is `docs/stage-3/T8-demonstration-report.md`).
-> Generated at 2026-11-06T21:30:11.382Z (UTC) at commit `f4a380b5e704700288028743c97ed99257d5e6b4`.
+> Generated at 2026-11-06T21:41:50.633Z (UTC) at commit `f21266292186f2a61c4d8e365f0f9f40f2c505f4`.
 > Working tree at generation time (`git status --porcelain`):
 >
 > ```
-> ?? docs/stage-3/T8-demonstration-report.md
-> ?? scripts/sie-milestone-a-demo.mjs
+> M docs/stage-3/T8-builder-report.md
+>  M docs/stage-3/T8-readiness-checklist.md
+>  M scripts/sie-milestone-a-demo.mjs
 > ```
 
 ## Summary
@@ -395,8 +396,12 @@ asserted by this script (this script observes only its own six suites).
 
 ## Manifest completeness
 
-The demo script carries an expected-name manifest for every test in the
-three Group A/B files (131 tests: 130 Group A/B tests + 1 structural
-supporting check). This run contained every expected test exactly
-once and no unexpected test. The manifest is a list of NAMES, not results;
-all results above were observed in this run.
+The demo script carries an expected-name manifest for every test in all
+six suites (236 names: 131 in the three Group A/B files —
+130 Group A/B tests + 1 structural supporting check — and
+105 in the three supporting suites). The missing-name and
+unexpected-name checks apply to all six suites alike, so a dropped or added
+test in any suite fails the demo even when its TAP plan is internally
+consistent. This run contained every expected test exactly once and no
+unexpected test in any of the six suites. The manifest is a list of NAMES,
+not results; all results above were observed in this run.
