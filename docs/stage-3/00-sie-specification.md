@@ -60,7 +60,7 @@ table caption) label every row beneath them unless a row states otherwise.
 | Label | Meaning in this document |
 |---|---|
 | **[DECIDED]** | Founder-decided. Used only for: the approved wording of D1–D8 (Register §10), quoted; B1/B2; or the Stage 3 authorization of 2026-11-06 (the brief's §10 hard limits and §11 boundary as approved). The specific decision is named each time. |
-| **[REF]** | Attributed to WP-04 v1.1. **Every [REF] in this document is UNVERIFIED against WP-04 verbatim.** None is a quotation of WP-04. Each is carried from the prep draft's own [REF] reconstruction and must be checked against WP-04 v1.1 before the task that depends on it starts (§2). |
+| **[REF]** | Attributed to WP-04 v1.1. A [REF] label on a rule is the prep draft's reconstruction, not a quotation. **Revision of 2026-11-06 (Stage 3 resume step 1):** WP-04 v1.1 text is now quoted in §2 from the filed retrieval (§0.4). Verbatim quotations appear only in the §2 "Quoted from WP-04 v1.1 (retrieval 2026-11-06)" subsections, and those are verified quotations of the retrieval file. Every [REF] label outside those subsections is still a reconstruction and is still UNVERIFIED as wording. Where §2 quotes the matching WP-04 passage, the reader can now check the reconstruction against it. §2.9 lists where they diverge. A [REF] rule with no matching passage in the retrieval stays unverified in substance too (§2.9, DV-7). |
 | **[P]** | Proposal, not decided. The source is named: "prep" (prep draft [P]), "addendum CR-0n" (governing correction, itself PROPOSED pending re-review), "Stage 2 spec NN" (Proposed), "advisor" (relayed advisor direction — a proposal), or "this spec" (introduced by this Specification to carry an input forward). |
 | **[OPEN]** | Undecided. Owner and what unblocks it are in §19. |
 
@@ -72,6 +72,11 @@ Notes on labels:
   (The brief §4 phrase "the prep draft's CR-01 independent-reuse-judgment
   rule" refers to **Register** CR-01; the brief §5.3 "CR-01: eligibility …"
   refers to **addendum** CR-01.)
+- **WP-04's own status tags.** Inside a WP-04 quotation, [BASE], [OPEN],
+  [REF], and REMOVED are WP-04's requirement-provenance matrix tags, kept
+  verbatim. They are not this document's labels. In particular, WP-04's
+  [OPEN] is not this document's [OPEN], and WP-04's [REF] is not this
+  document's [REF].
 - **[BASE]** items (October 29 baseline, reconstructed — prep "Basis") do not
   appear as rules here. Seed records (T5) will carry [BASE] provenance where
   applicable, with the prep's reconstruction caveat.
@@ -91,7 +96,7 @@ Notes on labels:
 | Prep | Genesis SIE Implementation Preparation — DRAFT and PROPOSED (626 lines) | DRAFT, PROPOSED; nothing in it approved | Yes (Founder workspace file) |
 | Addendum | … Correction Addendum — DRAFT and PROPOSED (CR-01–CR-04 + 7 nonblocking refinements; 144 lines) | DRAFT, PROPOSED; governs over prep where they disagree, pending re-review | Yes (Founder workspace file) |
 | Advisor | Relayed advisor direction, 2026-11-06 (copy verified against the source message; file name retains "UNVERIFIED") | Its 7 decisions and the Phase 1/2/3 breakdown are PROPOSALS | Yes (orchestrator goal files) |
-| WP-04 | SIE baseline WP-04 v1.1 (REVIEW PASSED, PROPOSED) | Baseline; not a Founder decision | **No.** Its full text is in the ChatGPT planning conversation, not in any local file. |
+| WP-04 | SIE baseline WP-04 v1.1 (REVIEW PASSED, PROPOSED) | Baseline; not a Founder decision | **At T0: no.** Since 2026-11-06, the passages for 7 of the 8 §2.2 points are available through the filed retrieval `wp04-v1.1-retrieval-2026-11-06.md` (orchestrator goal files; read-only browser retrieval from the ChatGPT planning conversation, 2026-11-06 ~10:35 MST). That file is the only source of WP-04 quotations in this document. The full WP-04 text is still not a local file. |
 | Stage 2 specs | `docs/stage-2/04-contracts.md`, `docs/stage-2/05-verifier-identity-runtime.md` | Proposed | Yes (this repo, merged PR #35) |
 | Stage 1 specs | `docs/stage-1/11-records-separation.md` (F-14 proposal) | Proposed | Yes (this repo, merged PR #34) |
 | Repo code | `scripts/events.mjs`, `scripts/task-state.mjs`, `tasks/schema.md` | As merged on main 152fced | Yes (read only; not changed) |
@@ -124,6 +129,58 @@ requirements, exposure requirements, recurrence rules, and evidence standards"
 - Where the prep draft and the addendum disagree with each other, the addendum
   governs. Where either might disagree with WP-04, this document **cannot
   tell**, and says so rather than resolving it (§17).
+
+**Update, 2026-11-06 (Stage 3 resume step 1). The paragraphs above record
+the T0 position as history.** The current position is:
+
+- WP-04 v1.1 text is now available from the filed retrieval (§0.3, WP-04
+  row). Quoted from WP-04 v1.1 (retrieval 2026-11-06), §2 now carries
+  verbatim WP-04 passages for **7 of the 8** brief §2.2 points.
+- **R4-events is the one open gap.** Point 1's six rules are quoted, but
+  WP-04 defines no R4 event key, so its R4 event-key sub-gap stays
+  open. Under the Founder Amendment (§0.5) it is carried as
+  **[OPEN]/not-evaluated**.
+- The brief's T0 entry criterion "WP-04 v1.1 retrieved and available for
+  verbatim quotation" is now **met for the 7 quoted points**. It is **not**
+  met for the R4 event key, because no WP-04 text defines one. That
+  carve-out is the Founder Amendment's subject.
+- Where a reconstruction can now be compared with WP-04, the comparison is
+  recorded in §2.9. No reconstruction was silently rewritten.
+
+### 0.5 Founder Amendment — 2026-11-06 ~10:39 MST (widget widget-a16b7b03)
+
+**Record.** On 2026-11-06 at about 10:39 MST the Founder approved the
+following by tapping "Resume Stage 3: R4-events open, exit on Milestone A"
+(widget widget-a16b7b03). The wording below is the authoritative amendment
+text, recorded verbatim:
+
+> (a) R4-events is carried as [OPEN]/not-evaluated. The detector's event
+> half is NOT implemented and must NOT be claimed. T1 is accepted on the
+> blocker half only. Record the [OPEN] status in the spec and in T1's
+> acceptance (AC-T1-1 and AC-T1-4 met in part: blocker half only; event
+> half not evaluated).
+>
+> (b) Roadmap Stage 3 exits on Milestone A demonstrated. SIE Phase 1
+> (internal) completion (A+B) is a separate later matter, per WP-04's own
+> distinction — do not treat the internal Phase 1 gate as the Stage 3 exit.
+
+**Label:** [DECIDED — Founder Amendment 2026-11-06]. The amendment text
+mentions "spec/README". Under the step-1 two-file limit, the [OPEN] status
+is recorded here in the Specification and in `T1-builder-report.md`. No
+README was edited.
+
+**Where this Specification applies it.**
+
+- (a) R4-events [OPEN]/not-evaluated is marked
+  "[OPEN — R4 events: not evaluated]" at §2 point 1, the §5.1 R4 row,
+  DET-6, and the §5.2 pseudocode R4 comment. The blocker-half semantics
+  (DET-6) are unchanged, and no event key is defined anywhere.
+- (b) is applied at §1.3 (C-1 closed), §2 point 7, and §17 C-1. SC-9 is
+  unchanged.
+
+**What it does not do.** It decides no other open item. F-36, F-14,
+F-10, F-16, F-21, F-34, H1–H6, SIE-01–SIE-07, and decision 5 (watch
+start) all stay open.
 
 ---
 
@@ -194,6 +251,23 @@ indication that **WP-04 v1.1 may define SIE Phase 1 as A+B**, which would
 conflict with the advisor's breakdown. This is surfaced here for Founder
 review as conflict **C-1** (§17). It is not resolved by this document.
 
+**Update, 2026-11-06 — C-1 CLOSED by the WP-04 quotation and the Founder
+Amendment (§0.5 (b)).** The paragraph above is kept as the T0 record.
+
+- WP-04 v1.1 **does** define SIE Phase 1 (internal) as A+B. The
+  distinction from the Stage 3 exit is WP-04's own. Quoted from WP-04 v1.1
+  (retrieval 2026-11-06): "SIE Phase 1 (internal) passes only when both
+  Milestone A and Milestone B pass — [BASE] (October 29 clarification;
+  distinct from roadmap Stage 3 exit on Milestone A, per D1)". Full
+  quotations are in §2 point 7.
+- Amendment (b) confirms that the split stands. Roadmap Stage 3 exits on
+  Milestone A demonstrated. SIE Phase 1 (internal) completion (A+B) is a
+  separate later matter.
+- SC-9 is unchanged.
+- The advisor's Phase 1/2/3 breakdown is still a proposal beyond Stage 3's
+  working use (SC-10). WP-04 does not define phases beyond SIE Phase 1
+  (internal), and that question stays [OPEN] (WP-04 decision 3).
+
 Note also: D1's approved wording does not mention SIE phases at all. The
 prep's [D1/REF] tag on the A+B line is therefore at most [REF]; D1 does not
 decide it.
@@ -214,10 +288,14 @@ decide it.
   test result, and report: "Milestone A demonstrated", never "SIE Phase 1
   passed". The prep's A+B line is preserved as history and is not followed as
   the Stage 3 exit rule.
-- **SC-12 [OPEN — C-1].** Whether WP-04 v1.1 defines SIE Phase 1 as A+B, and
+- **SC-12 [OPEN — C-1] (T0 text, kept as history).** Whether WP-04 v1.1 defines SIE Phase 1 as A+B, and
   if so how the advisor's breakdown is reconciled with it, is a Founder
   decision after WP-04 is quoted (§2 point 7). Either answer leaves SC-9
   unchanged.
+  **Update, 2026-11-06 [DECIDED — Founder Amendment (b), §0.5]:** C-1 is
+  closed. WP-04 defines SIE Phase 1 (internal) as A+B, and amendment (b)
+  keeps it distinct from the Stage 3 exit. SC-9 is unchanged. The phases
+  beyond SIE Phase 1 (internal) stay [OPEN] (WP-04 decision 3).
 
 ### 1.4 Test groups and milestones
 
@@ -235,11 +313,49 @@ decide it.
 
 ## 2. The eight WP-04 verbatim points (brief §2.2) — AC-T0-2
 
-**Result: 0 of 8 quoted from WP-04 v1.1. 8 of 8 flagged as still missing.**
-For each point: what is available locally (always a reconstruction, never
-WP-04 text), the gap, and which Stage 3 task cannot finish correctly until the
-gap is closed. The text in "Available locally" is quoted from the prep draft
-(or the Register, where stated) — **it is not WP-04 wording.**
+**Result (revised 2026-11-06, Stage 3 resume step 1):**
+
+- **7 of 8 points are quoted from WP-04 v1.1** (retrieval 2026-11-06,
+  §0.3).
+- **Point 1's six rules are quoted, but its R4 event-key sub-gap is the one
+  open gap.** It is carried as [OPEN]/not-evaluated under the Founder
+  Amendment (§0.5).
+- T0 result, kept as history: 0 of 8 quoted, 8 of 8 flagged as still
+  missing.
+
+For each point, this section gives:
+
+- what was available locally at T0 (always a reconstruction, never WP-04
+  text);
+- the T0 gap, kept as history;
+- the verbatim WP-04 passage, under a "Quoted from WP-04 v1.1 (retrieval
+  2026-11-06)" heading;
+- the updated gap.
+
+The text in "Available locally" is quoted from the prep draft, or from the
+Register where stated. **It is not WP-04 wording.** Only the "Quoted from
+WP-04 v1.1" subsections carry WP-04 wording. They are copied from the
+retrieval file exactly, including WP-04's own status tags (§0.2) and the
+retrieval's own quotation marks. Where the retrieval itself labels a
+passage as something other than WP-04 text, this document labels it the
+same way. Divergences between the reconstructions and WP-04 are recorded
+in §2.9, not silently rewritten.
+
+**Retrieval-file numbering.** The retrieval's own section numbers differ
+from the brief's point numbers. The mapping is:
+
+| Brief point | Retrieval section |
+|---|---|
+| 1 | §3, plus §1 (the event-key sub-gap) |
+| 2 | §4 |
+| 3 | §5 |
+| 4 | §6 |
+| 5 | §2 |
+| 6 | §7 |
+| 7 | §8 |
+| 8 | §9 |
+
+Retrieval §10 is context only.
 
 ### Point 1 — The six detector rules R1–R6
 
@@ -249,14 +365,53 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   retry_exhausted"; "R6: stuck in_progress > 2 ticks". Candidate-vs-failure
   distinction: "[P, following WP-04 v1.1]". R4/R6 exact-match semantics:
   addendum CR-04 [P].
-- **Gap: STILL MISSING — WP-04 verbatim.** Missing: each rule's exact wording;
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim.** Missing: each rule's exact wording;
   the thresholds as WP-04 states them (≥ 2 attempts; ≥ 2 tasks; > 2 ticks);
   WP-04's own statement of the candidate-vs-failure distinction; whether
   WP-04 names exactly six rules; whether WP-04 says anything about R4 key
   equality or R6 tick measurement (if it does, addendum CR-04 must be checked
   against it).
-- **Blocks:** T1 (AC-T1-1 requires "Every WP-04 detector rule has exactly one
-  implementation branch").
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §3, "SIX
+  DETECTOR RULES (v1.0 §B, [BASE], October 29 baseline)"):
+
+  > "Detector rules (all [BASE], October 29 baseline): blocked-with-blockers; failed or interrupted runs; attempts greater than or equal to 2; the same blocker or event across 2 or more tasks; retry_exhausted; stuck in_progress for more than 2 ticks. Detector output is a candidate list with the matching rule cited per candidate."
+
+  > "Detector rules are exact-match rules only. No fuzzy matching, no semantic matching, no inferred similarity. A detector rule may not determine runner choice."
+
+  Matrix line (retrieval §1, v1.1):
+
+  > "Same blocker/event across at least 2 tasks — [BASE] (October 29 baseline lifecycle)."
+
+  Quoted from WP-04 v1.1 (retrieval 2026-11-06), retrieval §1. The
+  retrieval records this about the WP-04 incident-record schema: "**No
+  error-signature, root-cause, or event-key field.** Do not use 'error
+  signature' or 'root cause' as the WP-04 event key — those words do not
+  appear as a grouping field in WP-04 v1.0/v1.1." The retrieval also
+  records that the gap was flagged later in the same conversation (SIE
+  Implementation Preparation review, CR-04): "R4 uses
+  group_keys(existing_records) without defining which recorded values form
+  the same blocker or event key." The CR-04 text is a review, not WP-04
+  itself.
+- **Gap now: six rules QUOTED; R4 event key [OPEN].**
+  - WP-04 names exactly six rules, with the thresholds "attempts greater
+    than or equal to 2", "2 or more tasks", and "more than 2 ticks". These
+    match R1–R6 and the thresholds in §5.1.
+  - WP-04 requires exact-match rules only, and says "A detector rule may
+    not determine runner choice". This is consistent with DET-3, DET-6,
+    and DET-7.
+  - **[OPEN — R4 events: not evaluated] (Founder Amendment, §0.5 (a)).**
+    The R4 event key is **not in WP-04**. The incident-record schema has
+    no error-signature, root-cause, or event-key field, and addendum
+    CR-04 flagged the gap.
+    - The blocker half is implemented: exact equality, ≥ 2 distinct
+      tasks, insufficient-evidence handling (DET-6).
+    - The event half is NOT implemented, NOT claimed, and NOT evaluated.
+    - No event key is defined in this Specification.
+  - WP-04 says nothing about R6 tick measurement in the retrieved text.
+    DET-7 therefore stays addendum CR-04 [P].
+- **T1 status:** accepted on the blocker half only (Founder Amendment
+  (a)). AC-T1-1 and AC-T1-4 are met in part: blocker half only, event half
+  not evaluated.
 
 ### Point 2 — The watch rule, watch start, and "next 10 tasks"
 
@@ -267,16 +422,54 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   fix-presence and record-creation. Extension: "Watch extends by FULL windows
   on insufficient exposure [REF]". Task counting: prep §6 SIE-02: "WP-04 v1.1
   states 'next 10 tasks' without this qualification."
-- **Gap: STILL MISSING — WP-04 verbatim.** Missing: the exact watch rule
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim.** Missing: the exact watch rule
   wording; WP-04's watch-start rule and whether WP-04 recommends or decides
   fix merge; the source and status of the "unified" rule (the prep marks it
   [REF] yet "not approved", so its origin is unclear); WP-04's extension rule
   wording; whether WP-04 qualifies "next 10 tasks" at all.
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §4, "WATCH
+  RULE"):
+
+  v1.0 rule (v1.0 §B):
+
+  > "Watch: 30 days or the next 10 tasks, whichever comes first, starting at fix merge (recommended; see decision 5)."
+
+  v1.1 rule (v1.1 point 2, the unified watch-window exposure rule,
+  "replacing the v1.0 rule"):
+
+  > "The watch window is a period of operational observation following the fix's presence in the system AND the incident record's creation, starting at the later of the two instants, subject to decision 5. Exposure is measured ONLY by operational evidence observed during the window (the trigger class exercised in later tasks, plus zero recurrence); record creation alone establishes zero exposure, and no incident is validated by record creation alone. The watch-start event (fix merge versus first post-merge CI run) is an open Founder decision (decision 5); until it is decided, the unified rule preserves the decision rather than deciding it. Validated evidence during the window is sufficient for the watch to close; absence of recurrence alone is not validated evidence. Decision 5 (fix merge versus first post-merge CI run) stays open; the unified rule preserves it rather than deciding it."
+
+  Matrix line:
+
+  > "30-day or next-10-tasks watch, whichever first — [BASE] (October 29 baseline lifecycle)."
+
+- **Gap now: QUOTED.** The v1.1 unified rule is a WP-04 v1.1 correction
+  that **replaces** the v1.0 rule. It is recorded as a clarification, not a
+  contradiction (§2.9, DV-1). Specifically:
+  - The prep's "unified watch rule [REF, not approved]" turns out to be
+    WP-04 v1.1's own text. Its "not approved" status is consistent with
+    WP-04 itself: the rule is "subject to decision 5" and preserves that
+    decision rather than deciding it.
+  - The v1.0 "fix merge (recommended; see decision 5)" is the source of
+    the prep's "[recommended in WP-04 v1.1]".
+  - **Decision 5 (watch start: fix merge versus first post-merge CI run)
+    remains OPEN** (H5). This Specification adopts no watch-start
+    reading. All readings stay preserved, and every computation stays
+    PROVISIONAL (WAT-2, WAT-4).
+  - Not in the retrieved text, so still unverified [REF]: the
+    full-window extension rule (WAT-5) and any qualification of "next 10
+    tasks" (SIE-02). The retrieved text does not qualify "next 10 tasks".
+  - One sentence of the v1.1 rule may differ from addendum CR-01's
+    eligibility rule: "Validated evidence during the window is sufficient
+    for the watch to close". It is recorded, not resolved (§2.9, DV-6).
 - **This Specification's handling:** all three watch-start readings are
   preserved as OPEN (§7, WAT-2); no reading is adopted; every watch
-  computation names its reading and is labeled provisional.
-- **Blocks:** T2 (final watch computation), T6 (N-VAL window cases are
-  testable on fixtures under each reading, but no reading is final).
+  computation names its reading and is labeled provisional. W-C is now the
+  quoted v1.1 rule (§7, WAT-2), and decision 5 is still open.
+- **Blocks:** T2 (final watch computation stays PROVISIONAL under H5 /
+  decision 5), T6 (N-VAL window cases are testable on fixtures under each
+  reading, but no reading is final). Neither is blocked on quotation any
+  longer.
 
 ### Point 3 — The first-live-loop trigger
 
@@ -286,12 +479,34 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   criteria for "seed-docs inconsistency" "are not specified". Addendum
   refinement 7: specify the threshold through SIE-05 "before using that
   fallback operationally".
-- **Gap: STILL MISSING — WP-04 verbatim.** Missing: the exact trigger
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim.** Missing: the exact trigger
   wording; what WP-04 counts as a "real … failure"; what the 30 days are
   counted from; any criteria WP-04 gives for a seed-docs inconsistency.
-- **Blocks:** T3 (AC-T3-2: "states the first-live-loop trigger exactly as
-  WP-04 v1.1 does"). Does not block Stage 3's exit, because Stage 3 does not
-  start the loop (§15).
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §5,
+  "FIRST-LIVE-LOOP TRIGGER"):
+
+  v1.0 §F:
+
+  > "No failures are faked: the first live loop runs on the first real post-November-5 failure, or on a seed-docs inconsistency if no real failure occurs within 30 days."
+
+  Matrix line (v1.1):
+
+  > "First live loop on the first real post-November-5 failure, or a seed-docs inconsistency if none in 30 days, no faked failures — [BASE] (October 29 roadmap)."
+
+- **Review note — NOT WP-04 text.** The retrieval labels the following as
+  "Review note (not WP-04 itself, v1.1 review point 3)". It is recorded
+  here as a review note only and is **not** presented as WP-04 wording:
+
+  > "The first live SIE loop cannot start automatically after November 5. Even if an authentic failure occurs in a live task after November 5, the loop can start only after a separate Stage 3 authorization and an explicit start command. The calendar does not grant permission."
+
+- **Gap now: QUOTED.** The trigger wording matches the prep's
+  reconstruction (PRO-3).
+  - The retrieved WP-04 text gives no criteria for a "seed-docs
+    inconsistency", and does not say what the 30 days are counted from.
+    Those stay [OPEN] (SIE-05).
+- **Blocks:** T3 must state the trigger exactly as quoted above
+  (AC-T3-2). It is no longer blocked on quotation. Does not block Stage 3's
+  exit, because Stage 3 does not start the loop (§15).
 
 ### Point 4 — The seven SIE capabilities and the loop as ordinary runner tasks
 
@@ -299,13 +514,24 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   capabilities: Observe, Diagnose, Improve, Learn, Reuse, Evaluate, Compound.
   The loop runs as ordinary runner tasks. No new service, daemon, or database
   is introduced. The detector is read-only."
-- **Gap: STILL MISSING — WP-04 verbatim.** Missing: WP-04's definition of each
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim.** Missing: WP-04's definition of each
   capability (the names are reconstructed; no definitions are available at
   all); WP-04's wording of "ordinary runner tasks"; how WP-04 maps capabilities
   to milestones or phases.
-- **Blocks:** nothing in T1–T8 depends on capability definitions directly;
-  T3 (procedure) should cite them once quoted. Recorded so the Specification
-  does not appear to define them.
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §6, "SEVEN
+  CAPABILITIES (v1.0 §A)"), in full:
+
+  > "Seven capabilities: Observe, Diagnose, Improve, Learn, Reuse, Evaluate, Compound." Observe (detect a candidate incident and record it); Diagnose (investigate the cause with evidence); Improve (implement a fix and validate it); Learn (distill a validated lesson); Reuse (consult a validated lesson in a later task); Evaluate (measure whether reuse improved outcomes); Compound (accumulate lessons over time).
+
+- **Gap now: QUOTED.** The capability names and their per-capability
+  definitions are quoted.
+  - The prep's other "Basis" sentences are **not** in the retrieved text,
+    so they stay unverified [REF] (§2.9, DV-7). Those sentences are: "The
+    loop runs as ordinary runner tasks. No new service, daemon, or
+    database is introduced. The detector is read-only."
+  - The retrieved text does not map capabilities to milestones or phases.
+- **Blocks:** nothing in T1–T8 depends on capability definitions directly.
+  T3 (procedure) should cite them as quoted above.
 
 ### Point 5 — The seed corpus list
 
@@ -315,13 +541,40 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   truncated-base-SHA candidate" (SIE-P5 exit), and describes only the
   truncated-base-SHA item (prep §4.7: "UNVERIFIED CANDIDATE (operator-class
   error) [REF]").
-- **Gap: STILL MISSING — WP-04 verbatim, entire list.** Missing: all ten
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim, entire list.** Missing: all ten
   corpus items (names, dates, sources); whether the truncated-base-SHA item is
   one of the ten or an eleventh item (the prep's "ten … plus" wording suggests
   eleventh, unconfirmed). **This Specification does not reconstruct the list
   and does not guess its contents.**
-- **Blocks:** T5 entirely (its brief entry criterion is "WP-04 seed corpus
-  list quoted").
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §2, "SEED
+  CORPUS (v1.0 §D, preserved in v1.1)"), in full:
+
+  > "Seed corpus (observed, historical): overnight-03 kill and recovery; stale-checkout MODULE_NOT_FOUND; wiring deletion contradiction; policy §7 backoff claim; policy §9 repo-plus-workflow staleness; step-4 versus durable-doc crash-before-task_started disagreement; race precision correction (24 versus 3); claim-commit identity cosmetic note; thin event log; test outputs not durably stored."
+
+  > "Seed records are historical evidence, not validated incidents. They may not be used as the sole basis for a validated incident record. A seed record may be cited as evidence for a hypothesis or for a reproduction-supported conclusion, but it does not by itself establish a validated incident. Historical incidents cannot enter as validated incidents: they never count toward Milestone B. No incident is validated retroactively."
+
+- **Item count.** The retrieved list has **exactly 10 items**. Numbered
+  here for reference only; the numbers are not WP-04's:
+  1. overnight-03 kill and recovery
+  2. stale-checkout MODULE_NOT_FOUND
+  3. wiring deletion contradiction
+  4. policy §7 backoff claim
+  5. policy §9 repo-plus-workflow staleness
+  6. step-4 versus durable-doc crash-before-task_started disagreement
+  7. race precision correction (24 versus 3)
+  8. claim-commit identity cosmetic note
+  9. thin event log
+  10. test outputs not durably stored
+
+  None of the ten is the truncated-base-SHA item. The truncated-base-SHA
+  candidate (prep §4.7, UNVERIFIED CANDIDATE) is therefore an **eleventh
+  item**, which confirms the prep's "ten … plus the truncated-base-SHA
+  candidate" wording. **This closes conflict C-7 (§17).**
+- **Gap now: QUOTED.** This list is the authoritative list for T5. The
+  seed-records paragraph is consistent with N-HIST and with the
+  "no retroactive validation" wording of INDEX Section 5 (§12).
+- **Blocks:** T5 is **no longer blocked** on the seed corpus. Its other
+  entry conditions stand (brief §9 T5: T0 and T2 complete).
 
 ### Point 6 — The Graphiti conjunctive trigger
 
@@ -329,26 +582,64 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   Graphiti conjunctive trigger is met (50–100+ records AND an acted-on
   superseded fact OR a grep-unanswerable query class) — that trigger is NOT
   met [REF]."
-- **Gap: STILL MISSING — WP-04 verbatim.** Missing: the exact threshold
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim.** Missing: the exact threshold
   ("50–100+" is a range, not a threshold — which number applies?); the
   operator grouping (the prep's text reads "A AND B OR C", which is ambiguous:
   "(A AND B) OR C" vs. "A AND (B OR C)"); what counts as an "acted-on
   superseded fact" and a "grep-unanswerable query class"; whether "NOT met" is
   WP-04's statement or a later assessment.
-- **Blocks:** T7 (AC-T7 retrieval procedure must state the re-examination
-  condition).
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §7,
+  "GRAPHITI TRIGGER"), verbatim as-is:
+
+  > v1.0 §A / matrix: "Search stays grep-based and Markdown-first until the Graphiti conjunctive trigger fires (50–100+ records AND an agent acting on a superseded fact, or a grep-unanswerable query class)." Status in v1.1 matrix: [BASE].
+
+- **Gap now: QUOTED (wording); grouping and threshold recorded as written,
+  not interpreted.**
+  - "50–100+" is **WP-04's own wording**, quoted as-is. This
+    Specification does **not** pick a single threshold number.
+  - WP-04's text reads "(… AND …, or …)". This Specification does **not**
+    resolve the operator grouping and records that WP-04's own text reads
+    that way (C-8).
+  - What counts as "an agent acting on a superseded fact" or "a
+    grep-unanswerable query class" is not defined in the retrieved text.
+  - The retrieved text does not say the trigger is "NOT met". That
+    statement in RET-1 is the prep's, not WP-04's, and stays unverified
+    (§2.9, DV-7).
+- **Blocks:** T7 must state the re-examination condition as quoted above.
+  It is no longer blocked on quotation. Any reading of the threshold or the
+  grouping needs a decision, not a T7 choice.
 
 ### Point 7 — Whether WP-04 defines SIE Phases 1/2/3, and how
 
 - **Available locally:** the indications in §1.3 (prep [D1/REF] A+B line;
   addendum refinement 1; prep naming discipline "[P, following WP-04 v1.1]").
-- **Gap: STILL MISSING — WP-04 verbatim.** Missing: whether WP-04 defines SIE
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim.** Missing: whether WP-04 defines SIE
   phases; if so, their contents and pass conditions; specifically whether
   SIE Phase 1 = A + B.
-- **Handling:** §1.3 — surfaced as conflict C-1; Stage 3 exit rests on
-  Milestone A (SC-9), not on a phase label.
-- **Blocks:** nothing in T1–T8 (SC-9, SC-11); blocks treating the advisor's
-  breakdown as decided beyond Stage 3.
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §8, "SIE
+  PHASES"), the matrix lines verbatim:
+
+  > "SIE phases beyond Phase 1 — [OPEN] (decision 3; WP-04 does not define phases beyond SIE Phase 1 (internal))."
+
+  > "SIE Phase 1 (internal) passes only when both Milestone A and Milestone B pass — [BASE] (October 29 clarification; distinct from roadmap Stage 3 exit on Milestone A, per D1)."
+
+  and:
+
+  > "That internal gate does NOT gate roadmap Stage 4 (D1): roadmap Stage 3 exits on Milestone A demonstrated, and roadmap Stage 4 is not blocked on Milestone B or on SIE Phase 1 completion."
+
+- **Gap now: QUOTED.**
+  - WP-04 **does** define SIE Phase 1 (internal) as A+B.
+  - The distinction between that internal gate and the roadmap Stage 3
+    exit (Milestone A) is **WP-04's own**.
+  - WP-04 does not define phases beyond SIE Phase 1 (internal). That
+    question is [OPEN] in WP-04's matrix (decision 3).
+- **Handling:** §1.3 — **C-1 CLOSED** by this quotation together with
+  Founder Amendment (b) (§0.5), which confirms that the split stands.
+  SC-9 (Stage 3 exit = Milestone A demonstrated) is unchanged. SC-11
+  (milestones, not phases, in exit claims) stays.
+- **Blocks:** nothing in T1–T8 (SC-9, SC-11). Treating the advisor's
+  Phase 2/3 breakdown as decided beyond Stage 3 is still blocked (WP-04
+  decision 3, [OPEN]).
 
 ### Point 8 — The exact SIE lifecycle, watch, exposure, recurrence, and evidence standards
 
@@ -361,30 +652,128 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   "REOPENED and the approved second-recurrence rule must be retained"
   (Register CR-09). The Register refers to an "approved second-recurrence
   rule" but does not state it.
-- **Gap: STILL MISSING — WP-04 verbatim, all five standards.** Without them,
+- **Gap at T0 (history): STILL MISSING — WP-04 verbatim, all five standards.** Without them,
   **no reader can check that this Specification weakens nothing**: §3 below
   reproduces the standards *as reconstructed*, and that reproduction is
   itself unverified.
-- **Blocks:** T2 (lifecycle and watch), T6 (Group B refusals encode these
-  standards), and any claim that Stage 3 preserved the D1 standards.
+- **Quoted from WP-04 v1.1 (retrieval 2026-11-06)** (retrieval §9,
+  "LIFECYCLE / WATCH / EXPOSURE / RECURRENCE / EVIDENCE STANDARDS (v1.0,
+  preserved)"), in full:
+
+  Lifecycle:
+
+  > "Incident lifecycle: detected → investigated → fixed → validated → watched → learned → evaluated. A candidate incident is detected by a detector rule. An incident record is created with the schema fields. Investigation produces observed facts, hypotheses, and reproduction-supported conclusions. A fix is implemented with a regression test that fails before the fix and passes after the fix. Validation requires a reproduced failure, a passing test, and independent verification. A validated incident enters watch. A lesson is distilled only from a validated incident. A lesson is reused only on a later task. Evaluation measures whether reuse improved outcomes."
+
+  Recurrence:
+
+  > "Recurrence: 2 or more occurrences of the same blocker or event across 2 or more tasks." Matrix: "2-or-more-occurrences recurrence — [BASE]."
+
+  Meaningful exposure:
+
+  > "Meaningful exposure: the incident must have been exercised by at least 2 unrelated users in the live system." / "Validation requires meaningful exposure, not zero recurrence alone" (VAL-2). "A validated record without an exposure-evidence link is schema-rejected" (N-VAL-4). "Zero recurrence alone cannot validate" (N-VAL-3). "Fixture evidence alone cannot validate" (N-VAL-1). "A merged PR alone cannot validate" (N-VAL-2).
+
+  Evidence:
+
+  > "Evidence standards: observed facts are recorded as observed; hypotheses are recorded as hypotheses; conclusions must be reproduction-supported. No conclusion may be recorded as a fact without reproduction evidence. Evidence links must be recorded for each conclusion. A validated incident requires a reproduced failure, a passing test, and independent verification."
+
+  Milestone A (validated demonstration):
+
+  > full pass-fail matrix must pass — DET-1, DET-2; INC-1, INC-2; DIA-1, DIA-2; FIX-1, FIX-2; VAL-1, VAL-2; N-VAL-1..4; LES-1, LES-2; N-LES-1; N-HIST-1, N-HIST-2; REU-1, REU-2; N-REU-1, N-REU-2; EVA-1, EVA-2; N-EVAL-1..3; GOV-1. "Overall demo pass requires EVERY row to pass."
+
+  Milestone B (validated learning):
+
+  > requires the full watch window; meaningful exposure; zero recurrence; exposure-sufficiency judgment; incident validation; a lesson distilled from a validated incident; subsequent legitimate reuse of that lesson on a later task; and evaluation with sample sizes. "Milestone B cannot pass before the watch window elapses. Milestone A is a prerequisite for Milestone B. SIE Phase 1 (internal) passes only when BOTH Milestone A and Milestone B pass, reported separately."
+
+  Governance / implementation gate (§H/J, preserved):
+
+  > "WP-04 is planning only. It does not implement the SIE, authorize any engine branch, task, or worker, or authorize Stage V, close-out, Stage DB, Stage S, or any other execution. Implementation requires a separate Stage 3 authorization and an explicit start command."
+
+  Context needed for the Milestone A list (retrieval §10, v1.1 focused
+  correction 1, which corrects the v1.0 matrix above; retrieval summary
+  wording):
+
+  > Acceptance-test grouping: Group A Functional (DET-1/2, INC-1/2, DIA-1/2, FIX-1/2) and Group B Safety/negative (N-VAL-1..4, N-LES-1, N-HIST-1/2, N-REU-1/2, N-EVAL-1..3, GOV-1) required for Milestone A; Group C Validated-learning (LES-1/2, REU-1/2, EVA-1/2) deferred until evidence exists.
+
+- **Identifier collision.** WP-04's test identifiers (VAL-2, N-VAL-1..4,
+  LES-1, REU-1, and so on) are WP-04's. They are **not** this
+  Specification's rule ids of the same name (for example §8 VAL-2, §9
+  LES-1, §16 REU-1). When a WP-04 test id is meant, this document writes
+  "WP-04 VAL-2" and so on.
+- **Gap now: QUOTED.** All five standards are quoted, so a reader can now
+  check this Specification against WP-04. That check found **material
+  divergences**: §2.9 DV-2 to DV-5, DV-6, DV-8, and DV-9. They are
+  recorded there and not resolved here.
+- **Blocks:** T2 (lifecycle and watch) and T6 (Group B refusals encode
+  these standards) are no longer blocked on quotation. Watch computations
+  stay PROVISIONAL under H5 / decision 5.
+  - Per the coordinator disposition (recorded verbatim in
+    `T1-builder-report.md`), "any divergence found on retrieval triggers a
+    Specification revision + affected-task rework".
+  - The §2.9 divergences that touch T2/T6 therefore need that revision
+    and review before T2/T6 rely on the affected points. This
+    Specification does not make that revision.
+  - Any claim that Stage 3 preserved the D1 standards must account for
+    §2.9.
 
 ### Summary table
 
-| # | Point | Quoted from WP-04? | Locally available | Task blocked until quoted |
+| # | Point | Quoted from WP-04? (revised 2026-11-06) | Source (retrieval §) | Still open after quotation |
 |---|---|---|---|---|
-| 1 | Detector rules R1–R6 | No — MISSING | Prep reconstruction (names, thresholds) | T1 |
-| 2 | Watch rule / start / "next 10 tasks" | No — MISSING | Prep reconstruction; 3 readings | T2 (final computation), T6 (window cases) |
-| 3 | First-live-loop trigger | No — MISSING | Prep reconstruction | T3 |
-| 4 | Seven capabilities; ordinary runner tasks | No — MISSING | Names only (prep) | None directly; T3 should cite |
-| 5 | Seed corpus list | No — MISSING | **Nothing** (list absent locally) | T5 (entirely) |
-| 6 | Graphiti conjunctive trigger | No — MISSING | Prep paraphrase (ambiguous grouping) | T7 |
-| 7 | SIE Phases in WP-04 | No — MISSING | Indirect indications (§1.3) | None in Stage 3; later-stage phase use |
-| 8 | Lifecycle, watch, exposure, recurrence, evidence standards | No — MISSING | Prep reconstruction + Register preservation clause | T2, T6; any D1-preservation claim |
+| 1 | Detector rules R1–R6 | **Yes — six rules quoted; R4 event key [OPEN]** ([OPEN — R4 events: not evaluated], Founder Amendment §0.5 (a)) | §3, §1 | R4 event key (not in WP-04); R6 tick measurement not in WP-04 (DET-7 stays [P]) |
+| 2 | Watch rule / start / "next 10 tasks" | **Yes** (v1.0 rule + v1.1 unified rule, which replaces it) | §4 | Decision 5 / H5 (watch start); SIE-02; WAT-5 extension unverified; DV-6 |
+| 3 | First-live-loop trigger | **Yes** (review note labeled as not WP-04) | §5 | SIE-05 (seed-docs inconsistency criteria) |
+| 4 | Seven capabilities; ordinary runner tasks | **Yes** (capabilities with definitions) | §6 | "Ordinary runner tasks" sentence not in retrieved text (DV-7) |
+| 5 | Seed corpus list | **Yes** (exactly 10 items; SHA item is an eleventh) | §2 | None for the list; C-7 CLOSED; T5 unblocked on it |
+| 6 | Graphiti conjunctive trigger | **Yes** (wording as-is, "50–100+" is WP-04's) | §7 | Grouping and threshold recorded, not interpreted (C-8) |
+| 7 | SIE Phases in WP-04 | **Yes** (Phase 1 (internal) = A+B, distinct from Stage 3 exit) | §8 | Phases beyond Phase 1 (WP-04 decision 3); C-1 CLOSED |
+| 8 | Lifecycle, watch, exposure, recurrence, evidence standards | **Yes** (all five, plus Milestone A/B and governance gate) | §9 (+ §10 item 1) | Divergences DV-2 to DV-6, DV-8, DV-9 (§2.9) |
+
+T0 version of this table, kept as history: every point was "No — MISSING".
+The blocked tasks were T1 (point 1), T2/T6 (points 2, 8), T3 (point 3),
+T5 (point 5, entirely), and T7 (point 6).
 
 **Closing evidence for every point:** the passage quoted verbatim from WP-04
 v1.1 into a revision of this Specification, with its location in WP-04, and a
 reviewer check that each [REF] rule here matches it (or a conflict entry in
-§17 where it does not).
+§17 where it does not). **Status:** quotations are done for 7 of 8 points,
+with the location given as the retrieval section and the WP-04 section
+that the retrieval names. The builder's comparison is §2.9. A reviewer
+check is still required.
+
+### 2.9 Divergence check — reconstructions vs. WP-04 v1.1 (retrieval 2026-11-06)
+
+Every retrieved passage was compared with this Specification's existing
+reconstruction **before** being quoted.
+
+- **No reconstruction was rewritten, with one exception.** W-C's wording
+  was replaced by the quoted v1.1 rule (DV-1), which is a clarification,
+  not a contradiction. Every other rule below keeps its T0 text. The
+  divergence is recorded beside it, so the difference stays visible until
+  a reviewed revision resolves it.
+- "Contradiction" means the texts cannot both hold as written.
+- "Possible divergence" means they can be read consistently, but only
+  through an interpretation that this document does not make.
+- Rows DV-2 onward are also entered in §17 (C-15 to C-20).
+
+| ID | Kind | Reconstruction (this Specification, as it stands) | WP-04 v1.1 (quoted, §2) | Handling |
+|---|---|---|---|---|
+| DV-1 | **Clarification (expected), not a contradiction** | WAT-2 W-C: "unified rule: later of fix-presence and record-creation" (prep §2.3: "[REF, not approved]"); W-A fix merge "[recommended in WP-04 v1.1]" | v1.1 point 2 unified rule, **replacing** the v1.0 rule "starting at fix merge (recommended; see decision 5)"; "subject to decision 5"; decision 5 "stays open" | W-C wording updated to the quoted v1.1 rule (§7 WAT-2). Decision 5 still OPEN; no reading adopted; computations PROVISIONAL (WAT-4) |
+| DV-2 | **Contradiction (ordering)** | Lifecycle OPEN → FIXED → WATCH → VALIDATED: validation comes **after** the watch and requires its end condition (§3, §6.1 INC-1, §8 VAL-1, addendum CR-01) | "detected → investigated → fixed → validated → watched → learned → evaluated … A validated incident enters watch." The v1.1 unified rule and Milestone B ("requires the full watch window; … incident validation"; "Milestone B cannot pass before the watch window elapses") also tie validation to the window | Not resolved. INC-1/VAL-1 unchanged. Needs a reviewed Specification revision (and possibly a Founder ruling) before T2 implements the lifecycle order (C-15) |
+| DV-3 | **Contradiction (missing requirement)** | Exposure = "operational evidence inside the watch window" (EXP-1, EXP-2, §3); "meaningful exposure" is a VAL-1 element with no threshold | "Meaningful exposure: the incident must have been exercised by at least 2 unrelated users in the live system." | Not resolved. The reconstruction omits WP-04's "at least 2 unrelated users" condition. What "unrelated users" means is not defined in the retrieved text. The omission must not be read as permission to validate on less (ST-3, C-16) |
+| DV-4 | **Contradiction (looser alternative)** | VAL-1 element (1) and `reproduction_evidence`: "reproduced failure, **or documented reproduction analysis with its limit stated**" | "Validation requires a reproduced failure, a passing test, and independent verification." / "A validated incident requires a reproduced failure, a passing test, and independent verification." | Not resolved. The "or documented reproduction analysis" alternative is not in the retrieved WP-04 text and may weaken it (C-17) |
+| DV-5 | **Contradiction (looser condition)** | VAL-1 element (2) and `regression_test`: "passing regression test post-fix" / "passing result post-fix" | "A fix is implemented with a regression test that fails before the fix and passes after the fix." | Not resolved. The reconstruction omits "fails before the fix" (C-17) |
+| DV-6 | **Possible divergence** | VAL-1 (addendum CR-01): eligibility requires "the watch window's end condition has been reached"; prep's mid-window eligibility removed (C-10) | v1.1 unified rule: "Validated evidence during the window is sufficient for the watch to close; absence of recurrence alone is not validated evidence." | Not resolved. If WP-04 lets the watch close early on validated evidence, CR-01 is stricter than WP-04 (stricter does not weaken it). If WP-04 means "at window end", they agree. No reading adopted (C-18) |
+| DV-7 | **Not in the retrieved text (unverified, not contradicted)** | [REF] statements with no matching retrieved passage: full-window extension (WAT-5 [REF] part); "a second recurrence mandates deeper review" (WAT-6); "The loop runs as ordinary runner tasks. No new service, daemon, or database is introduced. The detector is read-only." (§2 pt 4, LOC-4); Graphiti trigger "NOT met" (RET-1); H1 "recommended in WP-04 v1.1"; H3 "≥5 guided + ≥5 unguided"; DET-2 candidate-vs-failure wording "following WP-04 v1.1"; "There is no prescribed reuse task [REF]" (N-REU; compare retrieval §10 item 4, a summary) | — (the retrieval covers the eight §2.2 points and the six v1.1 corrections only; the full WP-04 text is not local) | Each stays [REF], UNVERIFIED as before. Not contradicted, not confirmed (C-19) |
+| DV-8 | **Possible divergence (test grouping)** | §1.4: Group C = VAL, LES, REU, EVA (positive); Group A = DET, INC, DIA, FIX; Group B = N-VAL, N-LES, N-HIST, N-REU, N-EVAL, GOV | v1.0 Milestone A matrix lists VAL-1, VAL-2, LES-1/2, REU-1/2, EVA-1/2 with "EVERY row to pass"; v1.1 correction 1 (retrieval summary) groups A and B for Milestone A and Group C as "LES-1/2, REU-1/2, EVA-1/2", with VAL-1/VAL-2 in no listed group | Not resolved. Where WP-04 VAL-1/VAL-2 sit after v1.1 correction 1 is not stated in the retrieval. §1.4 unchanged (C-20) |
+| DV-9 | **Possible divergence (term "recurrence")** | `recurrence_count`/`recurrence_evidence`: a new occurrence of the observed behavior after the fix (INC-2, §6.1); second recurrence → deeper review | "Recurrence: 2 or more occurrences of the same blocker or event across 2 or more tasks." | Not resolved. WP-04's definition (cross-task, like R4) and the Specification's post-fix recurrence evidence may name different things. It also means "recurrence" in WP-04 depends in part on the [OPEN] R4 event key (C-20) |
+
+**No other divergence was found.** The six detector rules and their
+thresholds (point 1), the first-live-loop trigger (point 3), the
+capability names (point 4), the Graphiti wording (point 6), and the Phase 1
+(internal) = A+B indication (point 7) all match the reconstructions. The
+N-VAL refusals for merged-PR-alone, zero-recurrence-alone, fixture-alone,
+and a missing exposure link also match (WP-04 N-VAL-1..4 vs. §8 VAL-3,
+EVL-1).
 
 ---
 
@@ -397,14 +786,33 @@ reviewer check that each [REF] rule here matches it (or a conflict entry in
 - **ST-2 [DECIDED — Stage 3 authorization, brief §10 item 7].** "No
   weakening of the approved SIE lifecycle, watch, exposure, recurrence, or
   evidence standards."
-- **ST-3 [P — this spec].** Because WP-04 is unavailable (§2 point 8), this
-  Specification preserves the standards in the only way it can: it carries
-  every reconstructed standard **at least as strictly** as the prep draft and
-  addendum state it, adds no relaxation, and where two readings exist keeps
-  both open rather than choosing the looser one. Every place where a
-  correction tightens the prep (addendum CR-01, CR-02, CR-03, CR-04) is
-  applied. No standard below may be relaxed by T1–T8 without a Founder
-  decision recorded first.
+- **ST-3 [P — this spec].** At T0, WP-04 was unavailable (§2 point 8).
+  This Specification therefore preserves the standards as follows:
+  - It carries every reconstructed standard **at least as strictly** as
+    the prep draft and addendum state it.
+  - It adds no relaxation.
+  - Where two readings exist, it keeps both open rather than choosing the
+    looser one.
+  - Every place where a correction tightens the prep (addendum CR-01,
+    CR-02, CR-03, CR-04) is applied.
+  - No standard below may be relaxed by T1–T8 without a Founder decision
+    recorded first.
+
+  **Update, 2026-11-06:** WP-04 point 8 is now quoted (§2 point 8), so
+  these standards **can be checked against WP-04**. The check (§2.9) found
+  places where the reconstruction below omits or loosens a WP-04
+  condition:
+  - DV-3: "at least 2 unrelated users";
+  - DV-4: the reproduction alternative;
+  - DV-5: "fails before the fix".
+
+  It also found an ordering contradiction (DV-2). Until a reviewed
+  revision resolves them, **nothing in this Specification may be read as
+  permitting a looser condition than the quoted WP-04 text**. That is the
+  existing D1 preservation requirement (ST-1, ST-2), restated. It is not a
+  new rule, and it does not choose how each divergence is resolved. The
+  order of lifecycle states (DV-2) is not a strictness question and stays
+  unresolved.
 
 The standards, as reconstructed (each detailed in the section named):
 
@@ -485,13 +893,14 @@ The standards, as reconstructed (each detailed in the section named):
 | R1 | blocked-with-blockers | status blocked AND blockers non-empty | [REF] | unchanged (addendum) |
 | R2 | failed/interrupted runs | event type `task_failed` or `run_interrupted` | [REF] | unchanged |
 | R3 | attempts ≥ 2 | attempt count ≥ 2 | [REF] | unchanged |
-| R4 | same blocker/event across ≥ 2 tasks | exact recorded key on ≥ 2 distinct tasks | [REF] rule; [P] addendum CR-04 semantics | DET-6 |
+| R4 | same blocker/event across ≥ 2 tasks | exact recorded key on ≥ 2 distinct tasks | [REF] rule (wording now quoted, §2 pt 1); [P] addendum CR-04 semantics | DET-6. Blocker half implemented. **[OPEN — R4 events: not evaluated]** (Founder Amendment, §0.5 (a)): the event half is NOT implemented, NOT claimed, and NOT evaluated; WP-04 defines no event key |
 | R5 | retry_exhausted | event type `retry_exhausted` | [REF] | unchanged |
 | R6 | stuck in_progress > 2 ticks | tick-index distance ≥ 3 | [REF] rule; [P] addendum CR-04 semantics | DET-7 |
 
 - **DET-1 [P — prep AC-P1-1].** Every WP-04 detector rule has exactly one
   implementation branch, and no additional matching rule is introduced.
-  (Which rules WP-04 contains: §2 point 1, MISSING.)
+  (Which rules WP-04 contains: §2 point 1. At T0 this was MISSING. Since
+  2026-11-06 the six rules are quoted, and the R4 event key is [OPEN].)
 - **DET-2 [P — prep §2.1, "following WP-04 v1.1"; [REF] origin unverified].**
   Candidate-vs-failure: "A candidate is an exact-match observation that a rule
   fired. A runner-caused failure is a judgment reached only after diagnosis
@@ -519,6 +928,13 @@ The standards, as reconstructed (each detailed in the section named):
   incomparable keys → NO candidate; the scan records "insufficient evidence:
   key missing or incomparable". Every R4 candidate retains the exact key value
   and exact source pointers per task. R4 never determines runner causation.
+  **[OPEN — R4 events: not evaluated] (Founder Amendment, §0.5 (a)).**
+  - The blocker half is implemented under the semantics above: exact
+    equality, ≥ 2 distinct tasks, insufficient-evidence handling. These
+    semantics are unchanged.
+  - The event half is NOT implemented, NOT claimed, and NOT evaluated.
+  - WP-04 v1.1 defines no event key (§2 point 1), and this Specification
+    invents none.
 - **DET-7 [P — addendum CR-04 correction 2] — R6 tick index.** R6 measures
   distance in the authoritative recorded tick index (number of recorded ticks
   between last-progress tick and current tick), not wall-clock time and not
@@ -566,6 +982,9 @@ FUNCTION detect_candidates(existing_records) RETURNS (candidate_list, insufficie
             candidates.APPEND(candidate("R3", evidence=[t.id, attempt count]))
 
     # R4 same recorded key on >= 2 distinct tasks [REF rule; addendum CR-04 semantics]
+    # [OPEN — R4 events: not evaluated] (Founder Amendment, §0.5 (a)): only the
+    # blocker half is implemented; the event half is NOT implemented, NOT claimed,
+    # NOT evaluated. WP-04 defines no event key; none is invented here.
     FOR EACH source_item IN blocker_and_event_items(existing_records):
         IF key(source_item) IS MISSING OR BLANK OR INCOMPARABLE:
             insufficient.APPEND("insufficient evidence: key missing or incomparable", source_item)
@@ -733,13 +1152,24 @@ Missing required field → record incomplete, returned without verdict (prep §3
 ## 7. Watch computation
 
 - **WAT-1 [REF].** Watch = 30 days OR next 10 tasks, whichever first.
-  Unverified against WP-04 (§2 point 2).
+  Unverified against WP-04 at T0. Since 2026-11-06 it matches the quoted
+  WP-04 text: "30-day or next-10-tasks watch, whichever first — [BASE]"
+  (§2 point 2).
 - **WAT-2 [OPEN — H5; all readings preserved].** Watch start, three readings:
   - **W-A — fix merge** (prep H5: "[recommended in WP-04 v1.1]").
   - **W-B — first post-merge CI run** (prep H5 alternative).
-  - **W-C — unified rule: later of fix-presence and record-creation** (prep
+  - **W-C — the WP-04 v1.1 unified watch-window exposure rule** (quoted,
+    §2 point 2, replacing the v1.0 rule). In WP-04's words, the window
+    starts "at the later of the two instants" (the fix's presence in the
+    system and the incident record's creation), "subject to decision 5".
+    W-C is no longer "[REF, not approved]". It is quoted WP-04 v1.1 text.
+    It is still [OPEN] as to decision 5, because by its own text it
+    "preserves the decision rather than deciding it". T0 wording, kept as
+    history: "unified rule: later of fix-presence and record-creation" (prep
     §2.3: "[REF, not approved]").
-  No reading is adopted by this Specification. Note: W-A and W-B do not
+  No reading is adopted by this Specification. Decision 5 (fix merge versus
+  first post-merge CI run) stays OPEN (H5), and every computation stays
+  PROVISIONAL (WAT-4). Note: W-A and W-B do not
   mention record creation; W-C does. Prep boundary note (a) — pre-record
   evidence does not count as exposure — follows from W-C and from the
   exposure rule (EXP-2) independently: pre-record evidence cannot be
@@ -781,7 +1211,7 @@ FUNCTION watch_window(fix_merge_time, first_post_merge_ci_time,
     CASE reading:
         "W-A": start = fix_merge_time
         "W-B": start = first_post_merge_ci_time
-        "W-C": start = MAX(fix_presence_time, record_creation_time)   # [REF, not approved]
+        "W-C": start = MAX(fix_presence_time, record_creation_time)   # WP-04 v1.1 unified rule (quoted, §2 pt 2); subject to decision 5 (OPEN)
     IF start NOT ESTABLISHED FROM EXISTING RECORDS:
         RETURN "watch not started: missing <named> evidence"   # never assume a start
     RETURN window(start, reading, provisional = (H5 undecided OR SIE-02 undecided))
@@ -1010,7 +1440,8 @@ tasks/, events.jsonl                  # unchanged: Runner execution records, rea
   change. "SIE must not introduce a separate execution database or daemon"
   (Register ADR-01).
 - **LOC-4 [P — prep "Basis"; [REF]].** The loop runs as ordinary runner
-  tasks (§2 point 4, MISSING verbatim).
+  tasks (§2 point 4. Since 2026-11-06 the capabilities are quoted, but
+  this sentence is not in the retrieved text and stays unverified, DV-7).
 
 ---
 
@@ -1172,10 +1603,11 @@ as passable; no Stage 3 result is reported as a Group C pass.
 - **PRO-2 [DECIDED — D1; Stage 3 authorization, brief §10 item 8].** No
   manufactured incidents or unnecessary tasks. No faked failures, ever. No
   demo failing test on live systems (H1 OPEN).
-- **PRO-3 [REF — UNVERIFIED; §2 point 3].** First-live-loop trigger, as
+- **PRO-3 [REF — UNVERIFIED at T0; §2 point 3].** First-live-loop trigger, as
   reconstructed by the prep: the first real post-November-5 failure, or a
   seed-docs inconsistency if none occurs in 30 days. Fallback criteria
-  [OPEN — SIE-05].
+  [OPEN — SIE-05]. *Since 2026-11-06 the WP-04 wording is quoted in §2
+  point 3. It matches this reconstruction. T3 states the quoted text.*
 - **PRO-4 [P — prep §7 item 3; brief §5.5].** The first live loop starts only
   when (a) the November 5 verdict has been issued and preserved, (b) SIE
   implementation has been explicitly authorized by the Founder, and (c) the
@@ -1192,9 +1624,13 @@ as passable; no Stage 3 result is reported as a Group C pass.
 
 ## 16. Retrieval, reuse, compounding, governance
 
-- **RET-1 [REF — UNVERIFIED; §2 point 6].** Retrieval is via grep until the
+- **RET-1 [REF — UNVERIFIED at T0; §2 point 6].** Retrieval is via grep until the
   Graphiti conjunctive trigger is met; the trigger is NOT met. Exact
-  threshold and grouping: MISSING.
+  threshold and grouping: MISSING. *Since 2026-11-06 the trigger wording
+  is quoted as-is in §2 point 6, including "50–100+". The threshold and
+  grouping are recorded as WP-04 wrote them and are not interpreted (C-8).
+  "The trigger is NOT met" is not in the retrieved text and stays
+  unverified (DV-7).*
 - **RET-2 [P — prep AC-P7-3].** Grep results are candidate material for
   judgment, never automatic reuse or automatic lesson promotion.
 - **REU-1 [OPEN — F-36; P — Register CR-01 proposed rule, carried as Stage 3
@@ -1223,25 +1659,42 @@ as passable; no Stage 3 result is reported as a Group C pass.
 
 ## 17. Conflicts and inconsistencies surfaced for review
 
-None of these is resolved by this Specification. Each names what would
-resolve it.
+None of these is resolved by this Specification, with the exceptions
+recorded on 2026-11-06 (Stage 3 resume step 1):
+
+- **C-1** and **C-7** are CLOSED by the WP-04 quotation (§2), and for C-1
+  also by the Founder Amendment (§0.5).
+- The quoted part of **C-8** is done: the wording is quoted as-is, and the
+  grouping and threshold stay uninterpreted.
+- The retrieval part of **C-13** is done.
+- The quotation part of **C-2** is done; decision 5 is still open.
+
+Closing these records what the quotation and the amendment settle. It is
+not a new decision. Each other row names what would resolve it. Rows
+C-15 to C-20 record the divergences found on retrieval (§2.9).
 
 | ID | Conflict | Between | Handling here | Resolved by |
 |---|---|---|---|---|
-| C-1 | SIE Phase 1 = A+B vs. Phase 1 = functional (A) | Prep §1 [D1/REF] + addendum refinement 1 vs. advisor breakdown / brief §3 | Stage 3 exit = Milestone A (SC-9); phases not used in exit claims (SC-11) | WP-04 quote (§2 pt 7) + Founder decision |
-| C-2 | Watch start: fix merge vs. first post-merge CI vs. unified later-of rule | Prep H5 ("fix merge [recommended in WP-04]") vs. prep §2.3 unified rule "[REF, not approved]" | All three preserved; computations named and PROVISIONAL (WAT-2, WAT-4) | WP-04 quote (§2 pt 2) + H5 decision |
+| C-1 | SIE Phase 1 = A+B vs. Phase 1 = functional (A) | Prep §1 [D1/REF] + addendum refinement 1 vs. advisor breakdown / brief §3 | Stage 3 exit = Milestone A (SC-9); phases not used in exit claims (SC-11) | WP-04 quote (§2 pt 7) + Founder decision. **CLOSED 2026-11-06** by the §2 pt 7 quotation (WP-04 defines SIE Phase 1 (internal) as A+B, distinct from the Stage 3 exit) and Founder Amendment (b) (§0.5): the split stands; SC-9 unchanged |
+| C-2 | Watch start: fix merge vs. first post-merge CI vs. unified later-of rule | Prep H5 ("fix merge [recommended in WP-04]") vs. prep §2.3 unified rule "[REF, not approved]" | All three preserved; computations named and PROVISIONAL (WAT-2, WAT-4) | WP-04 quote (§2 pt 2) + H5 decision. **WP-04 quote part done 2026-11-06:** the unified rule is WP-04 v1.1's own text (replacing v1.0's "fix merge (recommended; see decision 5)"); **decision 5 / H5 still OPEN** |
 | C-3 | Prep tags A+B line [D1/REF] but D1's approved wording does not mention phases | Prep §1 vs. Register §10 D1 | Treated as [REF] at most; not as D1 | Correction in a prep revision |
 | C-4 | Status string case: `open`/`unvalidated-staged` (prep, "exact header string [REF]") vs. OPEN/UNVALIDATED-STAGED (Register CR-09) | Prep §2.2–§3.2 vs. Register CR-09 | CR-09 form stored (VOC-5) | WP-04 quote (§2 pt 8) + F-10 decision |
 | C-5 | Lesson state CANDIDATE exists in Register CR-09 but has no definition, record, transition, or INDEX section in prep/addendum | Register CR-09 vs. prep §2.4/§3.2 | Reserved, unused in Stage 3 (VOC-6) | WP-04 quote + F-10 decision |
 | C-6 | "Candidate" names both a detector output and a lesson state | Prep §2.1 vs. Register CR-09 | Always qualified (VOC-7) | Terminology decision (F-10) |
-| C-7 | Seed corpus "ten items plus the truncated-base-SHA candidate": is SHA one of ten or an eleventh? | Prep SIE-P5 exit vs. prep §4.7 | Not guessed | WP-04 quote (§2 pt 5) |
-| C-8 | Graphiti trigger operator grouping ambiguous ("A AND B OR C") and threshold is a range ("50–100+") | Prep "Basis" | Not interpreted | WP-04 quote (§2 pt 6) |
+| C-7 | Seed corpus "ten items plus the truncated-base-SHA candidate": is SHA one of ten or an eleventh? | Prep SIE-P5 exit vs. prep §4.7 | Not guessed | WP-04 quote (§2 pt 5). **CLOSED 2026-11-06** by the §2 pt 5 quotation: the list has exactly 10 items, none of them the truncated-base-SHA item, which is therefore an eleventh |
+| C-8 | Graphiti trigger operator grouping ambiguous ("A AND B OR C") and threshold is a range ("50–100+") | Prep "Basis" | Not interpreted | WP-04 quote (§2 pt 6). **2026-11-06:** threshold wording quoted as-is ("50–100+" is WP-04's own wording); the grouping stays exactly as WP-04 wrote it ("… AND …, or …") — recorded, not interpreted. Any reading of either needs a decision |
 | C-9 | Prep `validated -> reopened` allowed "new evidence contradicting the validation"; addendum CR-03 assigns VALIDATED → REOPENED to corrected-verdict evidence | Prep §2.2 vs. addendum CR-03 | Addendum CR-03 applied: VALIDATED → REOPENED by `corrected_verdict_evidence` only; recurrence reopening from FIXED/WATCH only. The prep's recurrence-from-VALIDATED path is recorded as an unapplied proposal, not operative (INC-3) | Separate re-review of addendum CR-03 if the recurrence path is wanted |
 | C-10 | Prep `watch_outcome` grants eligibility mid-window | Prep §2.3 vs. addendum CR-01 | Addendum governs (§7.1) | Already corrected (addendum, pending re-review) |
 | C-11 | Prep `open -> reopened` vs. AC-P2-1 | Prep §2.2 vs. prep AC-P2-1 | Removed per addendum CR-03 | Already corrected (addendum, pending re-review) |
 | C-12 | Prep N-LES refused all lesson creation from unvalidated incidents, incl. staging | Prep §5.2 vs. addendum CR-02 | Addendum governs (N-LES, LES-2) | Already corrected (addendum, pending re-review) |
-| C-13 | Brief's T0 entry criterion "WP-04 v1.1 retrieved" not met | Brief §9 T0 vs. available sources | Proceeded under AC-T0-2's "flagged as missing" branch; coordinator accepted the deviation for T0 as a draft, conditional on retrieval and quotation of the eight passages before dependent implementation tasks proceed on them (§0.4) | Retrieval of WP-04 text |
+| C-13 | Brief's T0 entry criterion "WP-04 v1.1 retrieved" not met | Brief §9 T0 vs. available sources | Proceeded under AC-T0-2's "flagged as missing" branch; coordinator accepted the deviation for T0 as a draft, conditional on retrieval and quotation of the eight passages before dependent implementation tasks proceed on them (§0.4) | Retrieval of WP-04 text. **Retrieval done 2026-11-06:** T0 entry criterion met for the 7 quoted points; the **R4-events sub-gap remains open**, carried as [OPEN]/not-evaluated under the Founder Amendment (§0.5 (a)) |
 | C-14 | Prep field names (`attempt_count`, `last_progress_tick`) vs. repo records (`attempts`; no recorded tick index found) | Prep §2.1 vs. `scripts/task-state.mjs`, `tasks/schema.md` | Observation only (§5.3); T1 reconciles | T1 + SIE-03 |
+| C-15 | Lifecycle order: WATCH before VALIDATED vs. WP-04 "validated → watched … A validated incident enters watch" (§2.9 DV-2) | §3, §6.1 INC-1, §8 VAL-1 (Register CR-09 order; addendum CR-01) vs. WP-04 v1.1 point 8 | Recorded; INC-1/VAL-1 unchanged | Reviewed Specification revision; Founder ruling if WP-04 and CR-09/CR-01 cannot both hold. Before T2 implements the lifecycle order |
+| C-16 | Meaningful exposure: WP-04 "at least 2 unrelated users in the live system" absent from the reconstruction (§2.9 DV-3) | EXP-1/EXP-2, VAL-1 (4) vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Reviewed Specification revision; meaning of "unrelated users" for an engineering platform needs a decision |
+| C-17 | Validation elements looser than WP-04: "or documented reproduction analysis" (DV-4); regression test "fails before the fix" omitted (DV-5) | VAL-1 (1)–(2), §6.2 fields vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Reviewed Specification revision (before T2/T6 encode these elements) |
+| C-18 | Watch close: "Validated evidence during the window is sufficient for the watch to close" vs. addendum CR-01 end-condition requirement (§2.9 DV-6) | WP-04 v1.1 point 2 vs. VAL-1, §7.1 (addendum CR-01; C-10) | Recorded; CR-01 kept (stricter or equal under either reading) | Review clarification of the WP-04 sentence |
+| C-19 | [REF] statements with no matching retrieved passage (§2.9 DV-7) | Prep [REF] reconstructions vs. retrieval scope | Remain [REF], UNVERIFIED | Full WP-04 text, or review confirmation |
+| C-20 | Test grouping of WP-04 VAL-1/VAL-2 after v1.1 correction 1 (DV-8); "recurrence" defined cross-task in WP-04 vs. post-fix recurrence evidence here (DV-9) | §1.4, INC-2 vs. WP-04 v1.1 points 8 and correction 1 | Recorded; §1.4 and INC-2 unchanged | Reviewed Specification revision; DV-9 partly depends on the [OPEN] R4 event key |
 
 Any conflict between this Specification and WP-04 v1.1, a Founder decision
 (D1–D8), or the M10 freeze is resolved in favour of the Founder decision and
@@ -1252,15 +1705,15 @@ the freeze; this Specification would then be wrong and must be corrected
 
 ## 18. Stage 3 task mapping (what each task takes from this Specification)
 
-| Task | Uses | Blocked by §2 gap? |
+| Task | Uses | Blocked by §2 gap? (revised 2026-11-06) |
 |---|---|---|
-| T1 Detector | §5 (DET-1–DET-9), F-R1–F-R6, F-R4-INS, F-R6-INS, F-DUP | Point 1 (exact rules); C-14 |
-| T2 Incidents, status machine, watch | §6, §7, §8, VOC-5 | Points 2, 8 (computation stays PROVISIONAL) |
-| T3 Procedure | §15 | Point 3 (trigger wording); point 4 should be cited |
+| T1 Detector | §5 (DET-1–DET-9), F-R1–F-R6, F-R4-INS, F-R6-INS, F-DUP | Point 1 six rules quoted; **R4 event key [OPEN — R4 events: not evaluated]**; T1 accepted on the blocker half only (Founder Amendment, §0.5 (a)); C-14. *T0: point 1 (exact rules)* |
+| T2 Incidents, status machine, watch | §6, §7, §8, VOC-5 | Points 2, 8 quoted; computations still PROVISIONAL under H5 / decision 5; divergences C-15–C-18, C-20 to be revised before T2 relies on the affected points. *T0: points 2, 8* |
+| T3 Procedure | §15 | Point 3 quoted (state the trigger as quoted; review note is not WP-04); point 4 quoted, should be cited. *T0: point 3* |
 | T4 Schema + INDEX tests | §6.2, §9.2, §12 (IDX-1–IDX-6) | — |
-| T5 Seed records | §12 Section 5, N-HIST, F-SHA | **Point 5 — entire list missing** |
-| T6 Group B | §14.2 | Points 2, 8 (encodes the standards) |
-| T7 Staging + retrieval | §9, §12 Section 4, §16 RET-1/RET-2 | Point 6 |
+| T5 Seed records | §12 Section 5, N-HIST, F-SHA | Point 5 quoted (10 items + the truncated-base-SHA eleventh); **no longer blocked on the seed corpus**. *T0: entire list missing* |
+| T6 Group B | §14.2 | Points 2, 8 quoted; computations still PROVISIONAL under H5; divergences C-16–C-18 to be revised before T6 encodes the affected standards. *T0: points 2, 8* |
+| T7 Staging + retrieval | §9, §12 Section 4, §16 RET-1/RET-2 | Point 6 quoted as-is; grouping/threshold not interpreted (C-8). *T0: point 6* |
 | T8 Demonstration + readiness checklist | §14, §15 PRO-4/PRO-5, EVL-7 | — (reports the open gaps) |
 
 ---
@@ -1290,7 +1743,7 @@ Nothing below is decided by this Specification.
 | F-36 | SIE reuse judgment | Founder | Founder decision | REU-1 proposal; not decided by Stage 3 |
 | F-14 | Project-record storage | Founder | Founder decision | LOC-1 working assumption |
 | F-10 | Verdict and lesson vocabulary | Founder | Founder decision | VOC-1 used as working rule |
-| WP-04 | The eight §2.2 verbatim points | Coordinator (retrieval); Founder (any conflict) | WP-04 v1.1 text quoted into a revision of this Specification | §2; dependent tasks carry the gap |
+| WP-04 | The eight §2.2 verbatim points | Coordinator (retrieval); Founder (any conflict) | WP-04 v1.1 text quoted into a revision of this Specification | **2026-11-06: 7 of 8 quoted** (§2); **R4-events open**, carried as [OPEN]/not-evaluated (Founder Amendment, §0.5 (a)); divergences C-15–C-20 open (§2.9) |
 | SPEC-1 | Whether a still-stuck task yields new R6 candidates on later scans (DET-8) | T1 builder (proposal); Founder only if it affects recurrence | T1 design + review | [OPEN], low impact |
 
 ---
@@ -1305,10 +1758,18 @@ Nothing below is decided by this Specification.
 - Nothing here decides: F-36, F-14, F-10, F-16, F-21, F-23, F-34, F-26/H3,
   H1–H6, SIE-01–SIE-07, the D2 operational model, the D5 outcome, the D6
   Catalog version, the SIE phase breakdown beyond Stage 3's working use
-  (C-1), or any §2.2 verbatim point (those are confirmed by quotation).
+  (WP-04 decision 3; C-1 itself is closed by quotation + Founder Amendment
+  (b)), decision 5 (watch start), the R4 event key, the §2.9 divergences,
+  or any §2.2 verbatim point (those are confirmed by quotation).
 - No Milestone B, Group C, validated lesson, reuse claim, improvement claim,
   or global lesson promotion.
 - No Runner change, database, service, daemon, deploy, spending, production
   contact, new model provider, or new infrastructure.
-- No WP-04 wording is quoted or invented. Every [REF] is a reconstruction
-  carried from the prep draft and is unverified.
+- WP-04 wording **is quoted for 7 of 8 §2.2 points**. Every quotation comes
+  only from the filed retrieval `wp04-v1.1-retrieval-2026-11-06.md` (§0.3)
+  and appears in a §2 "Quoted from WP-04 v1.1 (retrieval 2026-11-06)"
+  subsection. **No WP-04 wording is invented.** The R4 event key is not in
+  WP-04 and is not supplied. Every [REF] label outside those subsections is
+  still a reconstruction carried from the prep draft, unverified as wording
+  (§0.2), and §2.9 records where it diverges from the quoted text.
+  (T0 text, kept as history: "No WP-04 wording is quoted or invented.")
