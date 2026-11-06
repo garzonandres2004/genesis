@@ -42,14 +42,18 @@ approval.
   entry; nothing in the recommendation text is overwritten (Register §10,
   "Founder decision records — 2026-10-30" preamble). *Test:* recommendation
   text is identical before and after the decision is recorded.
-- **DR-3 Exact status labels.** Status uses the exact labels the Register
+- **DR-3 Exact status labels (decision and queue items).** For decision
+  records and Founder-queue items, status uses the exact labels the Register
   uses: APPROVED, APPROVED WITH AMENDMENTS, CONDITIONALLY APPROVED for decided
   items, and Open for undecided queue items (Register, 2026-10-30 amendment;
   Register §5). Qualifications go in the decision wording, not in new labels
   (Register, 2026-10-30 amendment: "Qualifications ... are recorded in the §10
-  decision wording, not in alternative status labels"). *Test:* no status
-  outside this set appears; for example D5's "decision process only" scope is
-  in its wording, its label is APPROVED.
+  decision wording, not in alternative status labels"). This rule does not
+  cover other Register items: ADRs carry their own statuses (e.g.
+  Unresolved, Proposed, "Partially resolved"), and DR-4's §1 terms still
+  apply. *Test:* no decision record or queue item carries a status outside
+  this set; for example D5's "decision process only" scope is in its wording,
+  its label is APPROVED.
 - **DR-4 Approval terminology kept distinct.** The register distinguishes
   Founder-approved, historically demonstrated, proposed, unresolved,
   authorized, and blocked (Register §1 "Approval terminology"). An item

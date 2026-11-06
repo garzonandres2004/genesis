@@ -73,7 +73,8 @@ from project-specific context".
 ## Authority boundaries
 
 - **Founder:** decides who may act as knowledge owner and approve promotion
-  (this is "authority expansion", a Founder-only category in ADR-09). Can
+  (this is "authority expansion", a Founder-only category in ADR-09;
+  ADR-09, Unresolved; F-21 Open). Can
   retire any global item.
 - **Knowledge owner (unassigned):** approves entry under GK-5 once appointed.
 - **Reviewer:** performs GK-4; must not be the proposer.

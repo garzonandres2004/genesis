@@ -54,7 +54,7 @@ Runner operator"); **Builder**; **Verifier** (identity unresolved, ADR-05);
   | Decision records | R, A | R, P, W (record only) | — | R (as needed) | R | R (as needed) |
   | Authorization records | R, A | R, P, W (record only) | R (refs) | R (own task) | R | R (own task) |
   | Project record | R, A (strategic) | R, P, W (per spec 08 tiers) | — | R (as needed) | R | R (as needed) |
-  | Evidence records | R | R, W (file refs) | W (own events) | P (own evidence) | P (own findings) | P |
+  | Evidence records | R | R, W (file refs) | — | P (own evidence) | P (own findings) | P |
   | Global knowledge | R, A | R, P | — | R | R | R, P |
   | Execution records | R | R; W only through Runner rules | R, W | — (never edits) | R | — |
 
@@ -72,8 +72,9 @@ Runner operator"); **Builder**; **Verifier** (identity unresolved, ADR-05);
   access of any kind (D4: "Each aggregate check must be explicitly
   authorized"; "No service_role access"); credential creation, rotation or
   disclosure; spending or provisioning; contacting people or external
-  parties; changing governance or protection settings (repo `docs/policy.md`
-  §3; Register, Stage 1 amendment scope limits).
+  parties (Stage 1–3 Brief, hard limits: "no external contact"); changing
+  governance or protection settings (repo `docs/policy.md` §3; Register,
+  Stage 1 amendment scope limits).
 - **AP-5 Cross-project access is explicit.** Access to another project's
   records needs an authorization naming both (spec 04 PK-3; ADR-10).
 - **AP-6 Every write is attributable.** Each write to a governance or project
@@ -88,7 +89,7 @@ Runner operator"); **Builder**; **Verifier** (identity unresolved, ADR-05);
   writers.
 - **AP-9 Founder controls permission changes.** Granting, widening or
   removing a role's access is authority expansion or governance change,
-  Founder-only (ADR-09; spec 08 Tier F).
+  Founder-only (ADR-09, Unresolved; F-21 Open; spec 08 Tier F).
 - **AP-10 Isolation survives a shared coordinator.** A shared Muse "must not
   imply shared project authority, credentials, private context, or execution
   state" (ADR-10).
@@ -130,6 +131,13 @@ isolation and review, not by technical controls.
    canonical Register today)? The Register is silent.
 4. Who are the human reviewers for governance changes (D2) besides the
    Founder? None named.
+5. Events are classed here as execution records only (ADR-01: "Execution
+   record: Runner-owned task state and events"), so Runner has no write
+   access to evidence records; evidence records reference events by
+   identifier (spec 11 RS-3). The Register also lists "Execution events" and
+   "Task records and execution events" as evidence-package contents (§7
+   evidence-package summary; standard evidence package). Whether a package
+   copies events or only references them is not settled by the Register.
 
 ## Explicitly NOT decided here
 

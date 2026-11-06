@@ -100,9 +100,10 @@ behavior."
 
 - **Founder:** grants all stage-level authorizations recorded to date
   (Register B2, E-V5-2, Stage DB, Stage 1 amendments). Controls consequential
-  permissions (Register §1 principle 3). Founder-only categories per ADR-09:
-  "strategic direction, governance changes, budget expansion, production
-  risk, external commitments, and authority expansion".
+  permissions (Register §1 principle 3). Founder-only categories per ADR-09
+  (ADR-09, Unresolved; F-21 Open): "strategic direction, governance changes,
+  budget expansion, production risk, external commitments, and authority
+  expansion".
 - **Muse (coordinator):** may prepare authorization briefs and record a
   Founder authorization verbatim. May dispatch work only inside an existing
   authorization. Cannot grant or widen authorizations.
@@ -120,7 +121,7 @@ in `08-ownership-amendment.md`. Applied to authorization records:
 |---|---|
 | Grant a new authorization; widen scope, targets, limits, budget or duration; remove an exclusion; change the executor | Founder only |
 | Narrow an authorization (add a limit, shorten expiry, remove a target) | Founder, or a delegated reviewer whose written permission covers it; recorded and reported to the Founder |
-| Suspend an authorization for a safety reason | Any role may stop work immediately (by analogy with D8, which for Stage 5 measurement windows says "never delay safety action"; the Register states no general rule); recording the suspension is required; resumption is Founder only (F-29 default, Open) |
+| Suspend an authorization for a safety reason | Any role may stop work immediately (by analogy with D8, which for Stage 5 measurement windows says "never delay safety action"; the Register states no general rule); recording the suspension is required; resumption needs "evidence-based explicit clearance" (F-29 default, Open); that the clearance is Founder only is this spec's proposal, not the Register's |
 | Correct a clerical error that does not change meaning (typo, broken reference) | Recorder (Muse), labeled as a correction, with before/after shown; reviewed per D2 |
 | Record that an authorization's exit criteria were met | Recorder, with the verification report as evidence; acceptance stays with the Founder |
 
