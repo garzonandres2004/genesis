@@ -1,0 +1,1 @@
+{"id":"SYNTHETIC-fr4-shared-1","title":"SYNTHETIC fixture F-R4: shared blocker key, task 1 of 3","synthetic":"SYNTHETIC fixture - hand-constructed test input, not an operational record","project":"SYNTHETIC-fixture","status":"blocked","attempts":0,"runs":[],"blockers":["SYNTHETIC shared blocker key X"],"created":"2026-01-01","updated":"2026-01-01"}

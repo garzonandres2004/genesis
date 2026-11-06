@@ -1,0 +1,1 @@
+{"id":"SYNTHETIC-fr4ins-d2-case","title":"SYNTHETIC fixture F-R4-INS (d2): key differing only in case/whitespace from d1","synthetic":"SYNTHETIC fixture - hand-constructed test input, not an operational record","project":"SYNTHETIC-fixture","status":"queued","attempts":0,"runs":[],"blockers":["synthetic needs key "],"created":"2026-01-01","updated":"2026-01-01"}
