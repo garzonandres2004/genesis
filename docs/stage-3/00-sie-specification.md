@@ -4,7 +4,8 @@
   verified. This document is the Stage 3 task T0 deliverable; it becomes a
   "reviewed draft" only after the independent verification in brief §8 and
   the human review its risk class requires.
-- **Version:** 0.1-draft, 2026-11-06.
+- **Version:** 0.2-draft, 2026-11-06 (fix round 1: verifier findings 1, 2,
+  5, 6 applied; see `T0-builder-report.md`).
 - **Owner (canonical subject):** Register ADR-12 assigns "Incident and lesson
   lifecycle" to the "New SIE Specification". ADR-12 is itself Proposed and
   F-24 (canonical document ownership) is Open (Register §5). Drafted by the
@@ -115,6 +116,11 @@ requirements, exposure requirements, recurrence rules, and evidence standards"
   AC-T0-2's "explicitly flagged as still missing" branch, and each dependent
   task (T1, T2, T3, T5, T7) carries the gap as a precondition (§2, last
   table).
+- **Coordinator disposition (fix round 1, 2026-11-06):** the entry deviation
+  is accepted for T0 as a draft only (brief §2.2 permits unverified
+  reconstructions until the corresponding implementation tasks start; AC-T0-2
+  permits flagging), on condition that the eight passages are retrieved and
+  quoted before the dependent implementation tasks proceed on those points.
 - Where the prep draft and the addendum disagree with each other, the addendum
   governs. Where either might disagree with WP-04, this document **cannot
   tell**, and says so rather than resolving it (§17).
@@ -178,7 +184,7 @@ requirements, exposure requirements, recurrence rules, and evidence standards"
   WP-04 v1.1 itself defines Phase 1 as A+B … that finding must be surfaced as
   a conflict for Founder review."
 
-**What the local evidence shows.** Two independent local sources — the prep
+**What the local evidence shows.** Two related local documents — the prep
 draft (which tags the A+B line [D1/REF], i.e. as baseline material) and the
 addendum (written after the first external review) — both read "SIE Phase 1"
 as A+B. The prep draft also states its "SIE Phase 1/2/3" naming discipline is
@@ -330,8 +336,7 @@ gap is closed. The text in "Available locally" is quoted from the prep draft
   superseded fact" and a "grep-unanswerable query class"; whether "NOT met" is
   WP-04's statement or a later assessment.
 - **Blocks:** T7 (AC-T7 retrieval procedure must state the re-examination
-  condition). The trigger being "not met" is uncontroversial at zero records;
-  the wording is still needed.
+  condition).
 
 ### Point 7 — Whether WP-04 defines SIE Phases 1/2/3, and how
 
@@ -405,7 +410,7 @@ The standards, as reconstructed (each detailed in the section named):
 
 | Standard | Reconstructed content | Provenance | Detail |
 |---|---|---|---|
-| Lifecycle | OPEN → FIXED → WATCH → VALIDATED, with REOPENED from FIXED, WATCH, VALIDATED only; never from OPEN | [REF] states; [P] transition evidence (prep §2.2); addendum CR-03 removes OPEN → REOPENED | §6 |
+| Lifecycle | OPEN → FIXED → WATCH → VALIDATED, with REOPENED from FIXED, WATCH, VALIDATED only; never from OPEN | States: Register CR-09 working vocabulary [P, F-10 OPEN]; transitions [P] (prep §2.2 as corrected by addendum CR-03, which removes OPEN → REOPENED and limits VALIDATED → REOPENED to corrected-verdict evidence) | §6 |
 | Watch | 30 days OR next 10 tasks, whichever first; start rule OPEN (3 readings); extension by full windows | [REF] (30d/10 tasks; full-window extension); [OPEN] start (H5) and counting (SIE-02) | §7 |
 | Exposure | Operational evidence inside the watch window only; record creation alone = zero exposure; fixture/synthetic/pre-window evidence never counts | [REF] (prep §2.3) | §7, §10 |
 | Recurrence | A second recurrence mandates deeper review; REOPENED and the second-recurrence rule retained | [REF] (prep §2.3); Register CR-09 (retention); procedure [OPEN] SIE-07 | §6, §7 |
@@ -434,10 +439,12 @@ The standards, as reconstructed (each detailed in the section named):
   In particular: a Stage 3 task verification PASS is never written as, or
   read as, an incident VALIDATED or a lesson VALIDATED; a Group A/B test
   result is a test result, not an SIE status.
-- **VOC-3 [DECIDED — Register CR-09 text, B1].** "The complete approved SIE
-  Specification must govern transitions and definitions." This document is
-  that Specification in draft; it is not yet approved, so it does not yet
-  govern (see the Status line at the top).
+- **VOC-3 [P — Register CR-09 proposed resolution, tied to F-10 (OPEN)].**
+  "The complete approved SIE Specification must govern transitions and
+  definitions." B1 adopted the Register as canonical but preserves F-10 as
+  open; canonical adoption does not approve this proposed resolution. This
+  document is that Specification in draft; it is not yet approved, so it does
+  not yet govern (see the Status line at the top).
 - **VOC-4 [P — Register CR-09; [REF] prep].** "REOPENED and the approved
   second-recurrence rule must be retained."
 
@@ -611,8 +618,10 @@ reconciles field names instead of assuming them. They decide nothing.
 
 ### 6.1 Transitions (prep §2.2 with addendum CR-03 applied)
 
-- **INC-1 [REF states; P transitions — prep AC-P2-1 as corrected by addendum
-  CR-03].** States are exactly OPEN, FIXED, WATCH, VALIDATED, REOPENED.
+- **INC-1 [P — state vocabulary: Register CR-09, the required working
+  vocabulary (adoption as the rule is F-10, OPEN; VOC-1); P — transitions:
+  prep §2.2 / AC-P2-1 as corrected by addendum CR-03, both proposals].**
+  States are exactly OPEN, FIXED, WATCH, VALIDATED, REOPENED.
   REOPENED is reachable from FIXED, WATCH, and VALIDATED only — **never from
   OPEN**. If WP-04 v1.1 is later found to require OPEN → REOPENED, that is a
   conflict to surface (addendum CR-03), not something to re-add silently.
@@ -645,11 +654,12 @@ FIXED -> REOPENED, WATCH -> REOPENED:            # addendum CR-03 correction 2
 
 VALIDATED -> REOPENED:                            # addendum CR-03 correction 2
     REQUIRES corrected_verdict_evidence (specific evidence invalidating an
-             earlier conclusion or verdict) AND a stated reason
-             -- OR recurrence_evidence (new occurrence), recorded as such.
+             earlier conclusion or verdict) AND a stated reason.
+             This is the ONLY operative path from VALIDATED. Recurrence-based
+             reopening is FIXED/WATCH -> REOPENED only (above).
     EFFECT  prior VALIDATED status preserved in history, annotated superseded
             with reason; never silently overwritten.
-            A corrected verdict alone does NOT increment recurrence_count and
+            A corrected verdict does NOT increment recurrence_count and
             does NOT by itself establish a recurrence.
 
 Corrected verdict on a FIXED/WATCH record (before validation completes):
@@ -665,11 +675,16 @@ OPEN -> REOPENED: DELETED (addendum CR-03 correction 1). Not a fallback.
 - **INC-3 [P — prep §2.2, addendum CR-03; [REF] for the prep's original
   "new evidence contradicting the validation"].** The prep's `validated ->
   reopened` accepted "new_evidence contradicting the validation, or a
-  corrected verdict". This spec keeps both paths into REOPENED from VALIDATED
-  (a new recurrence, or a corrected verdict) but records them in their
-  separate fields; only a recurrence increments `recurrence_count`. Whether
-  WP-04 treats a post-validation recurrence differently is unknown (§2 point
-  8).
+  corrected verdict". Addendum CR-03 governs over the prep: VALIDATED →
+  REOPENED requires `corrected_verdict_evidence` only; recurrence-based
+  reopening (`recurrence_evidence`, incrementing `recurrence_count`) belongs
+  to FIXED → REOPENED and WATCH → REOPENED only. A recurrence-based path from
+  VALIDATED is **not** an operative transition in this Specification.
+  **Unapplied proposal (requires separate review, not operative) [P — prep
+  §2.2, not adopted]:** allow VALIDATED → REOPENED on `recurrence_evidence`,
+  recorded in its own field and incrementing `recurrence_count`. It may be
+  adopted only by a re-review of addendum CR-03 (conflict C-9). Whether WP-04
+  treats a post-validation recurrence differently is unknown (§2 point 8).
 - **INC-4 [P — prep §2.2 "Separation rule"].** Observed facts, hypotheses, and
   reproduction-supported conclusions are stored in separate fields and never
   merged. A hypothesis that later gains reproduction support is recorded as a
@@ -709,7 +724,7 @@ Missing required field → record incomplete, returned without verdict (prep §3
 | `sufficiency_judgment` | Required for VALIDATED | Judgment text: why the evidence suffices, by whom (judge role OPEN pending D2), date. A structural check never substitutes (H6). |
 | `recurrence_count` | Required | Incremented by recurrence evidence only (INC-2). |
 | `recurrence_evidence` | Required for each FIXED/WATCH → REOPENED | Specific pointer + reason (addendum CR-03). |
-| `corrected_verdict_evidence` | Required for VALIDATED → REOPENED by correction, and for correction annotations | Specific pointer + reason; not recurrence (addendum CR-03). *Field name from addendum CR-03; not in prep §3.1.* |
+| `corrected_verdict_evidence` | Required for VALIDATED → REOPENED (its only path), and for correction annotations | Specific pointer + reason; not recurrence (addendum CR-03). *Field name from addendum CR-03; not in prep §3.1.* |
 | `provenance` | Required | Per field where they differ. |
 | `history` | Required | Append-only: each status change with reason, evidence pointer, date. |
 
@@ -739,9 +754,12 @@ Missing required field → record incomplete, returned without verdict (prep §3
   watch computation names the start reading and the counting rule it applied.
   A computation under an undecided rule is labeled **PROVISIONAL**, never
   final.
-- **WAT-5 [REF].** Watch extends by FULL windows on insufficient exposure —
-  a full 30-days-or-10-tasks window, not a partial top-up; each extension
-  re-applies the end-condition and exposure tests (addendum CR-01).
+- **WAT-5 [REF baseline + P addendum CR-01 — labeled per part].** Two parts:
+  - **[REF — prep §2.3; unverified against WP-04 verbatim].** Watch extends
+    by FULL windows on insufficient exposure — a full 30-days-or-10-tasks
+    window, not a partial top-up.
+  - **[P — addendum CR-01].** Each extension re-applies the end-condition and
+    exposure tests.
 - **WAT-6 [REF — prep §2.3; Register CR-09 "approved second-recurrence rule";
   procedure OPEN — SIE-07].** A second recurrence mandates deeper review. It
   does not automatically reopen, validate, or invalidate anything; the review
@@ -1218,11 +1236,11 @@ resolve it.
 | C-6 | "Candidate" names both a detector output and a lesson state | Prep §2.1 vs. Register CR-09 | Always qualified (VOC-7) | Terminology decision (F-10) |
 | C-7 | Seed corpus "ten items plus the truncated-base-SHA candidate": is SHA one of ten or an eleventh? | Prep SIE-P5 exit vs. prep §4.7 | Not guessed | WP-04 quote (§2 pt 5) |
 | C-8 | Graphiti trigger operator grouping ambiguous ("A AND B OR C") and threshold is a range ("50–100+") | Prep "Basis" | Not interpreted | WP-04 quote (§2 pt 6) |
-| C-9 | Prep `validated -> reopened` allowed "new evidence contradicting the validation"; addendum CR-03 assigns VALIDATED → REOPENED to corrected-verdict evidence | Prep §2.2 vs. addendum CR-03 | Both paths kept, separate fields; only recurrence increments count (INC-3) | Addendum re-review |
+| C-9 | Prep `validated -> reopened` allowed "new evidence contradicting the validation"; addendum CR-03 assigns VALIDATED → REOPENED to corrected-verdict evidence | Prep §2.2 vs. addendum CR-03 | Addendum CR-03 applied: VALIDATED → REOPENED by `corrected_verdict_evidence` only; recurrence reopening from FIXED/WATCH only. The prep's recurrence-from-VALIDATED path is recorded as an unapplied proposal, not operative (INC-3) | Separate re-review of addendum CR-03 if the recurrence path is wanted |
 | C-10 | Prep `watch_outcome` grants eligibility mid-window | Prep §2.3 vs. addendum CR-01 | Addendum governs (§7.1) | Already corrected (addendum, pending re-review) |
 | C-11 | Prep `open -> reopened` vs. AC-P2-1 | Prep §2.2 vs. prep AC-P2-1 | Removed per addendum CR-03 | Already corrected (addendum, pending re-review) |
 | C-12 | Prep N-LES refused all lesson creation from unvalidated incidents, incl. staging | Prep §5.2 vs. addendum CR-02 | Addendum governs (N-LES, LES-2) | Already corrected (addendum, pending re-review) |
-| C-13 | Brief's T0 entry criterion "WP-04 v1.1 retrieved" not met | Brief §9 T0 vs. available sources | Proceeded under AC-T0-2's "flagged as missing" branch | Retrieval of WP-04 text; Founder/coordinator note |
+| C-13 | Brief's T0 entry criterion "WP-04 v1.1 retrieved" not met | Brief §9 T0 vs. available sources | Proceeded under AC-T0-2's "flagged as missing" branch; coordinator accepted the deviation for T0 as a draft, conditional on retrieval and quotation of the eight passages before dependent implementation tasks proceed on them (§0.4) | Retrieval of WP-04 text |
 | C-14 | Prep field names (`attempt_count`, `last_progress_tick`) vs. repo records (`attempts`; no recorded tick index found) | Prep §2.1 vs. `scripts/task-state.mjs`, `tasks/schema.md` | Observation only (§5.3); T1 reconciles | T1 + SIE-03 |
 
 Any conflict between this Specification and WP-04 v1.1, a Founder decision
