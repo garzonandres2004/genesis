@@ -13,13 +13,16 @@ widget-a16b7b03). It is recorded verbatim; this wording is authoritative:
 
 > (a) R4-events is carried as [OPEN]/not-evaluated. The detector's event
 > half is NOT implemented and must NOT be claimed. T1 is accepted on the
-> blocker half only. Record the [OPEN] status in the spec and in T1's
+> blocker half only. Record the [OPEN] status in the spec/README and in T1's
 > acceptance (AC-T1-1 and AC-T1-4 met in part: blocker half only; event
 > half not evaluated).
 >
 > (b) Roadmap Stage 3 exits on Milestone A demonstrated. SIE Phase 1
 > (internal) completion (A+B) is a separate later matter, per WP-04's own
 > distinction — do not treat the internal Phase 1 gate as the Stage 3 exit.
+
+*Report note (not part of the amendment):* no README was edited, because
+the step-1 scope covered only the Specification and this report.
 
 **T1 acceptance under this amendment.** T1 is accepted on the blocker half
 only. **AC-T1-1 and AC-T1-4 are met IN PART: blocker half only; event half
@@ -362,7 +365,7 @@ are builder claims only.
 
 | AC | Builder claim | Evidence the verifier can inspect |
 |---|---|---|
-| AC-T1-1 | **Met in part (blocker half only; event half not evaluated — [OPEN] per Founder amendment 2026-11-06).** Original claim, kept as history: **Not met — finding 1 open, escalated.** R4's event dimension is not implemented because no source names the event key (see "R4 events — why no key was chosen"). Otherwise: six branches, R1–R6, one per reconstructed rule, and no additional matching rule. Whether WP-04 itself has exactly these six rules cannot be checked (Spec §2 point 1, MISSING). | `RULE_BRANCHES` in `sie-detector.mjs`. Tests "AC-T1-1: exactly six rule branches…" and "…each rule builds candidates in exactly one place" (a source count of `makeCandidate('Rn'` = 1 per rule, 6 in total) |
+| AC-T1-1 | **Met in part (blocker half only; event half not evaluated — [OPEN] per Founder amendment 2026-11-06).** Original claim, kept as history: **Not met — finding 1 open, escalated.** R4's event dimension is not implemented because no source names the event key (see "R4 events — why no key was chosen"). Otherwise: six branches, R1–R6, one per reconstructed rule, and no additional matching rule. Whether WP-04 itself has exactly these six rules cannot be checked (Spec §2 point 1, MISSING). **Current status (2026-11-06):** point 1's six rules ARE now quoted from WP-04 v1.1 (retrieval 2026-11-06; Spec §2 point 1), so the six rules are verified as WP-04 wording. What remains open is only the R4 event-key sub-gap, carried as [OPEN]/not-evaluated under the Founder Amendment. | `RULE_BRANCHES` in `sie-detector.mjs`. Tests "AC-T1-1: exactly six rule branches…" and "…each rule builds candidates in exactly one place" (a source count of `makeCandidate('Rn'` = 1 per rule, 6 in total) |
 | AC-T1-2 | **Met.** Every output is `record_type: "detector-candidate"` with exactly the DET-9 fields and a fixed note: "Not a failure, not an incident, not a runner-caused-failure verdict; no cause is determined". No `verdict`, `cause`, or `classification` field exists. | Test "AC-T1-2: every output is a detector candidate with only DET-9 fields…". `makeCandidate` and `CANDIDATE_NOTE` in the source |
 | AC-T1-3 | **Addressed (finding 2 fixed; verifier to confirm).** The write guard now compares filesystem-resolved paths, so symlink aliases into a task-record directory are refused before anything is created. The boundary is stated in the module header (READ-ONLY BOUNDARY). The header states that the detector never modifies, reclassifies, backfills, renames, or deletes a source record, and never writes into `tasks/` or `events.jsonl`. It also states that creating SIE detector-candidate records is a separate act from reading Runner records (addendum refinement 6). The same boundary is stated in this report (Scope) and in the fixture README. | Tests: boundary text present; the only file write is one exclusive-create `writeFileSync` (no append, rename, delete, or truncate); fixture files are byte-identical (sha256) after scan and write; the writer refuses output inside a task-record directory, including the repo's `tasks/`; the writer refuses symlink aliases into those directories (new alias test); the CLI writes nothing without `--out` |
 | AC-T1-4 | **Met in part (blocker half only; event half not evaluated — [OPEN] per Founder amendment 2026-11-06).** Original claim, kept as history: **Not met in full (event inputs unevaluated, finding 1).** For the blocker dimension and R6: R4 compares recorded blocker strings by exact equality (no trim, no case folding) and needs at least 2 distinct task ids. A missing `blockers` field, a blank key, a non-string key, or a non-list `blockers` gives "insufficient evidence: key missing or incomparable" and never a candidate. R6 fires only at a tick-index distance of 3 or more (distance 2 does not match). Each of the following gives "insufficient evidence: tick position not determinable": a missing last-progress tick, a tick not in the index, a tick repeated in the index, an empty index (current tick undeterminable), and no index at all. **Gap:** the R4 *event* dimension is not implemented (see Open items). | Tests "AC-T1-4 / F-R4…", "…F-R4-INS…", "R4 never groups blank or incomparable keys…", "R4 counts distinct tasks…", "…event dimension is recorded as not evaluated", "…F-R6…", "…F-R6-INS…", "with no recorded tick index…", "R6 ignores tasks that are not in_progress…" |
@@ -406,9 +409,16 @@ record (`rule_basis`), in the fixture README, and here.
    part. The event half stays NOT IMPLEMENTED and is not claimed.
 2. **WP-04 precondition (Spec §0.4, C-13, §18).** The coordinator
    disposition is now recorded verbatim in "Working-basis disposition".
-   It still conflicts with the Specification text, which conditions
-   dependent implementation on retrieval. That conflict is carried, not
-   resolved, and the Specification was not edited.
+   *(Original text, kept as history, describing the position before
+   retrieval:* It still conflicts with the Specification text, which
+   conditions dependent implementation on retrieval. That conflict is
+   carried, not resolved, and the Specification was not edited.*)*
+   **Updated 2026-11-06:** WP-04 v1.1 has now been retrieved and 7 of 8
+   points are quoted (Spec §2). The R4-events sub-gap is carried as
+   **[OPEN]/not-evaluated** under the Founder Amendment. The
+   disposition's precondition (retrieve and quote before the rules are
+   treated as VERIFIED/settled) is therefore satisfied for the 7 quoted
+   points. The "still conflicts" sentence above is historical.
 3. **No authoritative tick index (SIE-03 OPEN).** Operationally R6 can
    only produce "insufficient evidence" today. A tick source (for example
    the scheduler's own store) can be read only after an SIE-03 decision.

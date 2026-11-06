@@ -4,8 +4,9 @@
   verified. This document is the Stage 3 task T0 deliverable; it becomes a
   "reviewed draft" only after the independent verification in brief §8 and
   the human review its risk class requires.
-- **Version:** 0.2-draft, 2026-11-06 (fix round 1: verifier findings 1, 2,
-  5, 6 applied; see `T0-builder-report.md`).
+- **Version:** 0.3-draft, 2026-11-06 (resume step 1 + fix round 1; 0.2-draft
+  was fix round 1 on T0 verifier findings 1, 2, 5, 6; see
+  `T0-builder-report.md`).
 - **Owner (canonical subject):** Register ADR-12 assigns "Incident and lesson
   lifecycle" to the "New SIE Specification". ADR-12 is itself Proposed and
   F-24 (canonical document ownership) is Open (Register §5). Drafted by the
@@ -156,7 +157,7 @@ text, recorded verbatim:
 
 > (a) R4-events is carried as [OPEN]/not-evaluated. The detector's event
 > half is NOT implemented and must NOT be claimed. T1 is accepted on the
-> blocker half only. Record the [OPEN] status in the spec and in T1's
+> blocker half only. Record the [OPEN] status in the spec/README and in T1's
 > acceptance (AC-T1-1 and AC-T1-4 met in part: blocker half only; event
 > half not evaluated).
 >
@@ -447,9 +448,13 @@ Retrieval §10 is context only.
   that **replaces** the v1.0 rule. It is recorded as a clarification, not a
   contradiction (§2.9, DV-1). Specifically:
   - The prep's "unified watch rule [REF, not approved]" turns out to be
-    WP-04 v1.1's own text. Its "not approved" status is consistent with
-    WP-04 itself: the rule is "subject to decision 5" and preserves that
-    decision rather than deciding it.
+    WP-04 v1.1's own text. The prep's "[REF, not approved]" tag described
+    the status of the prep's reconstruction. Quotation verifies the
+    wording only. WP-04 v1.1 as a whole is REVIEW PASSED, PROPOSED
+    (retrieval header), so the rule is not Founder-approved. Separately,
+    the rule is "subject to decision 5" and preserves that decision rather
+    than deciding it; that concerns decision 5, not WP-04's approval
+    status.
   - The v1.0 "fix merge (recommended; see decision 5)" is the source of
     the prep's "[recommended in WP-04 v1.1]".
   - **Decision 5 (watch start: fix merge versus first post-merge CI run)
@@ -758,12 +763,12 @@ reconstruction **before** being quoted.
 | ID | Kind | Reconstruction (this Specification, as it stands) | WP-04 v1.1 (quoted, §2) | Handling |
 |---|---|---|---|---|
 | DV-1 | **Clarification (expected), not a contradiction** | WAT-2 W-C: "unified rule: later of fix-presence and record-creation" (prep §2.3: "[REF, not approved]"); W-A fix merge "[recommended in WP-04 v1.1]" | v1.1 point 2 unified rule, **replacing** the v1.0 rule "starting at fix merge (recommended; see decision 5)"; "subject to decision 5"; decision 5 "stays open" | W-C wording updated to the quoted v1.1 rule (§7 WAT-2). Decision 5 still OPEN; no reading adopted; computations PROVISIONAL (WAT-4) |
-| DV-2 | **Contradiction (ordering)** | Lifecycle OPEN → FIXED → WATCH → VALIDATED: validation comes **after** the watch and requires its end condition (§3, §6.1 INC-1, §8 VAL-1, addendum CR-01) | "detected → investigated → fixed → validated → watched → learned → evaluated … A validated incident enters watch." The v1.1 unified rule and Milestone B ("requires the full watch window; … incident validation"; "Milestone B cannot pass before the watch window elapses") also tie validation to the window | Not resolved. INC-1/VAL-1 unchanged. Needs a reviewed Specification revision (and possibly a Founder ruling) before T2 implements the lifecycle order (C-15) |
-| DV-3 | **Contradiction (missing requirement)** | Exposure = "operational evidence inside the watch window" (EXP-1, EXP-2, §3); "meaningful exposure" is a VAL-1 element with no threshold | "Meaningful exposure: the incident must have been exercised by at least 2 unrelated users in the live system." | Not resolved. The reconstruction omits WP-04's "at least 2 unrelated users" condition. What "unrelated users" means is not defined in the retrieved text. The omission must not be read as permission to validate on less (ST-3, C-16) |
+| DV-2 | **Contradiction (ordering)** | Lifecycle OPEN → FIXED → WATCH → VALIDATED: validation comes **after** the watch and requires its end condition (§3, §6.1 INC-1, §8 VAL-1, addendum CR-01) | "detected → investigated → fixed → validated → watched → learned → evaluated … A validated incident enters watch." The v1.1 unified rule and Milestone B list watch and validation among the Milestone B requirements ("requires the full watch window; … incident validation"; "Milestone B cannot pass before the watch window elapses"), but listing them as requirements does not establish their order, and "validated evidence" in the unified rule is not necessarily incident validation. No claim is made here that WP-04 ties validation to the window. | Not resolved. INC-1/VAL-1 unchanged. Needs a reviewed Specification revision (and possibly a Founder ruling) before T2 implements the lifecycle order (C-15) |
+| DV-3 | **Omitted mandatory condition (potential weakening)** | Exposure = "operational evidence inside the watch window" (EXP-1, EXP-2, §3); "meaningful exposure" is a VAL-1 element with no threshold | "Meaningful exposure: the incident must have been exercised by at least 2 unrelated users in the live system." | Not resolved. The reconstruction omits WP-04's "at least 2 unrelated users" condition; an unspecified threshold can coexist with the two-user minimum, so this is an omission, not a mutual exclusion. What "unrelated users" means is not defined in the retrieved text. The omission must not be read as permission to validate on less (ST-3, C-16) |
 | DV-4 | **Contradiction (looser alternative)** | VAL-1 element (1) and `reproduction_evidence`: "reproduced failure, **or documented reproduction analysis with its limit stated**" | "Validation requires a reproduced failure, a passing test, and independent verification." / "A validated incident requires a reproduced failure, a passing test, and independent verification." | Not resolved. The "or documented reproduction analysis" alternative is not in the retrieved WP-04 text and may weaken it (C-17) |
-| DV-5 | **Contradiction (looser condition)** | VAL-1 element (2) and `regression_test`: "passing regression test post-fix" / "passing result post-fix" | "A fix is implemented with a regression test that fails before the fix and passes after the fix." | Not resolved. The reconstruction omits "fails before the fix" (C-17) |
-| DV-6 | **Possible divergence** | VAL-1 (addendum CR-01): eligibility requires "the watch window's end condition has been reached"; prep's mid-window eligibility removed (C-10) | v1.1 unified rule: "Validated evidence during the window is sufficient for the watch to close; absence of recurrence alone is not validated evidence." | Not resolved. If WP-04 lets the watch close early on validated evidence, CR-01 is stricter than WP-04 (stricter does not weaken it). If WP-04 means "at window end", they agree. No reading adopted (C-18) |
-| DV-7 | **Not in the retrieved text (unverified, not contradicted)** | [REF] statements with no matching retrieved passage: full-window extension (WAT-5 [REF] part); "a second recurrence mandates deeper review" (WAT-6); "The loop runs as ordinary runner tasks. No new service, daemon, or database is introduced. The detector is read-only." (§2 pt 4, LOC-4); Graphiti trigger "NOT met" (RET-1); H1 "recommended in WP-04 v1.1"; H3 "≥5 guided + ≥5 unguided"; DET-2 candidate-vs-failure wording "following WP-04 v1.1"; "There is no prescribed reuse task [REF]" (N-REU; compare retrieval §10 item 4, a summary) | — (the retrieval covers the eight §2.2 points and the six v1.1 corrections only; the full WP-04 text is not local) | Each stays [REF], UNVERIFIED as before. Not contradicted, not confirmed (C-19) |
+| DV-5 | **Omitted mandatory condition (potential weakening)** | VAL-1 element (2) and `regression_test`: "passing regression test post-fix" / "passing result post-fix" | "A fix is implemented with a regression test that fails before the fix and passes after the fix." | Not resolved. The reconstruction omits "fails before the fix". Validation requires evidence of failure before the fix as well as passing after it (C-17) |
+| DV-6 | **Possible divergence** | VAL-1 (addendum CR-01): eligibility requires "the watch window's end condition has been reached"; prep's mid-window eligibility removed (C-10) | v1.1 unified rule: "Validated evidence during the window is sufficient for the watch to close; absence of recurrence alone is not validated evidence." | Not resolved. If WP-04 lets the watch close early on validated evidence, CR-01 is stricter than WP-04 (stricter does not weaken it) — but only while the retrieved Milestone B requirement for the full window remains intact; early close must not displace it. If WP-04 means "at window end", they agree. No reading adopted (C-18) |
+| DV-7 | **Not in the retrieved text (unverified, not contradicted)** | [REF] statements with no matching retrieved passage: full-window extension (WAT-5 [REF] part); "a second recurrence mandates deeper review" (WAT-6); "The loop runs as ordinary runner tasks. No new service, daemon, or database is introduced. The detector is read-only." (§2 pt 4, LOC-4); Graphiti trigger "NOT met" (RET-1); H1 "recommended in WP-04 v1.1"; H3 "≥5 guided + ≥5 unguided"; DET-2 candidate-vs-failure wording "following WP-04 v1.1"; "There is no prescribed reuse task [REF]" (N-REU) — NOT verified verbatim. What retrieval §10 item 4 (a summary, not WP-04 text) supports is only the narrower proposition: the "Adopt CLI reuse task" requirement was REMOVED and is illustrative only, and a task created primarily to produce a reuse metric is not proof of organic learning. The broader "no prescribed reuse task" formulation must not be treated as verbatim WP-04 verification | — (the retrieval covers the eight §2.2 points and the six v1.1 corrections only; the full WP-04 text is not local) | Each stays [REF], UNVERIFIED as before. Not contradicted, not confirmed (C-19) |
 | DV-8 | **Possible divergence (test grouping)** | §1.4: Group C = VAL, LES, REU, EVA (positive); Group A = DET, INC, DIA, FIX; Group B = N-VAL, N-LES, N-HIST, N-REU, N-EVAL, GOV | v1.0 Milestone A matrix lists VAL-1, VAL-2, LES-1/2, REU-1/2, EVA-1/2 with "EVERY row to pass"; v1.1 correction 1 (retrieval summary) groups A and B for Milestone A and Group C as "LES-1/2, REU-1/2, EVA-1/2", with VAL-1/VAL-2 in no listed group | Not resolved. Where WP-04 VAL-1/VAL-2 sit after v1.1 correction 1 is not stated in the retrieval. §1.4 unchanged (C-20) |
 | DV-9 | **Possible divergence (term "recurrence")** | `recurrence_count`/`recurrence_evidence`: a new occurrence of the observed behavior after the fix (INC-2, §6.1); second recurrence → deeper review | "Recurrence: 2 or more occurrences of the same blocker or event across 2 or more tasks." | Not resolved. WP-04's definition (cross-task, like R4) and the Specification's post-fix recurrence evidence may name different things. It also means "recurrence" in WP-04 depends in part on the [OPEN] R4 event key (C-20) |
 
@@ -1162,8 +1167,11 @@ Missing required field → record incomplete, returned without verdict (prep §3
     §2 point 2, replacing the v1.0 rule). In WP-04's words, the window
     starts "at the later of the two instants" (the fix's presence in the
     system and the incident record's creation), "subject to decision 5".
-    W-C is no longer "[REF, not approved]". It is quoted WP-04 v1.1 text.
-    It is still [OPEN] as to decision 5, because by its own text it
+    W-C's wording is now the quoted WP-04 v1.1 unified rule (verified
+    wording, §2 point 2). That verifies the wording only: WP-04 v1.1
+    itself carries the status REVIEW PASSED, PROPOSED (retrieval header),
+    so quotation does not remove its PROPOSED status and does not make it
+    Founder-approved. Decision 5 stays open. It is still [OPEN] as to decision 5, because by its own text it
     "preserves the decision rather than deciding it". T0 wording, kept as
     history: "unified rule: later of fix-presence and record-creation" (prep
     §2.3: "[REF, not approved]").
@@ -1561,7 +1569,13 @@ records only, never operational data (prep AC-P6-2).
 - **N-REU [P — prep §5.4, unchanged; H2 OPEN].** Refuse: (a) reuse claimed
   from a staged lesson; (b) reuse with no task (manufactured or prescribed
   reuse task); (c) reuse outside the lesson's applicability. "There is no
-  prescribed reuse task [REF]; preparation must not invent one." Designed
+  prescribed reuse task [REF]; preparation must not invent one." That
+  [REF] statement stays UNVERIFIED and is not verified verbatim by the
+  retrieval: retrieval §10 item 4 (a summary, not WP-04 text) supports
+  only the narrower proposition that the "Adopt CLI reuse task"
+  requirement was REMOVED and is illustrative only, and that a task
+  created primarily to produce a reuse metric is not proof of organic
+  learning (§2.9, DV-7). Designed
   against the proposed legitimate-task-only rule, with the assumption marked.
   N-REU tests *refusal*; it demonstrates no reuse.
 - **N-EVAL [P — prep §5.5, unchanged].** Refuse or downgrade to "no
@@ -1691,8 +1705,8 @@ C-15 to C-20 record the divergences found on retrieval (§2.9).
 | C-14 | Prep field names (`attempt_count`, `last_progress_tick`) vs. repo records (`attempts`; no recorded tick index found) | Prep §2.1 vs. `scripts/task-state.mjs`, `tasks/schema.md` | Observation only (§5.3); T1 reconciles | T1 + SIE-03 |
 | C-15 | Lifecycle order: WATCH before VALIDATED vs. WP-04 "validated → watched … A validated incident enters watch" (§2.9 DV-2) | §3, §6.1 INC-1, §8 VAL-1 (Register CR-09 order; addendum CR-01) vs. WP-04 v1.1 point 8 | Recorded; INC-1/VAL-1 unchanged | Reviewed Specification revision; Founder ruling if WP-04 and CR-09/CR-01 cannot both hold. Before T2 implements the lifecycle order |
 | C-16 | Meaningful exposure: WP-04 "at least 2 unrelated users in the live system" absent from the reconstruction (§2.9 DV-3) | EXP-1/EXP-2, VAL-1 (4) vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Reviewed Specification revision; meaning of "unrelated users" for an engineering platform needs a decision |
-| C-17 | Validation elements looser than WP-04: "or documented reproduction analysis" (DV-4); regression test "fails before the fix" omitted (DV-5) | VAL-1 (1)–(2), §6.2 fields vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Reviewed Specification revision (before T2/T6 encode these elements) |
-| C-18 | Watch close: "Validated evidence during the window is sufficient for the watch to close" vs. addendum CR-01 end-condition requirement (§2.9 DV-6) | WP-04 v1.1 point 2 vs. VAL-1, §7.1 (addendum CR-01; C-10) | Recorded; CR-01 kept (stricter or equal under either reading) | Review clarification of the WP-04 sentence |
+| C-17 | Validation elements looser than WP-04: "or documented reproduction analysis" (DV-4); regression test "fails before the fix" omitted — an omitted mandatory condition (potential weakening), not a contradiction (DV-5) | VAL-1 (1)–(2), §6.2 fields vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Reviewed Specification revision (before T2/T6 encode these elements) |
+| C-18 | Watch close: "Validated evidence during the window is sufficient for the watch to close" vs. addendum CR-01 end-condition requirement (§2.9 DV-6) | WP-04 v1.1 point 2 vs. VAL-1, §7.1 (addendum CR-01; C-10) | Recorded; CR-01 kept (stricter or equal under either reading, provided the retrieved full-window Milestone B requirement remains intact) | Review clarification of the WP-04 sentence |
 | C-19 | [REF] statements with no matching retrieved passage (§2.9 DV-7) | Prep [REF] reconstructions vs. retrieval scope | Remain [REF], UNVERIFIED | Full WP-04 text, or review confirmation |
 | C-20 | Test grouping of WP-04 VAL-1/VAL-2 after v1.1 correction 1 (DV-8); "recurrence" defined cross-task in WP-04 vs. post-fix recurrence evidence here (DV-9) | §1.4, INC-2 vs. WP-04 v1.1 points 8 and correction 1 | Recorded; §1.4 and INC-2 unchanged | Reviewed Specification revision; DV-9 partly depends on the [OPEN] R4 event key |
 
