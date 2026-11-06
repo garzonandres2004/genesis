@@ -4,9 +4,10 @@
   verified. This document is the Stage 3 task T0 deliverable; it becomes a
   "reviewed draft" only after the independent verification in brief §8 and
   the human review its risk class requires.
-- **Version:** 0.3-draft, 2026-11-06 (resume step 1 + fix round 1; 0.2-draft
-  was fix round 1 on T0 verifier findings 1, 2, 5, 6; see
-  `T0-builder-report.md`).
+- **Version:** 0.4-draft, 2026-11-06 (spec revision for DV-2–DV-9; see
+  `DV-revision-builder-report.md`). 0.3-draft was resume step 1 + fix
+  rounds; 0.2-draft was fix round 1 on T0 verifier findings 1, 2, 5, 6; see
+  `T0-builder-report.md`.
 - **Owner (canonical subject):** Register ADR-12 assigns "Incident and lesson
   lifecycle" to the "New SIE Specification". ADR-12 is itself Proposed and
   F-24 (canonical document ownership) is Open (Register §5). Drafted by the
@@ -147,6 +148,11 @@ the T0 position as history.** The current position is:
   carve-out is the Founder Amendment's subject.
 - Where a reconstruction can now be compared with WP-04, the comparison is
   recorded in §2.9. No reconstruction was silently rewritten.
+- **Revision 0.4-draft, 2026-11-06 (DV-2–DV-9).** The spec revision that
+  the coordinator disposition prescribes has been made. Each DV row in §2.9
+  now records its outcome: DV-4, DV-5, DV-6 and DV-9 (counting definition)
+  resolved; DV-2 and DV-3 open pending a Founder ruling; DV-7 and DV-8
+  open; the DV-9 second-recurrence threshold open.
 
 ### 0.5 Founder Amendment — 2026-11-06 ~10:39 MST (widget widget-a16b7b03)
 
@@ -470,6 +476,14 @@ Retrieval §10 is context only.
   - One sentence of the v1.1 rule may differ from addendum CR-01's
     eligibility rule: "Validated evidence during the window is sufficient
     for the watch to close". It is recorded, not resolved (§2.9, DV-6).
+    **Revision 0.4-draft, 2026-11-06: DV-6 RESOLVED by a conjunctive
+    reading.** The watch closes toward validation eligibility only when
+    BOTH the end condition is reached AND validated evidence is present.
+    Absence of recurrence alone is never sufficient. This reading is
+    stricter than or equal to the WP-04 sentence and equal to addendum
+    CR-01, so it weakens neither. The retrieved Milestone B requirement
+    for the full watch window stays intact and independently required.
+    The WP-04 quotation above is unchanged (§2.9, DV-6; C-18).
 - **This Specification's handling:** all three watch-start readings are
   preserved as OPEN (§7, WAT-2); no reading is adopted; every watch
   computation names its reading and is labeled provisional. W-C is now the
@@ -710,7 +724,8 @@ Retrieval §10 is context only.
 - **Gap now: QUOTED.** All five standards are quoted, so a reader can now
   check this Specification against WP-04. That check found **material
   divergences**: §2.9 DV-2 to DV-5, DV-6, DV-8, and DV-9. They are
-  recorded there and not resolved here.
+  recorded there and not resolved here. (Step-1 text, kept as history;
+  see the revision note under "Blocks" below.)
 - **Blocks:** T2 (lifecycle and watch) and T6 (Group B refusals encode
   these standards) are no longer blocked on quotation. Watch computations
   stay PROVISIONAL under H5 / decision 5.
@@ -719,7 +734,22 @@ Retrieval §10 is context only.
     Specification revision + affected-task rework".
   - The §2.9 divergences that touch T2/T6 therefore need that revision
     and review before T2/T6 rely on the affected points. This
-    Specification does not make that revision.
+    Specification does not make that revision. (Step-1 text, kept as
+    history.)
+  - **Revision 0.4-draft, 2026-11-06: the revision is now made.** It
+    still needs review. Outcomes per §2.9:
+    - DV-4 and DV-5 are tightened to WP-04 (VAL-1, §6.2, LES-3).
+    - DV-6 is resolved conjunctively (VAL-1, §7.1).
+    - DV-9 aligns the recurrence counting definition with WP-04's
+      cross-task text (§3, §6.1, §6.2). Its second-recurrence threshold
+      sub-point stays OPEN.
+    - DV-2 (lifecycle order) stays OPEN pending a Founder ruling (C-15).
+      T2 implements the brief's order with C-15 recorded and is reworked
+      if the Founder rules otherwise.
+    - DV-3 ("at least 2 unrelated users") stays OPEN pending a Founder
+      ruling (C-16). No validation may claim to satisfy it until it is
+      defined and enforced.
+    - DV-7 and DV-8 stay open (C-19, C-20).
   - Any claim that Stage 3 preserved the D1 standards must account for
     §2.9.
 
@@ -728,13 +758,13 @@ Retrieval §10 is context only.
 | # | Point | Quoted from WP-04? (revised 2026-11-06) | Source (retrieval §) | Still open after quotation |
 |---|---|---|---|---|
 | 1 | Detector rules R1–R6 | **Yes — six rules quoted; R4 event key [OPEN]** ([OPEN — R4 events: not evaluated], Founder Amendment §0.5 (a)) | §3, §1 | R4 event key (not in WP-04); R6 tick measurement not in WP-04 (DET-7 stays [P]) |
-| 2 | Watch rule / start / "next 10 tasks" | **Yes** (v1.0 rule + v1.1 unified rule, which replaces it) | §4 | Decision 5 / H5 (watch start); SIE-02; WAT-5 extension unverified; DV-6 |
+| 2 | Watch rule / start / "next 10 tasks" | **Yes** (v1.0 rule + v1.1 unified rule, which replaces it) | §4 | Decision 5 / H5 (watch start); SIE-02; WAT-5 extension unverified. DV-6 RESOLVED (0.4-draft, conjunctive reading) |
 | 3 | First-live-loop trigger | **Yes** (review note labeled as not WP-04) | §5 | SIE-05 (seed-docs inconsistency criteria) |
 | 4 | Seven capabilities; ordinary runner tasks | **Yes** (capabilities with definitions) | §6 | "Ordinary runner tasks" sentence not in retrieved text (DV-7) |
 | 5 | Seed corpus list | **Yes** (exactly 10 items; SHA item is an eleventh) | §2 | None for the list; C-7 CLOSED; T5 unblocked on it |
 | 6 | Graphiti conjunctive trigger | **Yes** (wording as-is, "50–100+" is WP-04's) | §7 | Grouping and threshold recorded, not interpreted (C-8) |
 | 7 | SIE Phases in WP-04 | **Yes** (Phase 1 (internal) = A+B, distinct from Stage 3 exit) | §8 | Phases beyond Phase 1 (WP-04 decision 3); C-1 CLOSED |
-| 8 | Lifecycle, watch, exposure, recurrence, evidence standards | **Yes** (all five, plus Milestone A/B and governance gate) | §9 (+ §10 item 1) | Divergences DV-2 to DV-6, DV-8, DV-9 (§2.9) |
+| 8 | Lifecycle, watch, exposure, recurrence, evidence standards | **Yes** (all five, plus Milestone A/B and governance gate) | §9 (+ §10 item 1) | 0.4-draft: DV-4, DV-5, DV-6 RESOLVED; DV-9 counting RESOLVED, threshold OPEN; DV-2, DV-3 OPEN pending a Founder ruling; DV-8 OPEN (§2.9) |
 
 T0 version of this table, kept as history: every point was "No — MISSING".
 The blocked tasks were T1 (point 1), T2/T6 (points 2, 8), T3 (point 3),
@@ -762,18 +792,26 @@ reconstruction **before** being quoted.
 - "Possible divergence" means they can be read consistently, but only
   through an interpretation that this document does not make.
 - Rows DV-2 onward are also entered in §17 (C-15 to C-20).
+- **Revision 0.4-draft, 2026-11-06.** The bullets above describe step 1
+  and are kept as history. The reviewed-revision step they anticipate has
+  now been drafted, and it still needs review. The "Reconstruction" column
+  below still shows the step-1 text, so the divergence stays visible. The
+  "Handling" column records each outcome: RESOLVED (with the sections
+  changed) or OPEN (with the reason and what unblocks it). The rules that
+  were changed are DV-4, DV-5, DV-6 and DV-9 (counting). DV-2, DV-3, DV-7
+  and DV-8 change no operative rule. DV-3 adds annotations only.
 
 | ID | Kind | Reconstruction (this Specification, as it stands) | WP-04 v1.1 (quoted, §2) | Handling |
 |---|---|---|---|---|
 | DV-1 | **Clarification (expected), not a contradiction** | WAT-2 W-C: "unified rule: later of fix-presence and record-creation" (prep §2.3: "[REF, not approved]"); W-A fix merge "[recommended in WP-04 v1.1]" | v1.1 point 2 unified rule, **replacing** the v1.0 rule "starting at fix merge (recommended; see decision 5)"; "subject to decision 5"; decision 5 "stays open" | W-C wording updated to the quoted v1.1 rule (§7 WAT-2). Decision 5 still OPEN; no reading adopted; computations PROVISIONAL (WAT-4) |
-| DV-2 | **Contradiction (ordering)** | Lifecycle OPEN → FIXED → WATCH → VALIDATED: validation comes **after** the watch and requires its end condition (§3, §6.1 INC-1, §8 VAL-1, addendum CR-01) | "detected → investigated → fixed → validated → watched → learned → evaluated … A validated incident enters watch." The v1.1 unified rule and Milestone B list watch and validation among the Milestone B requirements ("requires the full watch window; … incident validation"; "Milestone B cannot pass before the watch window elapses"), but listing them as requirements does not establish their order, and "validated evidence" in the unified rule is not necessarily incident validation. No claim is made here that WP-04 ties validation to the window. | Not resolved. INC-1/VAL-1 unchanged. Needs a reviewed Specification revision (and possibly a Founder ruling) before T2 implements the lifecycle order (C-15) |
-| DV-3 | **Omitted mandatory condition (potential weakening)** | Exposure = "operational evidence inside the watch window" (EXP-1, EXP-2, §3); "meaningful exposure" is a VAL-1 element with no threshold | "Meaningful exposure: the incident must have been exercised by at least 2 unrelated users in the live system." | Not resolved. The reconstruction omits WP-04's "at least 2 unrelated users" condition; an unspecified threshold can coexist with the two-user minimum, so this is an omission, not a mutual exclusion. What "unrelated users" means is not defined in the retrieved text. The omission must not be read as permission to validate on less (ST-3, C-16) |
-| DV-4 | **Contradiction (looser alternative)** | VAL-1 element (1) and `reproduction_evidence`: "reproduced failure, **or documented reproduction analysis with its limit stated**" | "Validation requires a reproduced failure, a passing test, and independent verification." / "A validated incident requires a reproduced failure, a passing test, and independent verification." | Not resolved. The "or documented reproduction analysis" alternative is not in the retrieved WP-04 text and may weaken it (C-17) |
-| DV-5 | **Omitted mandatory condition (potential weakening)** | VAL-1 element (2) and `regression_test`: "passing regression test post-fix" / "passing result post-fix" | "A fix is implemented with a regression test that fails before the fix and passes after the fix." | Not resolved. The reconstruction omits "fails before the fix". Validation requires evidence of failure before the fix as well as passing after it (C-17) |
-| DV-6 | **Possible divergence** | VAL-1 (addendum CR-01): eligibility requires "the watch window's end condition has been reached"; prep's mid-window eligibility removed (C-10) | v1.1 unified rule: "Validated evidence during the window is sufficient for the watch to close; absence of recurrence alone is not validated evidence." | Not resolved. If WP-04 lets the watch close early on validated evidence, CR-01 is stricter than WP-04 (stricter does not weaken it) — but only while the retrieved Milestone B requirement for the full window remains intact; early close must not displace it. If WP-04 means "at window end", they agree. No reading adopted (C-18) |
-| DV-7 | **Not in the retrieved text (unverified, not contradicted)** | [REF] statements with no matching retrieved passage: full-window extension (WAT-5 [REF] part); "a second recurrence mandates deeper review" (WAT-6); "The loop runs as ordinary runner tasks. No new service, daemon, or database is introduced. The detector is read-only." (§2 pt 4, LOC-4); Graphiti trigger "NOT met" (RET-1); H1 "recommended in WP-04 v1.1"; H3 "≥5 guided + ≥5 unguided"; DET-2 candidate-vs-failure wording "following WP-04 v1.1"; "There is no prescribed reuse task [REF]" (N-REU) — NOT verified verbatim. What retrieval §10 item 4 (a summary, not WP-04 text) supports is only the narrower proposition: the "Adopt CLI reuse task" requirement was REMOVED and is illustrative only, and a task created primarily to produce a reuse metric is not proof of organic learning. The broader "no prescribed reuse task" formulation must not be treated as verbatim WP-04 verification | — (the retrieval covers the eight §2.2 points and the six v1.1 corrections only; the full WP-04 text is not local) | Each stays [REF], UNVERIFIED as before. Not contradicted, not confirmed (C-19) |
-| DV-8 | **Possible divergence (test grouping)** | §1.4: Group C = VAL, LES, REU, EVA (positive); Group A = DET, INC, DIA, FIX; Group B = N-VAL, N-LES, N-HIST, N-REU, N-EVAL, GOV | v1.0 Milestone A matrix lists VAL-1, VAL-2, LES-1/2, REU-1/2, EVA-1/2 with "EVERY row to pass"; v1.1 correction 1 (retrieval summary) groups A and B for Milestone A and Group C as "LES-1/2, REU-1/2, EVA-1/2", with VAL-1/VAL-2 in no listed group | Not resolved. Where WP-04 VAL-1/VAL-2 sit after v1.1 correction 1 is not stated in the retrieval. §1.4 unchanged (C-20) |
-| DV-9 | **Possible divergence (term "recurrence")** | `recurrence_count`/`recurrence_evidence`: a new occurrence of the observed behavior after the fix (INC-2, §6.1); second recurrence → deeper review | "Recurrence: 2 or more occurrences of the same blocker or event across 2 or more tasks." | Not resolved. WP-04's definition (cross-task, like R4) and the Specification's post-fix recurrence evidence may name different things. It also means "recurrence" in WP-04 depends in part on the [OPEN] R4 event key (C-20) |
+| DV-2 | **Contradiction (ordering)** | Lifecycle OPEN → FIXED → WATCH → VALIDATED: validation comes **after** the watch and requires its end condition (§3, §6.1 INC-1, §8 VAL-1, addendum CR-01) | "detected → investigated → fixed → validated → watched → learned → evaluated … A validated incident enters watch." The v1.1 unified rule and Milestone B list watch and validation among the Milestone B requirements ("requires the full watch window; … incident validation"; "Milestone B cannot pass before the watch window elapses"), but listing them as requirements does not establish their order, and "validated evidence" in the unified rule is not necessarily incident validation. No claim is made here that WP-04 ties validation to the window. | Step 1: not resolved; needs a reviewed Specification revision (and possibly a Founder ruling) before T2 implements the lifecycle order. **0.4-draft (2026-11-06): OPEN — Founder ruling required (C-15).** The two orders are WP-04 "fixed → validated → watched" ("A validated incident enters watch") and Register CR-09 / this Specification / brief AC-T2-1 "FIXED → WATCH → VALIDATED". The texts cannot both hold as written, and choosing between a WP-04 baseline text and the brief's acceptance criteria is not a builder decision. INC-1, VAL-1 and the status machine are unchanged. **Consequence:** T2 implements the status machine to its brief-stated acceptance criteria (open → fixed → watch → validated) with C-15 recorded. If the Founder rules otherwise, T2's status machine is reworked |
+| DV-3 | **Omitted mandatory condition (potential weakening)** | Exposure = "operational evidence inside the watch window" (EXP-1, EXP-2, §3); "meaningful exposure" is a VAL-1 element with no threshold | "Meaningful exposure: the incident must have been exercised by at least 2 unrelated users in the live system." | Not resolved. The reconstruction omits WP-04's "at least 2 unrelated users" condition; an unspecified threshold can coexist with the two-user minimum, so this is an omission, not a mutual exclusion. What "unrelated users" means is not defined in the retrieved text. The omission must not be read as permission to validate on less (ST-3, C-16). **0.4-draft (2026-11-06): OPEN — Founder ruling required (C-16).** WP-04's condition is recorded as an **additional mandatory requirement that the current design does NOT enforce**. What "unrelated users" means for this platform is not defined, and this Specification does not define it. **No Stage 3 validation may claim to satisfy DV-3 until it is defined and enforced.** Annotations were added at VAL-1 element (4) and at the §3 Exposure row. The operative exposure rules (EXP-1, EXP-2, EVL-1–EVL-3) are unchanged. AC-T2-2 (the exposure-evidence-link check) is a separate requirement and stands as written |
+| DV-4 | **Contradiction (looser alternative)** | VAL-1 element (1) and `reproduction_evidence`: "reproduced failure, **or documented reproduction analysis with its limit stated**" | "Validation requires a reproduced failure, a passing test, and independent verification." / "A validated incident requires a reproduced failure, a passing test, and independent verification." | Step 1: not resolved. The "or documented reproduction analysis" alternative is not in the retrieved WP-04 text and may weaken it. **0.4-draft (2026-11-06): RESOLVED — tightened to WP-04 (C-17).** The alternative is removed from VAL-1 element (1) and from the §6.2 `reproduction_evidence` row; a reproduced failure is now required. Reason: D1 preservation. WP-04 is the authority and it is stricter; the looser alternative would weaken it |
+| DV-5 | **Omitted mandatory condition (potential weakening)** | VAL-1 element (2) and `regression_test`: "passing regression test post-fix" / "passing result post-fix" | "A fix is implemented with a regression test that fails before the fix and passes after the fix." | Step 1: not resolved. The reconstruction omits "fails before the fix". Validation requires evidence of failure before the fix as well as passing after it. **0.4-draft (2026-11-06): RESOLVED — tightened to WP-04 (C-17).** The requirement is now a regression test that fails before the fix AND passes after it. It is stated in VAL-1 element (2) and the §6.2 `regression_test` row. LES-3 now checks that tightened `regression_test` requirement explicitly. Reason: D1 preservation, as for DV-4 |
+| DV-6 | **Possible divergence** | VAL-1 (addendum CR-01): eligibility requires "the watch window's end condition has been reached"; prep's mid-window eligibility removed (C-10) | v1.1 unified rule: "Validated evidence during the window is sufficient for the watch to close; absence of recurrence alone is not validated evidence." | Not resolved. If WP-04 lets the watch close early on validated evidence, CR-01 is stricter than WP-04 (stricter does not weaken it) — but only while the retrieved Milestone B requirement for the full window remains intact; early close must not displace it. If WP-04 means "at window end", they agree. No reading adopted (step 1). **0.4-draft (2026-11-06): RESOLVED — conjunctive reading adopted (C-18).** The watch closes toward validation eligibility only when BOTH (a) the window's end condition is reached AND (b) validated evidence is present. Validated evidence during the window is necessary, but the window must still end. Absence of recurrence alone is never sufficient. **Why this weakens neither text:** (1) Read against WP-04's sentence, it is stricter than or equal: equal if "sufficient" means "at window end", stricter if WP-04 permits an early close, because the permission is simply not used. It never closes on less than WP-04 requires and keeps WP-04's "absence of recurrence alone is not validated evidence". (2) It equals addendum CR-01's end-condition requirement and adds the evidence condition that VAL-1 already requires. (3) It is consistent with WP-04's Milestone B requirements ("requires the full watch window"; "Milestone B cannot pass before the watch window elapses"). Brief AC-T2-2, AC-T6-5 and VAL-1 element (1) point the same way; they support this reading but do not decide it. **Qualification of the earlier "CR-01 stricter or equal" claim:** it holds only relative to WP-04's watch-close sentence. It does not replace or satisfy the retrieved Milestone B full-window requirement, which stays intact and independently required. This resolution does not decide the lifecycle order (DV-2) or whether WP-04's "validated evidence" means incident validation. The WP-04 quotation in §2 point 2 is unchanged |
+| DV-7 | **Not in the retrieved text (unverified, not contradicted)** | [REF] statements with no matching retrieved passage: full-window extension (WAT-5 [REF] part); "a second recurrence mandates deeper review" (WAT-6); "The loop runs as ordinary runner tasks. No new service, daemon, or database is introduced. The detector is read-only." (§2 pt 4, LOC-4); Graphiti trigger "NOT met" (RET-1); H1 "recommended in WP-04 v1.1"; H3 "≥5 guided + ≥5 unguided"; DET-2 candidate-vs-failure wording "following WP-04 v1.1"; "There is no prescribed reuse task [REF]" (N-REU) — NOT verified verbatim. What retrieval §10 item 4 (a summary, not WP-04 text) supports is only the narrower proposition: the "Adopt CLI reuse task" requirement was REMOVED and is illustrative only, and a task created primarily to produce a reuse metric is not proof of organic learning. The broader "no prescribed reuse task" formulation must not be treated as verbatim WP-04 verification | — (the retrieval covers the eight §2.2 points and the six v1.1 corrections only; the full WP-04 text is not local) | Each stays [REF], UNVERIFIED as before. Not contradicted, not confirmed (C-19). **0.4-draft (2026-11-06): confirmed unchanged, still OPEN.** Every statement listed stays labeled [REF], UNVERIFIED. This revision neither confirms nor contradicts any of them, and none was rewritten. What unblocks them: the full WP-04 text, or a review confirmation |
+| DV-8 | **Possible divergence (test grouping)** | §1.4: Group C = VAL, LES, REU, EVA (positive); Group A = DET, INC, DIA, FIX; Group B = N-VAL, N-LES, N-HIST, N-REU, N-EVAL, GOV | v1.0 Milestone A matrix lists VAL-1, VAL-2, LES-1/2, REU-1/2, EVA-1/2 with "EVERY row to pass"; v1.1 correction 1 (retrieval summary) groups A and B for Milestone A and Group C as "LES-1/2, REU-1/2, EVA-1/2", with VAL-1/VAL-2 in no listed group | Not resolved. Where WP-04 VAL-1/VAL-2 sit after v1.1 correction 1 is not stated in the retrieval. §1.4 unchanged (C-20). **0.4-draft (2026-11-06): OPEN (C-20).** The retrieval does not state where WP-04 VAL-1/VAL-2 sit after v1.1 correction 1, and this Specification does not infer it. **T6's N-VAL tests must not assume a grouping** for WP-04 VAL-1/VAL-2: they must not claim to satisfy them as Group A/B rows, nor treat them as deferred Group C. §1.4 is unchanged. What unblocks it: the full v1.1 correction 1 text, or a review clarification |
+| DV-9 | **Possible divergence (term "recurrence")** | `recurrence_count`/`recurrence_evidence`: a new occurrence of the observed behavior after the fix (INC-2, §6.1); second recurrence → deeper review | "Recurrence: 2 or more occurrences of the same blocker or event across 2 or more tasks." | Not resolved. WP-04's definition (cross-task, like R4) and the Specification's post-fix recurrence evidence may name different things. It also means "recurrence" in WP-04 depends in part on the [OPEN] R4 event key (C-20). **0.4-draft (2026-11-06): counting definition RESOLVED (aligned); threshold sub-point OPEN (C-20).** *Aligned:* for counting purposes, "a recurrence" is now WP-04's definition: 2 or more occurrences of the same blocker or event across 2 or more distinct tasks, with the original incident's occurrence counted as one (§3, §6.1, §6.2). A post-fix new occurrence is *evidence* to be recorded. It increments `recurrence_count`, but it is not by itself the recurrence definition: whether a recurrence exists is decided by the cross-task condition over all recorded occurrences. *Threshold:* under cross-task counting, the **first recurrence** is when the condition first holds, i.e. the original occurrence plus one more occurrence in a different task (2 occurrences across 2 distinct tasks). WP-04 defines recurrence as a condition (≥ 2 occurrences), not as a numbered event, so the retrieved text does not say what a **second recurrence** is. The "second-recurrence rule" is Register CR-09's (named, not stated) and prep [REF] (DV-7). This sub-point is **OPEN**, and the existing threshold text (WAT-6; §7.1 `recurrence_count >= 2`; brief AC-T2-5) is **kept unchanged** as the working threshold. *No loosening:* a recorded post-fix occurrence that does not meet the cross-task condition (for example in the same task) still blocks any "zero recurrence" claim and still supports FIXED/WATCH → REOPENED. *Dependence:* for event-type occurrences, "same event" depends on the [OPEN] R4 event key. Until that key is defined, only the blocker half can be evaluated against WP-04's definition |
 
 **No other divergence was found.** The six detector rules and their
 thresholds (point 1), the first-live-loop trigger (point 3), the
@@ -822,15 +860,30 @@ EVL-1).
   order of lifecycle states (DV-2) is not a strictness question and stays
   unresolved.
 
+  **Revision 0.4-draft, 2026-11-06.** The paragraph above is the step-1
+  record. The revision it anticipates has now been made:
+  - DV-4 and DV-5 are tightened to WP-04 (§8 VAL-1, §6.2, §9 LES-3).
+  - DV-6 is resolved conjunctively (§8 VAL-1, §7.1).
+  - DV-9 aligns recurrence counting with WP-04's cross-task definition.
+    The second-recurrence threshold stays OPEN (table below).
+  - **DV-2 stays OPEN pending a Founder ruling** (C-15). The order below
+    is the brief's (AC-T2-1), recorded against WP-04's "validated →
+    watched".
+  - **DV-3 stays OPEN pending a Founder ruling** (C-16). The two-user
+    condition is mandatory in WP-04 but not enforced by this design, so
+    no validation may claim to satisfy it.
+  The rule that nothing here permits a looser condition than the quoted
+  WP-04 text still applies to everything that stays open.
+
 The standards, as reconstructed (each detailed in the section named):
 
 | Standard | Reconstructed content | Provenance | Detail |
 |---|---|---|---|
-| Lifecycle | OPEN → FIXED → WATCH → VALIDATED, with REOPENED from FIXED, WATCH, VALIDATED only; never from OPEN | States: Register CR-09 working vocabulary [P, F-10 OPEN]; transitions [P] (prep §2.2 as corrected by addendum CR-03, which removes OPEN → REOPENED and limits VALIDATED → REOPENED to corrected-verdict evidence) | §6 |
+| Lifecycle | OPEN → FIXED → WATCH → VALIDATED, with REOPENED from FIXED, WATCH, VALIDATED only; never from OPEN. *Order [OPEN — C-15, Founder ruling]: WP-04 reads "fixed → validated → watched"; this order follows brief AC-T2-1 pending the ruling (DV-2)* | States: Register CR-09 working vocabulary [P, F-10 OPEN]; transitions [P] (prep §2.2 as corrected by addendum CR-03, which removes OPEN → REOPENED and limits VALIDATED → REOPENED to corrected-verdict evidence) | §6 |
 | Watch | 30 days OR next 10 tasks, whichever first; start rule OPEN (3 readings); extension by full windows | [REF] (30d/10 tasks; full-window extension); [OPEN] start (H5) and counting (SIE-02) | §7 |
-| Exposure | Operational evidence inside the watch window only; record creation alone = zero exposure; fixture/synthetic/pre-window evidence never counts | [REF] (prep §2.3) | §7, §10 |
-| Recurrence | A second recurrence mandates deeper review; REOPENED and the second-recurrence rule retained | [REF] (prep §2.3); Register CR-09 (retention); procedure [OPEN] SIE-07 | §6, §7 |
-| Evidence / validation | Validation requires the window end condition reached AND sufficient in-window operational exposure AND all six validation elements | Elements [P] (prep §2.2); conjunctive rule [P] addendum CR-01 | §8, §10 |
+| Exposure | Operational evidence inside the watch window only; record creation alone = zero exposure; fixture/synthetic/pre-window evidence never counts. *Additional mandatory requirement NOT enforced by this design [OPEN — C-16, Founder ruling]: WP-04 "the incident must have been exercised by at least 2 unrelated users in the live system". "Unrelated users" is undefined for this platform; no validation may claim to satisfy it until it is defined and enforced (DV-3)* | [REF] (prep §2.3); the two-user condition is WP-04 v1.1 text (§2 point 8) | §7, §10 |
+| Recurrence | **Definition (counting) [WP-04 v1.1, quoted §2 point 8; aligned 0.4-draft, DV-9]:** "2 or more occurrences of the same blocker or event across 2 or more tasks". The original incident's occurrence counts as one, so the first recurrence = 2 occurrences across 2 distinct tasks. A post-fix new occurrence is recorded evidence (`recurrence_evidence`, incrementing `recurrence_count`). It is not by itself the definition, and it always blocks a "zero recurrence" claim. A second recurrence mandates deeper review; REOPENED and the second-recurrence rule retained. *What a "second recurrence" is under cross-task counting is [OPEN] (DV-9): the existing threshold (`recurrence_count >= 2`) is kept unchanged.* "Same event" depends on the [OPEN] R4 event key | Definition: WP-04 v1.1 (quoted); second-recurrence rule: [REF] (prep §2.3; DV-7); Register CR-09 (retention); procedure [OPEN] SIE-07 | §6, §7 |
+| Evidence / validation | Validation requires the window end condition reached AND sufficient in-window operational exposure AND all six validation elements. Element (1) is a reproduced failure (DV-4); element (2) is a regression test that fails before the fix and passes after it (DV-5). The watch closes toward eligibility only on end condition AND validated evidence (DV-6) | Elements [P] (prep §2.2), tightened to WP-04 v1.1 (0.4-draft); conjunctive rule [P] addendum CR-01, consistent with WP-04 v1.1 point 2 (DV-6) | §8, §10 |
 
 ---
 
@@ -1074,10 +1127,18 @@ WATCH -> VALIDATED:
             fixture evidence; on a staged lesson; by upgrading a record in place.
 
 FIXED -> REOPENED, WATCH -> REOPENED:            # addendum CR-03 correction 2
-    REQUIRES recurrence_evidence (a new occurrence of the observed behavior,
-             with a specific evidence pointer) AND a stated reason.
+    REQUIRES recurrence_evidence (a new post-fix occurrence of the same
+             blocker or event, with a specific evidence pointer and its task id)
+             AND a stated reason.
     EFFECT  watch restarts only under §7 rules; recurrence_count += 1;
             a second recurrence triggers mandatory deeper review (SIE-07 OPEN).
+    NOTE    (DV-9, 0.4-draft) The occurrence is recorded EVIDENCE. Whether it
+            completes a WP-04 recurrence is decided by the cross-task definition
+            over all recorded occurrences (original = 1; >= 2 occurrences across
+            >= 2 distinct tasks), not by this one occurrence alone. A same-task
+            occurrence still reopens and still blocks any "zero recurrence"
+            claim (no loosening). The "second recurrence" threshold text is
+            unchanged; what it means under cross-task counting is OPEN (DV-9).
 
 VALIDATED -> REOPENED:                            # addendum CR-03 correction 2
     REQUIRES corrected_verdict_evidence (specific evidence invalidating an
@@ -1099,6 +1160,21 @@ OPEN -> REOPENED: DELETED (addendum CR-03 correction 1). Not a fallback.
   corrected-verdict evidence are different evidence types, stored in
   different fields. A record is never moved backward without a stated reason
   and an evidence pointer, for either type.
+  **Recurrence definition (revision 0.4-draft, DV-9) [WP-04 v1.1, quoted
+  §2 point 8, for counting purposes]:** "Recurrence: 2 or more occurrences
+  of the same blocker or event across 2 or more tasks." The original
+  incident's occurrence counts as one.
+  - Each post-fix new occurrence is recorded as `recurrence_evidence` (with
+    its task id) and increments `recurrence_count`. It is evidence, not by
+    itself the recurrence definition.
+  - A recurrence exists when the cross-task condition holds over all
+    recorded occurrences.
+  - The first recurrence is therefore reached at 2 occurrences across 2
+    distinct tasks.
+  - What a "second recurrence" is under this counting is not stated in the
+    retrieved WP-04 text. It stays [OPEN] (DV-9), and the existing
+    threshold (WAT-6, §7.1) is unchanged.
+  - "Same event" depends on the [OPEN] R4 event key (§0.5 (a)).
 - **INC-3 [P — prep §2.2, addendum CR-03; [REF] for the prep's original
   "new evidence contradicting the validation"].** The prep's `validated ->
   reopened` accepted "new_evidence contradicting the validation, or a
@@ -1145,12 +1221,12 @@ Missing required field → record incomplete, returned without verdict (prep §3
 | `watch_start` | Required for WATCH and later | Computed per §7; **the reading applied (W-A/W-B/W-C) is named**; labeled PROVISIONAL while H5 is open (WAT-4). |
 | `watch_window` | Required for WATCH and later | Start, end condition, extensions (each a full window), current window number, task-counting rule applied (SIE-02). |
 | `exposure_evidence_link` | Required for VALIDATED; non-empty | Operational, in-window, specific (§10). Never fixture/synthetic. |
-| `regression_test` | Required for VALIDATED | Identifier and passing result post-fix. |
-| `reproduction_evidence` | Required for VALIDATED | Reproduced failure, or documented reproduction analysis with its limit stated. |
+| `regression_test` | Required for VALIDATED | Identifier, a **failing result before the fix, AND a passing result after the fix** (WP-04 v1.1: "a regression test that fails before the fix and passes after the fix"; tightened 0.4-draft, DV-5). A passing post-fix result alone does not satisfy this field. |
+| `reproduction_evidence` | Required for VALIDATED | A **reproduced failure** (WP-04 v1.1: "Validation requires a reproduced failure"; tightened 0.4-draft, DV-4). A documented reproduction analysis without a reproduced failure does not satisfy this field. |
 | `independent_verification` | Required for VALIDATED | Verifier identity, method, target commit/artifact, verdict. Until the D2 operational verifier role is decided: `NOT SATISFIED — D2 role pending`, and the incident is NOT labeled independently validated (H4). |
 | `sufficiency_judgment` | Required for VALIDATED | Judgment text: why the evidence suffices, by whom (judge role OPEN pending D2), date. A structural check never substitutes (H6). |
-| `recurrence_count` | Required | Incremented by recurrence evidence only (INC-2). |
-| `recurrence_evidence` | Required for each FIXED/WATCH → REOPENED | Specific pointer + reason (addendum CR-03). |
+| `recurrence_count` | Required | Number of recorded post-fix occurrences of the same blocker or event. Incremented by recurrence evidence only (INC-2). It counts evidence. Whether a WP-04 recurrence exists is decided by the cross-task definition over all occurrences, with the original counted as one: ≥ 2 occurrences across ≥ 2 distinct tasks (DV-9, 0.4-draft). The second-recurrence threshold (`>= 2`, WAT-6) is unchanged and [OPEN] as to its meaning under cross-task counting. |
+| `recurrence_evidence` | Required for each FIXED/WATCH → REOPENED | Specific pointer + reason + the task id of the occurrence (addendum CR-03; task id needed for the cross-task definition, DV-9). One entry is a recorded occurrence, not by itself a recurrence. Any entry blocks a "zero recurrence" claim. |
 | `corrected_verdict_evidence` | Required for VALIDATED → REOPENED (its only path), and for correction annotations | Specific pointer + reason; not recurrence (addendum CR-03). *Field name from addendum CR-03; not in prep §3.1.* |
 | `provenance` | Required | Per field where they differ. |
 | `history` | Required | Append-only: each status change with reason, evidence pointer, date. |
@@ -1206,6 +1282,15 @@ Missing required field → record incomplete, returned without verdict (prep §3
   does not automatically reopen, validate, or invalidate anything; the review
   decides, with evidence and judgment text. Stage 3 implements the trigger as
   a mechanism only.
+  **Revision 0.4-draft (DV-9):** recurrence is now counted by WP-04's
+  cross-task definition (INC-2). Under that definition, the first
+  recurrence is 2 occurrences across 2 distinct tasks (the original plus
+  one). The retrieved text does not say what the **second** recurrence is.
+  The working trigger stays exactly as before (`recurrence_count >= 2`,
+  i.e. two recorded post-fix occurrences; §7.1; brief AC-T2-5). Its
+  meaning under cross-task counting is [OPEN] (DV-9, C-20). What unblocks
+  it: the statement of the Register CR-09 "approved second-recurrence
+  rule", or a review clarification.
 - **EXP-1 [REF].** Exposure = operational evidence inside the window ONLY.
   Record creation alone = zero exposure.
 - **EXP-2 [REF — prep §2.3].** Fixture evidence, synthetic evidence, and
@@ -1242,8 +1327,12 @@ FUNCTION exposure_in_window(window, evidence) RETURNS exposure:
 FUNCTION watch_outcome(window, exposure, recurrence_count) RETURNS outcome:
     IF recurrence_count >= 2:
         RETURN "mandatory-deeper-review"          # prep §2.3 branch, retained (WAT-6)
-    IF window_end_condition NOT reached:          # addendum CR-01
-        RETURN "continue-watch"                   # exposure so far is provisional only
+                                                  # threshold unchanged; meaning under
+                                                  # cross-task counting OPEN (DV-9)
+    IF window_end_condition NOT reached:          # addendum CR-01; DV-6 conjunctive:
+        RETURN "continue-watch"                   # validated evidence mid-window never
+                                                  # closes the watch early; exposure so
+                                                  # far is provisional only
     IF window_end_condition reached AND exposure IS EMPTY:
         RETURN "extend-by-full-window"            # WAT-5
     IF window_end_condition reached AND exposure IS NON-EMPTY
@@ -1256,6 +1345,15 @@ The ordering above (recurrence branch first, then addendum CR-01's branches)
 is this Specification's reading of addendum CR-01's instruction to "Replace
 the eligibility branch" [P — this spec]. It is stricter than or equal to the
 prep in every case.
+
+**Revision 0.4-draft (DV-6).** The eligibility branches above implement
+the conjunctive reading of WP-04 v1.1's "Validated evidence during the
+window is sufficient for the watch to close". The watch closes toward
+validation eligibility only when the end condition is reached AND
+validated evidence is present, and absence of recurrence alone is never
+sufficient. This is stricter than or equal to WP-04's sentence and equal
+to addendum CR-01 (§2.9 DV-6). It does not satisfy or replace the separate
+Milestone B requirement for the full watch window, which stays intact.
 
 ### 7.2 Boundary notes (prep §2.3 "Worked boundary notes", per reading) [P]
 
@@ -1277,12 +1375,36 @@ prep in every case.
   1. The watch window's end condition has been reached (§7).
   2. Sufficient operational evidence inside the window (EXP-1, EXP-2, §10).
   3. All six validation elements:
-     (1) reproduced failure, or documented reproduction analysis with its
-     limit stated; (2) passing regression test post-fix; (3) independent
+     (1) a reproduced failure; (2) a regression test that fails before the
+     fix and passes after the fix; (3) independent
      verification, subject to D2 — until the D2 role is approved, recorded
      NOT SATISFIED and the incident is NOT labeled independently validated;
      (4) meaningful exposure; (5) sufficiency judgment text; (6) non-empty
      exposure-evidence link.
+
+  **Revision 0.4-draft, 2026-11-06:**
+  - **Element (1), DV-4.** Tightened to WP-04 v1.1: "Validation requires a
+    reproduced failure, a passing test, and independent verification".
+    The T0 alternative "or documented reproduction analysis with its limit
+    stated" is removed. Reason: D1 preservation. WP-04 is the authority
+    and is stricter.
+  - **Element (2), DV-5.** Tightened to WP-04 v1.1: "A fix is implemented
+    with a regression test that fails before the fix and passes after the
+    fix". The T0 text was "passing regression test post-fix". Same reason.
+  - **Items 1–2, DV-6.** These implement the conjunctive reading of WP-04
+    v1.1's watch-close sentence: end condition reached AND validated
+    evidence present. Absence of recurrence alone is never sufficient. The
+    Milestone B full-window requirement stays intact.
+  - **Element (4), DV-3 [OPEN — C-16, Founder ruling].** WP-04 v1.1 adds a
+    mandatory condition that this design does NOT enforce: "Meaningful
+    exposure: the incident must have been exercised by at least 2
+    unrelated users in the live system". What "unrelated users" means for
+    this platform is undefined. Until it is defined and enforced, no
+    validation may claim that element (4) satisfies WP-04's meaningful
+    exposure condition. Items 1–2 and elements (5)–(6) are unchanged.
+  - **Order, DV-2 [OPEN — C-15, Founder ruling].** VAL-1 sits on the
+    WATCH → VALIDATED transition (brief AC-T2-1). WP-04 reads "fixed →
+    validated → watched". VAL-1 is otherwise unchanged pending the ruling.
 - **VAL-2 [P — prep §2.3].** Eligibility is not validation. The sufficiency
   judgment must still be made and recorded.
 - **VAL-3 [P — prep §2.2].** Forbidden: validation on a merged PR alone; on
@@ -1325,7 +1447,8 @@ REQUIRE validated_incident.status == "VALIDATED"
 REQUIRE validated_incident.exposure_evidence_link IS NON-EMPTY
     AND specific (a specific record, event, commit, test result, or log entry)
     AND operational AND inside the watch window (§7, §10)
-REQUIRE validated_incident.regression_test identifier AND passing result
+REQUIRE validated_incident.regression_test identifier AND failing result before
+    the fix AND passing result after the fix   # §6.2 field as tightened (DV-5)
 REQUIRE validated_incident.sufficiency_judgment text present
 REQUIRE validated_incident.independent_verification NOT recorded as NOT SATISFIED
     # until the D2 role is approved, this cannot be met and NO validated
@@ -1690,6 +1813,16 @@ Closing these records what the quotation and the amendment settle. It is
 not a new decision. Each other row names what would resolve it. Rows
 C-15 to C-20 record the divergences found on retrieval (§2.9).
 
+**Revision 0.4-draft, 2026-11-06 (spec revision for DV-2–DV-9):**
+- **C-17 RESOLVED** (DV-4, DV-5 tightened to WP-04).
+- **C-18 RESOLVED** (DV-6, conjunctive reading).
+- **C-20:** the DV-9 counting definition is RESOLVED; its
+  second-recurrence threshold and the DV-8 half stay OPEN.
+- **C-15 and C-16 stay OPEN pending Founder rulings.**
+- **C-19 stays OPEN.**
+None of these outcomes is a Founder decision. The resolutions apply the
+quoted WP-04 text (or a reading stricter than it) and still need review.
+
 | ID | Conflict | Between | Handling here | Resolved by |
 |---|---|---|---|---|
 | C-1 | SIE Phase 1 = A+B vs. Phase 1 = functional (A) | Prep §1 [D1/REF] + addendum refinement 1 vs. advisor breakdown / brief §3 | Stage 3 exit = Milestone A (SC-9); phases not used in exit claims (SC-11) | WP-04 quote (§2 pt 7) + Founder decision. **CLOSED 2026-11-06** by the §2 pt 7 quotation (WP-04 defines SIE Phase 1 (internal) as A+B, distinct from the Stage 3 exit) and Founder Amendment (b) (§0.5): the split stands; SC-9 unchanged |
@@ -1706,12 +1839,12 @@ C-15 to C-20 record the divergences found on retrieval (§2.9).
 | C-12 | Prep N-LES refused all lesson creation from unvalidated incidents, incl. staging | Prep §5.2 vs. addendum CR-02 | Addendum governs (N-LES, LES-2) | Already corrected (addendum, pending re-review) |
 | C-13 | Brief's T0 entry criterion "WP-04 v1.1 retrieved" not met | Brief §9 T0 vs. available sources | Proceeded under AC-T0-2's "flagged as missing" branch; coordinator accepted the deviation for T0 as a draft, conditional on retrieval and quotation of the eight passages before dependent implementation tasks proceed on them (§0.4) | Retrieval of WP-04 text. **Retrieval done 2026-11-06:** T0 entry criterion met for the 7 quoted points; the **R4-events sub-gap remains open**, carried as [OPEN]/not-evaluated under the Founder Amendment (§0.5 (a)) |
 | C-14 | Prep field names (`attempt_count`, `last_progress_tick`) vs. repo records (`attempts`; no recorded tick index found) | Prep §2.1 vs. `scripts/task-state.mjs`, `tasks/schema.md` | Observation only (§5.3); T1 reconciles | T1 + SIE-03 |
-| C-15 | Lifecycle order: WATCH before VALIDATED vs. WP-04 "validated → watched … A validated incident enters watch" (§2.9 DV-2) | §3, §6.1 INC-1, §8 VAL-1 (Register CR-09 order; addendum CR-01) vs. WP-04 v1.1 point 8 | Recorded; INC-1/VAL-1 unchanged | Reviewed Specification revision; Founder ruling if WP-04 and CR-09/CR-01 cannot both hold. Before T2 implements the lifecycle order |
-| C-16 | Meaningful exposure: WP-04 "at least 2 unrelated users in the live system" absent from the reconstruction (§2.9 DV-3) | EXP-1/EXP-2, VAL-1 (4) vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Reviewed Specification revision; meaning of "unrelated users" for an engineering platform needs a decision |
-| C-17 | Validation elements looser than WP-04: "or documented reproduction analysis" (DV-4); regression test "fails before the fix" omitted — an omitted mandatory condition (potential weakening), not a contradiction (DV-5) | VAL-1 (1)–(2), §6.2 fields vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Reviewed Specification revision (before T2/T6 encode these elements) |
-| C-18 | Watch close: "Validated evidence during the window is sufficient for the watch to close" vs. addendum CR-01 end-condition requirement (§2.9 DV-6) | WP-04 v1.1 point 2 vs. VAL-1, §7.1 (addendum CR-01; C-10) | Recorded; CR-01 kept (stricter or equal under either reading, provided the retrieved full-window Milestone B requirement remains intact) | Review clarification of the WP-04 sentence |
-| C-19 | [REF] statements with no matching retrieved passage (§2.9 DV-7) | Prep [REF] reconstructions vs. retrieval scope | Remain [REF], UNVERIFIED | Full WP-04 text, or review confirmation |
-| C-20 | Test grouping of WP-04 VAL-1/VAL-2 after v1.1 correction 1 (DV-8); "recurrence" defined cross-task in WP-04 vs. post-fix recurrence evidence here (DV-9) | §1.4, INC-2 vs. WP-04 v1.1 points 8 and correction 1 | Recorded; §1.4 and INC-2 unchanged | Reviewed Specification revision; DV-9 partly depends on the [OPEN] R4 event key |
+| C-15 | Lifecycle order: WATCH before VALIDATED vs. WP-04 "validated → watched … A validated incident enters watch" (§2.9 DV-2) | §3, §6.1 INC-1, §8 VAL-1 (Register CR-09 order; addendum CR-01) vs. WP-04 v1.1 point 8 | Recorded; INC-1/VAL-1 unchanged | Step 1: reviewed Specification revision; Founder ruling if WP-04 and CR-09/CR-01 cannot both hold. **0.4-draft: OPEN — Founder ruling required.** The two orders, side by side: WP-04 v1.1 "detected → investigated → fixed → validated → watched → learned → evaluated … A validated incident enters watch" vs. Register CR-09 / this Specification / brief AC-T2-1 "open → fixed → watch → validated". The revision is done; it cannot reconcile the two orders without a ruling. INC-1, VAL-1 and the status machine are unchanged. **Consequence:** T2 implements the status machine to its brief-stated acceptance criteria (open → fixed → watch → validated) with C-15 recorded. If the Founder rules otherwise, T2's status machine is reworked |
+| C-16 | Meaningful exposure: WP-04 "at least 2 unrelated users in the live system" absent from the reconstruction (§2.9 DV-3) | EXP-1/EXP-2, VAL-1 (4) vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3). **0.4-draft:** recorded as an additional mandatory WP-04 requirement that the current design does NOT enforce, annotated at VAL-1 (4) and the §3 Exposure row. Operative exposure rules unchanged. AC-T2-2 stands as written | Step 1: reviewed Specification revision; meaning of "unrelated users" for an engineering platform needs a decision. **0.4-draft: OPEN — Founder ruling required** on what "unrelated users" means for this platform, followed by enforcement. **No Stage 3 validation may claim to satisfy DV-3 until it is defined and enforced** |
+| C-17 | Validation elements looser than WP-04: "or documented reproduction analysis" (DV-4); regression test "fails before the fix" omitted — an omitted mandatory condition (potential weakening), not a contradiction (DV-5) | VAL-1 (1)–(2), §6.2 fields vs. WP-04 v1.1 point 8 | Recorded; not to be read as permitting less (ST-3) | Step 1: reviewed Specification revision (before T2/T6 encode these elements). **RESOLVED 0.4-draft:** VAL-1 (1) and `reproduction_evidence` require a reproduced failure (alternative removed). VAL-1 (2), `regression_test` and LES-3 require fail-before AND pass-after. Reason: D1 preservation. Review of the revision still required |
+| C-18 | Watch close: "Validated evidence during the window is sufficient for the watch to close" vs. addendum CR-01 end-condition requirement (§2.9 DV-6) | WP-04 v1.1 point 2 vs. VAL-1, §7.1 (addendum CR-01; C-10) | Recorded; CR-01 kept (stricter or equal under either reading, provided the retrieved full-window Milestone B requirement remains intact). **0.4-draft qualification:** "stricter or equal" holds only relative to WP-04's watch-close sentence. It does not satisfy or replace the retrieved Milestone B full-window requirement, which stays intact | Step 1: review clarification of the WP-04 sentence. **RESOLVED 0.4-draft — conjunctive reading:** the watch closes only when the end condition is reached AND validated evidence is present; absence of recurrence alone is never sufficient. It is stricter than or equal to WP-04's sentence and equal to CR-01, so it weakens neither (§2.9 DV-6). It does not decide DV-2. Review of the revision still required |
+| C-19 | [REF] statements with no matching retrieved passage (§2.9 DV-7) | Prep [REF] reconstructions vs. retrieval scope | Remain [REF], UNVERIFIED. **0.4-draft:** confirmed unchanged; neither confirmed nor contradicted | Full WP-04 text, or review confirmation. **OPEN** |
+| C-20 | Test grouping of WP-04 VAL-1/VAL-2 after v1.1 correction 1 (DV-8); "recurrence" defined cross-task in WP-04 vs. post-fix recurrence evidence here (DV-9) | §1.4, INC-2 vs. WP-04 v1.1 points 8 and correction 1 | Step 1: recorded; §1.4 and INC-2 unchanged. **0.4-draft:** DV-8: §1.4 unchanged, and T6's N-VAL tests must not assume a grouping for WP-04 VAL-1/VAL-2. DV-9: the recurrence counting definition is aligned with WP-04's cross-task text (§3, INC-2, §6.1, §6.2). A post-fix occurrence is recorded evidence, not by itself a recurrence. The first recurrence is 2 occurrences across 2 distinct tasks | **DV-8 half: OPEN.** Unblocked by the full v1.1 correction 1 text or a review clarification. **DV-9 half: counting RESOLVED (0.4-draft); second-recurrence threshold OPEN.** The existing `recurrence_count >= 2` threshold is kept unchanged. It is unblocked by the statement of the Register CR-09 "approved second-recurrence rule" or a review clarification. DV-9 also depends on the [OPEN] R4 event key for event-type occurrences |
 
 Any conflict between this Specification and WP-04 v1.1, a Founder decision
 (D1–D8), or the M10 freeze is resolved in favour of the Founder decision and
@@ -1725,11 +1858,11 @@ the freeze; this Specification would then be wrong and must be corrected
 | Task | Uses | Blocked by §2 gap? (revised 2026-11-06) |
 |---|---|---|
 | T1 Detector | §5 (DET-1–DET-9), F-R1–F-R6, F-R4-INS, F-R6-INS, F-DUP | Point 1 six rules quoted; **R4 event key [OPEN — R4 events: not evaluated]**; T1 accepted on the blocker half only (Founder Amendment, §0.5 (a)); C-14. *T0: point 1 (exact rules)* |
-| T2 Incidents, status machine, watch | §6, §7, §8, VOC-5 | Points 2, 8 quoted; computations still PROVISIONAL under H5 / decision 5; divergences C-15–C-18, C-20 to be revised before T2 relies on the affected points. *T0: points 2, 8* |
+| T2 Incidents, status machine, watch | §6, §7, §8, VOC-5 | Points 2, 8 quoted; computations still PROVISIONAL under H5 / decision 5; divergences C-15–C-18, C-20 to be revised before T2 relies on the affected points (step 1). **0.4-draft:** revision made, review pending. C-17, C-18 and DV-9 counting are resolved, and T2 uses the tightened VAL-1, §6.2, §7.1 and INC-2. **C-15 OPEN (Founder ruling):** T2 implements AC-T2-1's order with C-15 recorded and is reworked if the Founder rules otherwise. **C-16 OPEN:** no validation claims DV-3. **DV-9 threshold OPEN:** AC-T2-5 uses the unchanged `recurrence_count >= 2`. *T0: points 2, 8* |
 | T3 Procedure | §15 | Point 3 quoted (state the trigger as quoted; review note is not WP-04); point 4 quoted, should be cited. *T0: point 3* |
 | T4 Schema + INDEX tests | §6.2, §9.2, §12 (IDX-1–IDX-6) | — |
 | T5 Seed records | §12 Section 5, N-HIST, F-SHA | Point 5 quoted (10 items + the truncated-base-SHA eleventh); **no longer blocked on the seed corpus**. *T0: entire list missing* |
-| T6 Group B | §14.2 | Points 2, 8 quoted; computations still PROVISIONAL under H5; divergences C-16–C-18 to be revised before T6 encodes the affected standards. *T0: points 2, 8* |
+| T6 Group B | §14.2 | Points 2, 8 quoted; computations still PROVISIONAL under H5; divergences C-16–C-18 to be revised before T6 encodes the affected standards (step 1). **0.4-draft:** revision made, review pending. C-17 and C-18 are resolved, and N-VAL (e) matches the DV-6 conjunctive reading (AC-T6-5). **C-16 OPEN:** no N-VAL result may claim WP-04's two-user condition. **DV-8 OPEN:** N-VAL must not assume a grouping for WP-04 VAL-1/VAL-2. *T0: points 2, 8* |
 | T7 Staging + retrieval | §9, §12 Section 4, §16 RET-1/RET-2 | Point 6 quoted as-is; grouping/threshold not interpreted (C-8). *T0: point 6* |
 | T8 Demonstration + readiness checklist | §14, §15 PRO-4/PRO-5, EVL-7 | — (reports the open gaps) |
 
@@ -1760,7 +1893,7 @@ Nothing below is decided by this Specification.
 | F-36 | SIE reuse judgment | Founder | Founder decision | REU-1 proposal; not decided by Stage 3 |
 | F-14 | Project-record storage | Founder | Founder decision | LOC-1 working assumption |
 | F-10 | Verdict and lesson vocabulary | Founder | Founder decision | VOC-1 used as working rule |
-| WP-04 | The eight §2.2 verbatim points | Coordinator (retrieval); Founder (any conflict) | WP-04 v1.1 text quoted into a revision of this Specification | **2026-11-06: 7 of 8 quoted** (§2); **R4-events open**, carried as [OPEN]/not-evaluated (Founder Amendment, §0.5 (a)); divergences C-15–C-20 open (§2.9) |
+| WP-04 | The eight §2.2 verbatim points | Coordinator (retrieval); Founder (any conflict) | WP-04 v1.1 text quoted into a revision of this Specification | **2026-11-06: 7 of 8 quoted** (§2); **R4-events open**, carried as [OPEN]/not-evaluated (Founder Amendment, §0.5 (a)); divergences C-15–C-20 open (§2.9) (step 1). **0.4-draft:** C-17, C-18 RESOLVED; C-20 DV-9 counting RESOLVED. C-15 (DV-2) and C-16 (DV-3) OPEN pending Founder rulings. C-19 (DV-7), the C-20 DV-8 half, and the DV-9 second-recurrence threshold OPEN |
 | SPEC-1 | Whether a still-stuck task yields new R6 candidates on later scans (DET-8) | T1 builder (proposal); Founder only if it affects recurrence | T1 design + review | [OPEN], low impact |
 
 ---
@@ -1778,6 +1911,13 @@ Nothing below is decided by this Specification.
   (WP-04 decision 3; C-1 itself is closed by quotation + Founder Amendment
   (b)), decision 5 (watch start), the R4 event key, the §2.9 divergences,
   or any §2.2 verbatim point (those are confirmed by quotation).
+  **Revision 0.4-draft, 2026-11-06:** DV-4, DV-5, DV-6 and the DV-9
+  counting definition are now resolved in this draft (§2.9). Each applies
+  the quoted WP-04 text or a reading stricter than it, and none is a
+  Founder decision. This revision does **not** decide the DV-2 lifecycle
+  order or the meaning of "unrelated users" (DV-3); both need Founder
+  rulings. It also does not decide DV-7, DV-8, or the DV-9
+  second-recurrence threshold, which stay open.
 - No Milestone B, Group C, validated lesson, reuse claim, improvement claim,
   or global lesson promotion.
 - No Runner change, database, service, daemon, deploy, spending, production
