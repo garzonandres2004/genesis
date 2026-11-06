@@ -23,8 +23,8 @@
 // a failure, or triggers a fix, retry, merge, or lesson. "Detector candidate"
 // is unrelated to the lesson state CANDIDATE (VOC-7).
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, join, relative, resolve, sep } from 'node:path';
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const RULE_BASIS =
@@ -184,7 +184,7 @@ function ruleR3({ tasks }) {
 // evaluated: the Spec names no event field as the R4 key (see notEvaluated).
 function ruleR4({ tasks }) {
   const insuff = [];
-  const groups = new Map(); // exact key -> Map(task id -> pointer)
+  const groups = new Map(); // exact key -> Map(task id -> { at, record })
   for (const t of tasks) {
     const { blockers } = t.record;
     if (!('blockers' in t.record) || blockers === undefined || blockers === null) {
@@ -203,7 +203,7 @@ function ruleR4({ tasks }) {
         insuff.push(insufficient('R4', INSUFFICIENT_R4, 'blocker key is blank', t.id, at));
       } else {
         if (!groups.has(key)) groups.set(key, new Map());
-        if (!groups.get(key).has(t.id)) groups.get(key).set(t.id, at);
+        if (!groups.get(key).has(t.id)) groups.get(key).set(t.id, { at, record: t.record });
       }
     });
   }
@@ -211,14 +211,20 @@ function ruleR4({ tasks }) {
   for (const [key, byTask] of groups) {
     if (byTask.size < 2) continue;
     const ids = [...byTask.keys()].sort();
-    const pointers = ids.map((id) => byTask.get(id));
+    const pointers = ids.map((id) => byTask.get(id).at);
+    // Timestamps as recorded (DET-9), one entry per contributing task. Not an
+    // id input: the DET-8 id stays rule + key + sorted pointers.
+    const perTaskTimestamps = ids.map((id) => {
+      const { at, record } = byTask.get(id);
+      return { task_id: id, source_pointer: at, created: record.created ?? null, updated: record.updated ?? null };
+    });
     out.push(makeCandidate('R4', {
       idInputs: [key, [...pointers].sort()],
       task_ids: ids,
       source_pointers: pointers,
-      recorded_timestamps: {},
+      recorded_timestamps: { per_task: perTaskTimestamps },
       match_description: `the exact recorded blocker key appears on ${ids.length} distinct tasks`,
-      retained: { key, key_source: 'blockers', per_task: ids.map((id) => ({ task_id: id, source_pointer: byTask.get(id) })) },
+      retained: { key, key_source: 'blockers', per_task: ids.map((id) => ({ task_id: id, source_pointer: byTask.get(id).at })) },
     }));
   }
   return { candidates: out, insufficient: insuff };
@@ -332,22 +338,48 @@ export function renderCandidate(c) {
 
 const inside = (child, parent) => child === parent || child.startsWith(parent + sep);
 
+// Filesystem-resolved path: realpath of the deepest existing ancestor, with
+// the not-yet-existing remainder appended, so a symlink anywhere along the
+// path is followed even when the target directory does not exist yet. A
+// dangling symlink cannot be resolved and is refused.
+function realResolve(p) {
+  let cur = resolve(p);
+  const rest = [];
+  for (;;) {
+    let isLink = false;
+    try {
+      isLink = lstatSync(cur).isSymbolicLink();
+    } catch {
+      const parent = dirname(cur);
+      if (parent === cur) break;
+      rest.unshift(basename(cur));
+      cur = parent;
+      continue;
+    }
+    if (isLink && !existsSync(cur)) throw new Error(`Refusing to write through an unresolvable symlink: ${cur}`);
+    break;
+  }
+  return join(realpathSync(cur), ...rest);
+}
+
 // Writes each candidate as <candidate_id>.md with exclusive create: an existing
 // file is left untouched and reported as existing, so repeated scans never
 // duplicate or rewrite a candidate record. Refuses any output location inside
-// a tasks directory or on an events file.
+// a tasks directory or on an events file, comparing filesystem-resolved paths
+// (symlink aliases included) before anything is created.
 export function writeCandidates(candidates, outDir, { tasksDir, eventsFile } = {}) {
-  const out = resolve(outDir);
-  const forbidden = [resolve(fileURLToPath(new URL('../tasks', import.meta.url))), tasksDir && resolve(tasksDir)].filter(Boolean);
+  const out = realResolve(outDir);
+  const forbidden = [fileURLToPath(new URL('../tasks', import.meta.url)), tasksDir].filter(Boolean).map(realResolve);
   for (const dir of forbidden) {
-    if (inside(out, dir)) throw new Error(`Refusing to write candidate records inside a task-record directory: ${out}`);
+    if (inside(out, dir)) throw new Error(`Refusing to write candidate records inside a task-record directory: ${outDir} (resolves to ${out})`);
   }
+  const events = eventsFile ? realResolve(eventsFile) : null;
   mkdirSync(out, { recursive: true });
   const created = [];
   const existing = [];
   for (const c of candidates) {
     const file = join(out, `${c.candidate_id}.md`);
-    if (eventsFile && file === resolve(eventsFile)) throw new Error(`Refusing to write over an events file: ${file}`);
+    if (events && file === events) throw new Error(`Refusing to write over an events file: ${file}`);
     if (existsSync(file)) { existing.push(c.candidate_id); continue; }
     try {
       writeFileSync(file, renderCandidate(c), { flag: 'wx' });

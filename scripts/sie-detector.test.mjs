@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -118,6 +118,29 @@ test('AC-T1-3: refuses to write candidate records inside a task-record directory
   assert.throws(() => writeCandidates(candidates, join(here, '..', 'tasks')), /Refusing to write/);
 });
 
+test('AC-T1-3: refuses symlink aliases into a task-record directory, before creating anything', () => {
+  const tasksDir = join(FX, 'F-R1-SYNTHETIC', 'tasks');
+  const repoTasks = join(here, '..', 'tasks');
+  const { candidates } = scanFixture('F-R1');
+  const tmp = mkdtempSync(join(tmpdir(), 'genesis-sie-alias-'));
+  symlinkSync(tasksDir, join(tmp, 'alias'), 'dir');
+  symlinkSync(repoTasks, join(tmp, 'repo-tasks-alias'), 'dir');
+  symlinkSync(join(tmp, 'missing-target'), join(tmp, 'dangling'));
+  const before = { fixture: readdirSync(tasksDir).sort(), repo: readdirSync(repoTasks).sort() };
+  // Output reached through the alias, directly and as a not-yet-existing descendant.
+  assert.throws(() => writeCandidates(candidates, join(tmp, 'alias'), { tasksDir }), /Refusing to write/);
+  assert.throws(() => writeCandidates(candidates, join(tmp, 'alias', 'new', 'sub'), { tasksDir }), /Refusing to write/);
+  // The protected directory itself named through an alias.
+  assert.throws(() => writeCandidates(candidates, tasksDir, { tasksDir: join(tmp, 'alias') }), /Refusing to write/);
+  // An alias of the repository's own tasks/ is refused with no tasksDir given.
+  assert.throws(() => writeCandidates(candidates, join(tmp, 'repo-tasks-alias')), /Refusing to write/);
+  assert.throws(() => writeCandidates(candidates, join(tmp, 'dangling', 'out')), /Refusing to write/);
+  assert.deepEqual({ fixture: readdirSync(tasksDir).sort(), repo: readdirSync(repoTasks).sort() }, before);
+  assert.ok(!existsSync(join(tmp, 'missing-target')), 'nothing created through the dangling symlink');
+  // A real output directory beside the aliases still works.
+  assert.equal(writeCandidates(candidates, join(tmp, 'out'), { tasksDir: join(tmp, 'alias') }).created.length, 1);
+});
+
 test('AC-T1-3: the CLI requires explicit paths and writes nothing without --out', () => {
   assert.throws(() => execFileSync('node', [script], { stdio: 'pipe' }));
   const dir = join(FX, 'F-R1-SYNTHETIC');
@@ -137,6 +160,23 @@ test('AC-T1-4 / F-R4: one R4 candidate on an exact key shared by 3 tasks; the co
   assert.deepEqual(r4[0].retained_values.per_task.map((p) => p.source_pointer), [
     'tasks/SYNTHETIC-fr4-shared-1.json#blockers[0]', 'tasks/SYNTHETIC-fr4-shared-2.json#blockers[0]', 'tasks/SYNTHETIC-fr4-shared-3.json#blockers[0]',
   ]);
+  assert.deepEqual(r4[0].recorded_timestamps, { per_task: [1, 2, 3].map((n) => ({
+    task_id: `SYNTHETIC-fr4-shared-${n}`, source_pointer: `tasks/SYNTHETIC-fr4-shared-${n}.json#blockers[0]`,
+    created: '2026-01-01', updated: '2026-01-01',
+  })) });
+});
+
+test('DET-9 / R4: recorded timestamps stay with their own task; they are not DET-8 id inputs', () => {
+  const r = scan({ tasks: [
+    synthetic('ts-b', { blockers: ['SYNTHETIC k'], created: '2026-02-01', updated: '2026-02-03' }),
+    synthetic('ts-a', { blockers: ['SYNTHETIC k'], created: '2026-01-01' }),
+  ] });
+  const [c] = r.candidates;
+  assert.deepEqual(c.recorded_timestamps.per_task, [
+    { task_id: 'SYNTHETIC-ts-a', source_pointer: 'tasks/SYNTHETIC-ts-a.json#blockers[0]', created: '2026-01-01', updated: null },
+    { task_id: 'SYNTHETIC-ts-b', source_pointer: 'tasks/SYNTHETIC-ts-b.json#blockers[0]', created: '2026-02-01', updated: '2026-02-03' },
+  ]);
+  assert.equal(c.candidate_id, candidateId('R4', ['SYNTHETIC k', ['tasks/SYNTHETIC-ts-a.json#blockers[0]', 'tasks/SYNTHETIC-ts-b.json#blockers[0]']]));
 });
 
 test('AC-T1-4 / F-R4-INS: missing, blank, incomparable keys give insufficient evidence; case/whitespace variants are different keys', () => {
