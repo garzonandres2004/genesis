@@ -106,7 +106,9 @@ rights over records (F-30; Stage 1 spec 08); safety-incident resumption rules
      review (step 5). Two verifier verdicts do not cancel each other; no
      majority rule.
   5. The human reviewer (Founder, or a delegate whose permission covers the
-     risk class, F-21) decides on the evidence and records the decision.
+     risk class, F-21 — subject to ES-8: a disagreement on a Governance,
+     Security or First-product item is the Founder's) decides on the evidence
+     and records the decision.
 - **ES-7 Allowed outcomes, and only these:**
   - corrected artifact re-verified PASS (D2: "Corrected artifacts require
     re-verification");
