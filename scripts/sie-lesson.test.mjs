@@ -14,6 +14,7 @@
 // the refusal paths only.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -75,6 +76,32 @@ function nearlyValidatedInc(n) {
   w.exposure_evidence_link = [{ pointer: 'test-only://operational-shaped/3', timestamp: at(FP, 3), is_operational: true, kind: 'run-event' }];
   w.sufficiency_judgment = JUDGMENT;
   return w;
+}
+
+// A VALIDATED-status incident record, hand-built as a SYNTHETIC literal:
+// nearlyValidatedInc with its status overridden and a matching history
+// entry appended (T2's validateRecord requires the last history entry's
+// `to` to equal the status, VAL-3 / INC-5). NOT produced by the validation
+// path (VAL-6: no incident reaches VALIDATED in Stage 3); it exercises the
+// D2-only refusal path only (F-T7-4). The T2 module accepts VALIDATED as a
+// known state; the record is otherwise the complete nearly-validated WATCH
+// record above.
+function validatedStatusInc(n) {
+  const w = nearlyValidatedInc(n);
+  return {
+    ...w,
+    status: 'VALIDATED',
+    history: [...w.history, {
+      seq: w.history.length,
+      type: 'SYNTHETIC',
+      from: 'WATCH',
+      to: 'VALIDATED',
+      reason: 'SYNTHETIC: hand-built fixture status for the D2-only refusal path; NOT produced by the validation path (VAL-6)',
+      evidence_pointer: 'test-only://synthetic/validated-status',
+      by: 'SYNTHETIC-test',
+      date: at(FP, 32),
+    }],
+  };
 }
 
 // ---- SYNTHETIC lessons ----
@@ -200,6 +227,11 @@ test('staging refusal: unknown field is refused, never silently kept', () => {
   refusesWith(() => stageLesson(stagedInput({ evidence_links: [] })), 'STAGING_REFUSED', 'unknown field');
 });
 
+test('staging refusal: non-empty caller-supplied annotations are refused at staging (S-11)', () => {
+  refusesWith(() => stageLesson(stagedInput({ annotations: [{ annotation: 'superseded-by: LES-2026-002', superseding_lesson_id: 'LES-2026-002' }] })), 'STAGING_REFUSED', 'annotations');
+  refusesWith(() => stageLesson(stagedInput({ annotations: [{ note: 'superseded-by: LES-2026-002' }] })), 'STAGING_REFUSED', 'annotations');
+});
+
 // ---- AC-T7-2: INDEX placement ----
 
 test('AC-T7-2: a staged record\'s INDEX entry lives only in the unvalidated-staged section (Section 4)', () => {
@@ -244,6 +276,28 @@ test('annotateSuperseded refuses a non-staged record, a self-supersession, and a
   refusesWith(() => annotateSuperseded(once, 'LES-2026-002'), 'ALREADY_SUPERSEDED', 'already annotated');
 });
 
+test('supersedingIdOf reads the T4 note shape as well as the T7 annotation shape (F-T7-2)', () => {
+  // T4's fixture shape: { note: 'superseded-by: <id>' }.
+  assert.equal(supersedingIdOf({ lesson_id: 'LES-2026-001', annotations: [{ note: 'superseded-by: LES-2026-002' }] }), 'LES-2026-002');
+  // T7's own textual shape without superseding_lesson_id.
+  assert.equal(supersedingIdOf({ lesson_id: 'LES-2026-001', annotations: [{ annotation: 'superseded-by: LES-2026-002' }] }), 'LES-2026-002');
+  // T7's stored shape with the id field.
+  assert.equal(supersedingIdOf({ lesson_id: 'LES-2026-001', annotations: [{ annotation: 'superseded-by: LES-2026-002', superseding_lesson_id: 'LES-2026-002' }] }), 'LES-2026-002');
+  assert.equal(supersedingIdOf({ lesson_id: 'LES-2026-001', annotations: [] }), null);
+  assert.equal(supersedingIdOf({ lesson_id: 'LES-2026-001', annotations: [{ note: 'unrelated note' }] }), null);
+  assert.equal(supersedingIdOf({ lesson_id: 'LES-2026-001' }), null);
+});
+
+test('annotateSuperseded refuses a duplicate when the existing annotation is a textual note without superseding_lesson_id (F-T7-2)', () => {
+  const staged = stageLesson(stagedInput());
+  const withNote = { ...structuredClone(staged), annotations: [{ note: 'superseded-by: LES-2026-002' }] };
+  refusesWith(() => annotateSuperseded(withNote, 'LES-2026-002'), 'ALREADY_SUPERSEDED', 'already annotated');
+  const withText = { ...structuredClone(staged), annotations: [{ annotation: 'superseded-by: LES-2026-002' }] };
+  refusesWith(() => annotateSuperseded(withText, 'LES-2026-002'), 'ALREADY_SUPERSEDED', 'already annotated');
+  // A different superseding id is still a new annotation, not a duplicate.
+  assert.equal(annotateSuperseded(withNote, 'LES-2026-003').annotations.length, 2);
+});
+
 test('AC-T7-1: creating a validated lesson from a staged lesson is refused (LES-5)', () => {
   const staged = stageLesson(stagedInput());
   const watch = endedWatch(watchInc(3));
@@ -277,11 +331,59 @@ test('validated-lesson creation without the complete LES-3 reference is refused,
 });
 
 test('validated-lesson creation with every LES-3 element except independent verification is refused on D2 (LES-3, LES-8)', () => {
-  const record = nearlyValidatedInc(3);
+  // The source is a VALIDATED-status SYNTHETIC literal (F-T7-4): the
+  // pre-fix test supplied a WATCH incident here, so the D2-only refusal
+  // was reported without the required validated incident status ever being
+  // checked. A WATCH source is covered by the next test instead.
+  const record = validatedStatusInc(3);
   const watch = endedWatch(record);
   const lesson = validatedLessonInput();
   refusesWith(() => createValidatedLesson({ lesson, source: { kind: 'incident', record }, watch }),
     'INDEPENDENT_VERIFICATION_NOT_SATISFIED', 'D2 role pending');
+});
+
+test('validated-lesson creation with a WATCH source is refused naming the missing validated-status element (F-T7-4)', () => {
+  // Otherwise-complete reference (exposure + sufficiency judgment on the
+  // record), but the source incident is WATCH, not VALIDATED: LES-3's
+  // first requirement (validated_incident.status == "VALIDATED") is
+  // missing, so the refusal names it and is NOT the D2-only refusal.
+  const record = nearlyValidatedInc(3);
+  const watch = endedWatch(record);
+  const lesson = validatedLessonInput();
+  refusesWith(() => createValidatedLesson({ lesson, source: { kind: 'incident', record }, watch }),
+    'INCOMPLETE_VALIDATION_REFERENCE', 'validated_incident_status');
+  try {
+    createValidatedLesson({ lesson, source: { kind: 'incident', record }, watch });
+    assert.fail('expected refusal');
+  } catch (e) {
+    assert.ok(e.details.failing.includes('validated_incident_status'), 'missing validated incident status is named');
+    assert.ok(!e.details.failing.includes('c3_independent_verification') || e.details.failing.length > 1,
+      'the refusal is not the D2-only refusal');
+  }
+});
+
+test('validated-lesson creation refuses a validation reference naming a different incident (F-T7-4)', () => {
+  const record = validatedStatusInc(3);
+  const watch = endedWatch(record);
+  const wrongIncident = validatedLessonInput({
+    validation_reference: { incident_id: 'INC-T7TEST-999', sufficiency_judgment: JUDGMENT },
+  });
+  refusesWith(() => createValidatedLesson({ lesson: wrongIncident, source: { kind: 'incident', record }, watch }),
+    'INCOMPLETE_VALIDATION_REFERENCE', 'validation_reference_incident_identity');
+  try {
+    createValidatedLesson({ lesson: wrongIncident, source: { kind: 'incident', record }, watch });
+    assert.fail('expected refusal');
+  } catch (e) {
+    assert.ok(e.details.failing.includes('validation_reference_incident_identity'), 'mismatched reference identity is named');
+  }
+  // A reference naming no incident at all is refused earlier, by T4's
+  // structure check (LESSON_STRUCTURE); the T7 cross-check above covers
+  // the mismatch, which T4 does not check.
+  const noIncident = validatedLessonInput({
+    validation_reference: { sufficiency_judgment: JUDGMENT },
+  });
+  refusesWith(() => createValidatedLesson({ lesson: noIncident, source: { kind: 'incident', record }, watch }),
+    'LESSON_STRUCTURE', 'naming the validated incident');
 });
 
 test('validated-lesson creation refuses a source incident id mismatch and a missing watch computation', () => {
@@ -328,19 +430,88 @@ test('retrieval query: by-source-incident form searches the named section for th
     'MISSING_INCIDENT_ID', 'incident_id');
 });
 
-test('retrieval query: by-superseded-id form searches Section 6 for the superseded-by note', () => {
+test('retrieval query: by-superseded-id finds the old record in a synthetic Section 6 supersession log (F-T7-3)', () => {
+  // Synthetic Section 6 supersession log (inline, SYNTHETIC): LES-2026-001
+  // superseded by LES-2026-002, and a second entry where LES-2026-001 is
+  // the SUPERSEDING id instead, so the direction of the lookup is
+  // observable.
+  const section6Log = [
+    '## Section 6: Supersessions and corrections',
+    '- LES-2026-001 superseded by LES-2026-002, reason: corrected guidance, date: 2026-06-02, evidence: test-only://ev/1',
+    '- LES-2026-003 superseded by LES-2026-001, reason: corrected guidance, date: 2026-06-03, evidence: test-only://ev/2',
+  ].join('\n');
   const q = buildRetrievalQuery({ kind: 'by-superseded-id', superseded_id: 'LES-2026-001', index_file: IDX });
   assert.equal(q.section, '6');
-  assert.equal(q.pattern, 'superseded-by: LES-2026-001');
+  // Lookup is by the OLD record's identity, not the annotation text.
+  assert.equal(q.pattern, 'LES-2026-001');
+  assert.notEqual(q.pattern, 'superseded-by: LES-2026-001');
   assert.match(q.command, /Section 6:/);
-  assert.match(q.command, /superseded-by: LES-2026-001/);
+  assert.match(q.command, /LES-2026-001/);
+  assert.doesNotMatch(q.command, /superseded-by: LES-2026-001/);
+  // Retrieval against the synthetic log: the fixed-string pattern matches
+  // the entry whose SUPERSEDED id is LES-2026-001.
+  const hits = section6Log.split('\n').filter((line) => line.includes(q.pattern));
+  const supersededEntry = hits.find((line) => line.startsWith('- LES-2026-001 superseded by'));
+  assert.ok(supersededEntry, 'the entry superseding LES-2026-001 is found');
+  assert.match(supersededEntry, /superseded by LES-2026-002/);
+  // The bare id also appears as a superseding id in another entry; the
+  // operator confirms the entry's superseded-id field (candidate material
+  // for judgment, RET-2).
+  assert.equal(hits.length, 2);
+  // The pre-fix pattern would have found nothing at all in the log: the
+  // log contains no "superseded-by: LES-2026-001" text, so the old
+  // direction missed the supersession entirely.
+  assert.equal(section6Log.split('\n').filter((line) => line.includes('superseded-by: LES-2026-001')).length, 0);
+  refusesWith(() => buildRetrievalQuery({ kind: 'by-superseded-id', index_file: IDX }),
+    'MISSING_SUPERSEDED_ID', 'superseded_id');
 });
 
-test('retrieval query: index-section form dumps exactly the requested section', () => {
+test('retrieval query: by-superseding-id is the distinct reverse lookup (F-T7-3)', () => {
+  const q = buildRetrievalQuery({ kind: 'by-superseding-id', superseding_id: 'LES-2026-002', index_file: IDX });
+  assert.equal(q.section, '6');
+  assert.equal(q.pattern, 'superseded-by: LES-2026-002');
+  assert.match(q.command, /Section 6:/);
+  assert.match(q.command, /superseded-by: LES-2026-002/);
+  // Retrieval against synthetic annotated-record content: the pattern
+  // finds the record superseded BY LES-2026-002 and no other.
+  const recordLines = [
+    'lesson_id: LES-2026-001',
+    'superseded-by: LES-2026-002',
+    'lesson_id: LES-2026-003',
+    'superseded-by: LES-2026-001',
+  ];
+  assert.deepEqual(recordLines.filter((line) => line.includes(q.pattern)), ['superseded-by: LES-2026-002']);
+  refusesWith(() => buildRetrievalQuery({ kind: 'by-superseding-id', index_file: IDX }),
+    'MISSING_SUPERSEDING_ID', 'superseding_id');
+});
+
+test('retrieval query: index-section form dumps exactly the requested section, excluding the next section heading (F-T7-5)', () => {
+  // Synthetic INDEX content (inline, SYNTHETIC): a staged entry in
+  // Section 4, with Section 5 following it.
+  const syntheticIndex = [
+    '# Test INDEX (SYNTHETIC)',
+    '## Section 1: Validated lessons',
+    '- LES-2026-002 validated entry',
+    '## Section 4: UNVALIDATED-STAGED lessons',
+    '- LES-2026-001 staged entry',
+    '## Section 5: Historical seed observations',
+    '- SEED-1 historical entry',
+    '',
+  ].join('\n');
   const q = buildRetrievalQuery({ kind: 'index-section', section: '4', index_file: IDX });
-  assert.match(q.command, /Section 4:/);
-  assert.match(q.command, /Section 5:/);
   assert.doesNotMatch(q.command, /grep/);
+  // Run the range the query actually builds against the synthetic INDEX.
+  const range = q.command.match(/^sed -n '([^']*)'/)[1];
+  const out = execFileSync('sed', ['-n', range], { input: syntheticIndex, encoding: 'utf8' });
+  assert.match(out, /## Section 4:/);
+  assert.match(out, /LES-2026-001 staged entry/);
+  assert.doesNotMatch(out, /## Section 5:/);
+  assert.doesNotMatch(out, /SEED-1/);
+  assert.doesNotMatch(out, /LES-2026-002/);
+  // The same terminating-heading-excluding range scopes the Section 4
+  // keyword query, so the next section's heading can no longer match it.
+  const kq = buildRetrievalQuery({ kind: 'by-applicability', keyword: 'runner choice', section: '4', index_file: IDX });
+  assert.ok(kq.command.includes(`sed -n '${range}'`), 'keyword query uses the same range');
   refusesWith(() => buildRetrievalQuery({ kind: 'index-section', section: '7', index_file: IDX }),
     'BAD_SECTION', 'must name one section');
 });
@@ -373,6 +544,15 @@ test('AC-T7-3: every retrieval result is candidate material for judgment only, n
   assert.equal(results[1].staged, false);
 });
 
+test('AC-T7-3: a T4-shaped supersession note flags the result superseded, never current guidance (F-T7-2)', () => {
+  const r = classifyRetrievalResult({ id: 'LES-2026-001', section: '4', record: { annotations: [{ note: 'superseded-by: LES-2026-002' }] } });
+  assert.equal(r.superseded, true);
+  assert.equal(r.superseding_id, 'LES-2026-002');
+  assert.equal(r.current_guidance, false);
+  refusesWith(() => classifyRetrievalResult({ id: 'LES-2026-001', record: { annotations: [{ note: 'superseded-by: LES-2026-002' }] } }, { as_current_guidance: true }),
+    'SUPERSEDED_AS_CURRENT_GUIDANCE', 'must never be returned as current guidance');
+});
+
 test('AC-T7-3: a superseded result is flagged with the superseding id and is never current guidance unflagged', () => {
   const annotated = annotateSuperseded(stageLesson(stagedInput()), 'LES-2026-002');
   const r = classifyRetrievalResult({ id: 'LES-2026-001', section: '4', record: annotated });
@@ -402,8 +582,8 @@ test('Graphiti trigger: the current Stage 3 record count does not meet it under 
   assert.equal(s.not_met_statement_provenance, GRAPHITI_NOT_MET_PROVENANCE);
 });
 
-test('Graphiti trigger: count in range plus an acted-on superseded fact meets it under both readings', () => {
-  const s = graphitiTriggerStatus(60, true, false);
+test('Graphiti trigger: a count at or above the top of the range plus an acted-on superseded fact meets it under both readings', () => {
+  const s = graphitiTriggerStatus(100, true, false);
   assert.equal(s.trigger_met, true);
   assert.equal(s.status, 'MET_UNDER_BOTH_RECORDED_READINGS');
   assert.match(s.retrieval_method, /RE-EXAMINE/);
@@ -424,10 +604,38 @@ test('Graphiti trigger: below-range count with a grep-unanswerable query class s
   assert.equal(s.retrieval_method, 'grep');
 });
 
-test('Graphiti trigger: the range is handled as WP-04 wrote it, with no single threshold chosen (C-8)', () => {
+test('Graphiti trigger: no single threshold is chosen, so no count in the unresolved 50-99 band can report the trigger met (C-8, F-T7-1)', () => {
+  // The semantic requirement, not just labels or band boundaries: (60,
+  // true, false) used to report MET; with the threshold unresolved it
+  // must report no verdict at all.
+  for (const count of [50, 60, 99]) {
+    const s = graphitiTriggerStatus(count, true, false);
+    assert.equal(s.count_in_stated_range, null, `count ${count} leaves the count predicate unresolved`);
+    assert.equal(s.trigger_met, null, `count ${count} with an acted-on superseded fact reports no verdict`);
+    assert.equal(s.status, 'UNDECIDED_THRESHOLD_OPEN_C8');
+    assert.equal(s.retrieval_method, 'grep');
+    assert.match(s.record_count_band, /unresolved/);
+  }
+  // A grep-unanswerable query class in the band is likewise undecided:
+  // reading A would fire on it alone, reading B still needs the count.
+  const u = graphitiTriggerStatus(60, false, true);
+  assert.equal(u.reading_a__count_and_acted_or_unanswerable, true);
+  assert.equal(u.reading_b__count_and_acted_or_unanswerable, null);
+  assert.equal(u.trigger_met, null);
+  assert.equal(u.status, 'UNDECIDED_THRESHOLD_OPEN_C8');
+  // With neither conjunct nor disjunct true, both readings are false
+  // whatever the count predicate is, so NOT met is still reported.
+  const n = graphitiTriggerStatus(60, false, false);
+  assert.equal(n.trigger_met, false);
+  assert.equal(n.status, 'NOT_MET_UNDER_BOTH_RECORDED_READINGS');
+  // Band boundaries: below 50 the predicate is false; at or above 100 it
+  // is true (any threshold in the range is met); only inside the band is
+  // it unresolved. No single threshold inside the range is chosen.
   assert.equal(graphitiTriggerStatus(49, false, false).count_in_stated_range, false);
-  assert.equal(graphitiTriggerStatus(50, false, false).count_in_stated_range, true);
-  assert.equal(graphitiTriggerStatus(50, false, false).record_count_band, 'in-or-above the stated "50–100+" range as written');
+  assert.equal(graphitiTriggerStatus(50, false, false).count_in_stated_range, null);
+  assert.equal(graphitiTriggerStatus(99, false, false).count_in_stated_range, null);
+  assert.equal(graphitiTriggerStatus(100, false, false).count_in_stated_range, true);
+  assert.equal(graphitiTriggerStatus(100, true, false).trigger_met, true);
   assert.match(graphitiTriggerStatus(50, false, false).range_handling, /no single threshold chosen/);
 });
 

@@ -39,9 +39,12 @@
 // ("50–100+" is a range, not a single number) are recorded as WP-04 wrote
 // them and are NOT interpreted (C-8 OPEN). graphitiTriggerStatus evaluates
 // BOTH readings side by side and only reports a trigger verdict when they
-// agree. Whether the trigger is "NOT met" is the prep's statement (RET-1),
-// not WP-04's: the retrieved text does not say it (DV-7, C-19 OPEN), so
-// that assessment is labeled as the prep's, not attributed to WP-04.
+// agree AND the count predicate is settled: a count inside the unresolved
+// 50–99 band settles nothing, so no verdict that depends on it is
+// reported (fix round 1, F-T7-1). Whether the trigger is "NOT met" is the
+// prep's statement (RET-1), not WP-04's: the retrieved text does not say
+// it (DV-7, C-19 OPEN), so that assessment is labeled as the prep's, not
+// attributed to WP-04.
 //
 // CANDIDATE (VOC-6) stays reserved and unused: no function here accepts,
 // produces, or classifies a CANDIDATE lesson state (F-10 OPEN).
@@ -120,6 +123,11 @@ function shellQuote(s) {
 
 // Section heading range for the T4 INDEX line syntax ("## Section N: ...";
 // see sie-schema.mjs parseIndex). Section 6 has no following section.
+// The terminating heading is EXCLUDED: sed ranges are inclusive at both
+// ends, so the range deletes the next section's heading line instead of
+// printing it (fix round 1, F-T7-5). Without the deletion a Section 4
+// dump would include "## Section 5: ..." and a keyword search could
+// return that heading as a match.
 function sectionRange(section) {
   const n = Number(section);
   if (!Number.isInteger(n) || n < 1 || n > 6) {
@@ -127,7 +135,7 @@ function sectionRange(section) {
   }
   return n === 6
     ? `/^## Section 6:/,$/p`
-    : `/^## Section ${n}:/,/^## Section ${n + 1}:/p`;
+    : `/^## Section ${n}:/,/^## Section ${n + 1}:/{ /^## Section ${n + 1}:/d; p; }`;
 }
 
 function sectionScopedCommand(indexFile, section, grepArgs) {
@@ -242,13 +250,18 @@ export function annotateSuperseded(stagedLesson, newLessonId, { date } = {}) {
     throw new LessonRefusal('SELF_SUPERSESSION', 'supersession annotation refused: a lesson never supersedes itself, and a validated lesson never reuses a staged lesson\'s id (LES-4)');
   }
   const existing = Array.isArray(stagedLesson.annotations) ? stagedLesson.annotations : [];
-  if (existing.some((a) => isPlainObject(a) && a.superseding_lesson_id === newLessonId)) {
+  // The duplicate guard uses the same shared parser as supersedingIdOf
+  // (fix round 1, F-T7-2): a textual annotation without
+  // superseding_lesson_id still counts as an existing supersession.
+  if (existing.some((a) => annotationSupersedingId(a) === newLessonId)) {
     throw new LessonRefusal('ALREADY_SUPERSEDED', `supersession annotation refused: ${stagedLesson.lesson_id} is already annotated as superseded by ${newLessonId}; annotations are append-only (LES-4)`);
   }
   // SILENT-SPEC DECISION S-4 (see T7 report): annotation entry shape.
   // The spec fixes only the note text "superseded-by: <id>" (LES-4). This
   // module stores { annotation, superseding_lesson_id, date? }; the date is
-  // included only when the caller supplies one.
+  // included only when the caller supplies one. The READER accepts both
+  // this shape and T4's fixture shape { note: 'superseded-by: <id>' },
+  // through the shared parser below (fix round 1, F-T7-2).
   const note = { annotation: `superseded-by: ${newLessonId}`, superseding_lesson_id: newLessonId };
   if (date !== undefined) {
     if (!isValidDate(date)) throw new LessonRefusal('BAD_DATE', `supersession annotation refused: date must be a valid date; got ${JSON.stringify(date)}`);
@@ -259,16 +272,33 @@ export function annotateSuperseded(stagedLesson, newLessonId, { date } = {}) {
   return deepFreeze(next);
 }
 
+// Shared "superseded-by" note parser (S-4, fix round 1, F-T7-2). One
+// parser reads the LES-4 note text from every annotation shape this module
+// accepts: T7's own { annotation, superseding_lesson_id } shape and T4's
+// fixture shape { note }. Both supersession DETECTION (supersedingIdOf,
+// used by classification) and the DUPLICATE guard in annotateSuperseded
+// use it, so a textual annotation without superseding_lesson_id is never
+// missed in either place.
+function parseSupersededByNote(text) {
+  if (!isNonEmptyString(text)) return null;
+  const m = /^superseded-by:\s*(LES-\d{4}-\d{3})\s*$/.exec(text.trim());
+  return m ? m[1] : null;
+}
+
+function annotationSupersedingId(a) {
+  if (!isPlainObject(a)) return null;
+  if (isNonEmptyString(a.superseding_lesson_id)) return a.superseding_lesson_id;
+  return parseSupersededByNote(a.annotation) ?? parseSupersededByNote(a.note);
+}
+
 // Finds the superseding id in a record's annotations, if any. Returns the id
-// string or null. The annotation text is the LES-4 form "superseded-by: <id>".
+// string or null. The annotation text is the LES-4 form "superseded-by: <id>",
+// read from either the `annotation` or the `note` field (S-4).
 export function supersedingIdOf(lesson) {
   if (!isPlainObject(lesson) || !Array.isArray(lesson.annotations)) return null;
   for (const a of lesson.annotations) {
-    if (isPlainObject(a) && isNonEmptyString(a.superseding_lesson_id)) return a.superseding_lesson_id;
-    if (isPlainObject(a) && isNonEmptyString(a.annotation)) {
-      const m = /^superseded-by:\s*(LES-\d{4}-\d{3})\s*$/.exec(a.annotation.trim());
-      if (m) return m[1];
-    }
+    const id = annotationSupersedingId(a);
+    if (id !== null) return id;
   }
   return null;
 }
@@ -287,7 +317,12 @@ export function supersedingIdOf(lesson) {
 //   5. watch computation missing -> MISSING_WATCH_COMPUTATION
 //   6. LES-3 reference incomplete (via T2's checkValidationEligibility,
 //      imported, not copied) -> INCOMPLETE_VALIDATION_REFERENCE, naming the
-//      failing elements; or the record itself incomplete -> INCOMPLETE_RECORD
+//      failing elements; or the record itself incomplete -> INCOMPLETE_RECORD.
+//      Two T7-level LES-3 requirements are checked here alongside the
+//      delegated elements (fix round 1, F-T7-4): the source incident's
+//      status must be VALIDATED (LES-3's first requirement; T2 does not
+//      require it), and validation_reference.incident_id must name the same
+//      incident as the source (T2 reads only the sufficiency judgment).
 //   7. only independent verification missing -> INDEPENDENT_VERIFICATION_NOT_SATISFIED
 //      (D2 role pending; LES-8)
 //   8. (defensive) even a fully eligible reference -> NO_VALIDATED_LESSON_IN_STAGE_3
@@ -329,16 +364,43 @@ export function createValidatedLesson({ lesson, source, watch } = {}) {
   if (check.incomplete) {
     throw new LessonRefusal('INCOMPLETE_RECORD', `validated-lesson creation refused: the source incident record is incomplete: ${check.problems.join('; ')}`, { problems: check.problems });
   }
-  if (!check.eligible) {
-    if (check.failing.length === 1 && check.failing[0] === 'c3_independent_verification') {
+  // T7-level LES-3 requirements, checked here alongside the delegated T2
+  // elements (fix round 1, F-T7-4). LES-3's first requirement is
+  // validated_incident.status == "VALIDATED": T2's eligibility check does
+  // not require it, so a WATCH record with otherwise complete evidence
+  // would otherwise pass this step without that element being reported.
+  // The second is reference identity: validation_reference.incident_id
+  // must name the same incident as the source. T2 reads only
+  // validation_reference.sufficiency_judgment, never the reference's
+  // incident_id, and T4's structure check (already run above) requires
+  // the id to be present but does not cross-check it against the source —
+  // so a reference naming another incident would otherwise pass
+  // unchallenged here.
+  const extraElements = {};
+  const extraFailing = [];
+  if (source.record.status !== VALIDATED_STATUS) {
+    extraFailing.push('validated_incident_status');
+    extraElements.validated_incident_status = { satisfied: false,
+      reason: `source incident status is ${JSON.stringify(source.record.status)}, not "VALIDATED" (LES-3: REQUIRE validated_incident.status == "VALIDATED"; LES-5)` };
+  }
+  const refIncidentId = lesson.validation_reference.incident_id;
+  if (refIncidentId !== source.record.incident_id) {
+    extraFailing.push('validation_reference_incident_identity');
+    extraElements.validation_reference_incident_identity = { satisfied: false,
+      reason: `validation_reference.incident_id ${JSON.stringify(refIncidentId)} does not match the source incident ${JSON.stringify(source.record.incident_id)} (LES-3: the reference must identify the same incident)` };
+  }
+  const allFailing = [...check.failing, ...extraFailing];
+  const allElements = { ...check.elements, ...extraElements };
+  if (!check.eligible || extraFailing.length > 0) {
+    if (allFailing.length === 1 && allFailing[0] === 'c3_independent_verification') {
       throw new LessonRefusal('INDEPENDENT_VERIFICATION_NOT_SATISFIED',
         `validated-lesson creation refused: independent verification is ${D2_NOT_SATISFIED} (D2 role ${D2_ROLE_STATUS}); ` +
         'until the D2 role is approved this cannot be met and no validated lesson may be created (LES-3, LES-8)',
-        { failing: check.failing, d2_role_status: D2_ROLE_STATUS });
+        { failing: allFailing, d2_role_status: D2_ROLE_STATUS });
     }
     throw new LessonRefusal('INCOMPLETE_VALIDATION_REFERENCE',
-      `validated-lesson creation refused: the complete LES-3 validation reference is missing: ${check.failing.map((n) => `${n}: ${check.elements[n].reason}`).join('; ')}`,
-      { failing: check.failing });
+      `validated-lesson creation refused: the complete LES-3 validation reference is missing: ${allFailing.map((n) => `${n}: ${allElements[n].reason}`).join('; ')}`,
+      { failing: allFailing });
   }
   // Defensive: even a fully eligible reference cannot produce a validated
   // lesson in Stage 3 (LES-8). Unreachable while D2 is pending (c3 always
@@ -349,7 +411,7 @@ export function createValidatedLesson({ lesson, source, watch } = {}) {
 
 // ---- §16 RET-2: grep retrieval query forms ----
 
-export const RETRIEVAL_KINDS = Object.freeze(['by-applicability', 'by-source-incident', 'by-superseded-id', 'index-section']);
+export const RETRIEVAL_KINDS = Object.freeze(['by-applicability', 'by-source-incident', 'by-superseded-id', 'by-superseding-id', 'index-section']);
 
 // Builds the grep query form for one retrieval. The module builds and
 // classifies queries/results; it does NOT run grep and does NOT read the repo
@@ -421,10 +483,36 @@ export function buildRetrievalQuery(input) {
       throw new LessonRefusal('MISSING_SUPERSEDED_ID', 'retrieval query refused: by-superseded-id needs a non-empty superseded_id');
     }
     // Section 6 is the supersessions-and-corrections log (IDX-2, §12).
-    const pattern = `superseded-by: ${input.superseded_id}`;
+    // Lookup is by the OLD record's identity: a Section 6 entry lists the
+    // superseded id (with the superseding id, reason, date, evidence), so
+    // the pattern is the superseded id itself (fix round 1, F-T7-3). The
+    // earlier form searched for "superseded-by: <superseded id>", which is
+    // the annotation text a record carries when it is superseded BY that
+    // id — the reverse direction: it would miss this record's entry and
+    // instead find records superseded by the queried id. Results are
+    // candidate material for judgment: the operator confirms the entry's
+    // superseded-id field, since the bare id also appears as a superseding
+    // id in other entries.
+    const pattern = input.superseded_id;
     return { ...base, section: '6', mixed_sections: false, pattern,
       command: sectionScopedCommand(input.index_file, '6', `-n -F -- ${shellQuote(pattern)}`),
-      record_scope_note: 'The same fixed-string pattern is run over lesson record files by the operator to find the annotated record itself; the INDEX Section 6 command above finds the secondary reference (IDX-2).' };
+      record_scope_note: 'The same id run over lesson record files finds the annotated record itself (its header carries its own lesson_id); the INDEX Section 6 command above finds the secondary reference (IDX-2).' };
+  }
+
+  if (input.kind === 'by-superseding-id') {
+    if (!isNonEmptyString(input.superseding_id)) {
+      throw new LessonRefusal('MISSING_SUPERSEDING_ID', 'retrieval query refused: by-superseding-id needs a non-empty superseding_id');
+    }
+    // Reverse lookup (fix round 1, F-T7-3): records superseded BY the given
+    // replacement id. Distinct kind and input from by-superseded-id, so the
+    // two directions can never be confused. The pattern is the LES-4
+    // annotation text itself; run over lesson record files it finds the
+    // annotated records, and the INDEX Section 6 command below finds the
+    // secondary references (IDX-2).
+    const pattern = `superseded-by: ${input.superseding_id}`;
+    return { ...base, section: '6', mixed_sections: false, pattern,
+      command: sectionScopedCommand(input.index_file, '6', `-n -F -- ${shellQuote(pattern)}`),
+      record_scope_note: 'The same fixed-string pattern is run over lesson record files by the operator to find the annotated records themselves; the INDEX Section 6 command above finds the secondary references (IDX-2).' };
   }
 
   // index-section: a whole-section lookup.
@@ -484,16 +572,28 @@ export function classifyRetrievalResults(results, opts = {}) {
 
 // Evaluates the WP-04 trigger EXACTLY as written (GRAPHITI_TRIGGER_QUOTED),
 // without interpreting the grouping or picking a single threshold (C-8).
-// The count is reported as a range check against WP-04's own "50–100+"
-// wording: only the range's lower bound (50) is used, as a band boundary,
-// and no single threshold inside the range is chosen. Both operator
-// groupings are evaluated side by side:
-//   reading A: (count-in-range AND acted-on-superseded-fact) OR grep-unanswerable-query-class
-//   reading B: count-in-range AND (acted-on-superseded-fact OR grep-unanswerable-query-class)
-// The trigger verdict is reported only when both readings agree; when they
-// disagree the status is UNDECIDED (grouping open, C-8) and grep stays the
-// retrieval method until a decision is made. The "NOT met" assessment is
-// labeled as the prep's (RET-1), not WP-04's (DV-7, C-19).
+// The count predicate is THREE-VALUED (fix round 1, F-T7-1): WP-04's
+// "50–100+" names a range, not a single threshold, so a count only settles
+// the predicate when it lies outside the whole range — below 50 it is below
+// every threshold in the range (false); at or above 100 it meets every
+// threshold in the range (true); from 50 to 99 the threshold could still be
+// above the count, so the predicate is UNRESOLVED (null). The earlier form
+// used recordCount >= 50 as a Boolean, which silently decided the threshold
+// at 50: (60, true, false) reported the trigger met although a threshold of
+// 100 was still unresolved. Both operator groupings are evaluated side by
+// side with three-valued logic:
+//   reading A: (count-predicate AND acted-on-superseded-fact) OR grep-unanswerable-query-class
+//   reading B: count-predicate AND (acted-on-superseded-fact OR grep-unanswerable-query-class)
+// A trigger verdict is reported only when both readings agree on a Boolean
+// (both true: MET; both false: NOT met). When they disagree as Booleans
+// the status is UNDECIDED_GROUPING_OPEN_C8; when either reading is
+// unresolved because the count sits in the 50–99 band, the status is
+// UNDECIDED_THRESHOLD_OPEN_C8. In both undecided cases trigger_met is
+// null and grep stays the retrieval method. The one case in the band that
+// still settles: with neither conjunct/disjunct true, both readings are
+// false whatever the count predicate is, so NOT met is reported. The "NOT
+// met" assessment is labeled as the prep's (RET-1), not WP-04's (DV-7,
+// C-19).
 export function graphitiTriggerStatus(recordCount, actedOnSupersededFact, grepUnanswerableQueryClass) {
   if (!Number.isInteger(recordCount) || recordCount < 0) {
     throw new LessonRefusal('BAD_INPUT', `Graphiti trigger refused: recordCount must be a non-negative integer; got ${JSON.stringify(recordCount)}`);
@@ -501,18 +601,28 @@ export function graphitiTriggerStatus(recordCount, actedOnSupersededFact, grepUn
   if (typeof actedOnSupersededFact !== 'boolean' || typeof grepUnanswerableQueryClass !== 'boolean') {
     throw new LessonRefusal('BAD_INPUT', 'Graphiti trigger refused: actedOnSupersededFact and grepUnanswerableQueryClass must be booleans (an agent acting on a superseded fact, or a grep-unanswerable query class, either happened or did not)');
   }
-  // Range check against WP-04's own wording only: 50 is the lower bound of
-  // the stated "50–100+" range. No single threshold is picked (C-8).
-  const countInRange = recordCount >= 50;
-  const readingA = (countInRange && actedOnSupersededFact) || grepUnanswerableQueryClass;
-  const readingB = countInRange && (actedOnSupersededFact || grepUnanswerableQueryClass);
-  const agreed = readingA === readingB;
+  // Three-valued count predicate against WP-04's own "50–100+" wording.
+  // No single threshold is picked (C-8): only counts outside the whole
+  // range settle the predicate.
+  const countPredicate = recordCount < 50 ? false : recordCount >= 100 ? true : null;
+  const countBand = recordCount < 50
+    ? 'below the stated "50–100+" range'
+    : recordCount >= 100
+      ? 'at or above the top of the stated "50–100+" range: meets any threshold in the range'
+      : 'inside the unresolved "50–100+" band: the threshold may still be above the count (C-8)';
+  // Kleene three-valued logic (null = unresolved).
+  const and3 = (a, b) => (a === false || b === false ? false : (a === null || b === null ? null : true));
+  const or3 = (a, b) => (a === true || b === true ? true : (a === null || b === null ? null : false));
+  const readingA = or3(and3(countPredicate, actedOnSupersededFact), grepUnanswerableQueryClass);
+  const readingB = and3(countPredicate, or3(actedOnSupersededFact, grepUnanswerableQueryClass));
+  const thresholdOpen = readingA === null || readingB === null;
+  const agreed = readingA === readingB && readingA !== null;
   return {
     wp04_trigger_quoted: GRAPHITI_TRIGGER_QUOTED,
     record_count: recordCount,
-    record_count_band: countInRange ? 'in-or-above the stated "50–100+" range as written' : 'below the stated "50–100+" range',
-    count_in_stated_range: countInRange,
-    range_handling: 'Range check against WP-04\'s own "50–100+" wording (lower bound 50 only); no single threshold chosen (C-8).',
+    record_count_band: countBand,
+    count_in_stated_range: countPredicate,
+    range_handling: 'WP-04\'s "50–100+" names a range, not a single threshold (C-8). A count below 50 is below every threshold in the range; a count at or above 100 meets every threshold in the range; a count from 50 to 99 leaves the count predicate unresolved, so no trigger verdict that depends on it is reported; no single threshold chosen.',
     acted_on_superseded_fact: actedOnSupersededFact,
     grep_unanswerable_query_class: grepUnanswerableQueryClass,
     reading_a__count_and_acted_or_unanswerable: readingA,
@@ -520,7 +630,7 @@ export function graphitiTriggerStatus(recordCount, actedOnSupersededFact, grepUn
     trigger_met: agreed ? readingA : null,
     status: agreed
       ? (readingA ? 'MET_UNDER_BOTH_RECORDED_READINGS' : 'NOT_MET_UNDER_BOTH_RECORDED_READINGS')
-      : 'UNDECIDED_GROUPING_OPEN_C8',
+      : thresholdOpen ? 'UNDECIDED_THRESHOLD_OPEN_C8' : 'UNDECIDED_GROUPING_OPEN_C8',
     retrieval_method: agreed && readingA ? 'RE-EXAMINE (trigger met under both recorded readings; Graphiti re-examination is the next step, not a decision made here)' : 'grep',
     not_met_statement_provenance: GRAPHITI_NOT_MET_PROVENANCE,
   };
