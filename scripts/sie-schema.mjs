@@ -138,12 +138,12 @@ export function checkIncidentStructure(record) {
       if (isEmptyValue(record[k])) problems.push(`missing required field "${k}" for VALIDATED (§6.2)`);
     }
   }
-  return { valid: problems.length === 0, problems };
+  return { valid: problems.length === 0, problems, limit: TEST_LIMIT };
 }
 
 // §9.2. Common fields, staged-only and validated-only rules, CR-02 (c).
 export function checkLessonStructure(lesson) {
-  if (!isPlainObject(lesson)) return { valid: false, problems: ['lesson record is not an object'] };
+  if (!isPlainObject(lesson)) return { valid: false, problems: ['lesson record is not an object'], limit: TEST_LIMIT };
   const problems = [];
   const allowed = [...LESSON_COMMON_FIELDS, ...LESSON_STAGED_FIELDS, ...LESSON_VALIDATED_FIELDS, ...LESSON_NOTE_FIELDS];
   for (const k of Object.keys(lesson)) if (!allowed.includes(k)) problems.push(`unknown field "${k}" (§9.2 fields only)`);
@@ -188,7 +188,7 @@ export function checkLessonStructure(lesson) {
     if (lesson.validation_claim === 'NONE') problems.push('validated lesson carries the staged-only validation_claim "NONE" (§9.2)');
     if (lesson.index_section === 'unvalidated-staged') problems.push('validated lesson carries the staged-only index_section (§9.2)');
   }
-  return { valid: problems.length === 0, problems };
+  return { valid: problems.length === 0, problems, limit: TEST_LIMIT };
 }
 
 // Seed records are drafted in T5; T4 checks only what the INDEX needs.
@@ -213,12 +213,12 @@ const STRUCTURE_BY_KIND = {
 
 // desc: { file, kind, record, fixture? } — one record file.
 export function checkRecordStructure(desc) {
-  if (!isPlainObject(desc)) return { file: null, id: null, valid: false, problems: ['record descriptor is not an object'] };
+  if (!isPlainObject(desc)) return { file: null, id: null, valid: false, problems: ['record descriptor is not an object'], limit: TEST_LIMIT };
   const problems = [];
   if (!isNonEmptyString(desc.file)) problems.push('record descriptor needs a file path');
   if (!RECORD_KINDS.includes(desc.kind)) problems.push(`unknown record kind ${JSON.stringify(desc.kind)} (one of ${RECORD_KINDS.join(', ')})`);
   else problems.push(...STRUCTURE_BY_KIND[desc.kind](desc.record).problems);
-  return { file: desc.file ?? null, id: recordIdOf(desc), valid: problems.length === 0, problems };
+  return { file: desc.file ?? null, id: recordIdOf(desc), valid: problems.length === 0, problems, limit: TEST_LIMIT };
 }
 
 // ---- INDEX (IDX-1..IDX-5) ----
@@ -304,7 +304,13 @@ export function checkIndex({ records, index } = {}) {
       problems.push(problem('UNKNOWN_SECTION', `unknown INDEX section ${JSON.stringify(key)}${why}; sections are 1-6 (§12)`, { section: key }));
       continue;
     }
-    for (const e of Array.isArray(entries) ? entries : []) {
+    // Fix round 1 (F-T4-1): a section value must be a list of entries. Any
+    // other value is refused, never discarded as an empty section.
+    if (!Array.isArray(entries)) {
+      problems.push(problem('MALFORMED_SECTION', `Section ${key} must be a list of entries, got ${JSON.stringify(entries)}; its content is neither resolved nor counted (§12)`, { section: key }));
+      continue;
+    }
+    for (const e of entries) {
       if (key === '6') { checkSupersession(e, byId, problems); continue; }
       if (!isPlainObject(e) || !isNonEmptyString(e.id) || !isNonEmptyString(e.file)) {
         problems.push(problem('MALFORMED_ENTRY', `Section ${key} entry needs an id and a record file: ${JSON.stringify(e)}`, { section: key }));
@@ -382,7 +388,9 @@ function judgmentGaps(name, j) {
   return gaps;
 }
 
-const result = (outcome, missing = []) => ({ outcome, judged: outcome === 'JUDGMENT_PRESENT', missing });
+// Every judgment result path (checkIncidentJudgment, checkLessonJudgment,
+// checkJudgment, including early returns) goes through here and carries the limit.
+const result = (outcome, missing = []) => ({ outcome, judged: outcome === 'JUDGMENT_PRESENT', missing, limit: TEST_LIMIT });
 
 // Incident: a validation decision (a history entry to VALIDATED, or status
 // VALIDATED) requires the validation judgment (that entry's reason, by, date)

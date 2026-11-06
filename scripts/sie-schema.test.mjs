@@ -21,7 +21,8 @@ import {
 } from './sie-incident.mjs';
 import {
   TEST_LIMIT, STRUCTURE_NOTE, IDX5_CHOICE, SECTIONS, checkStructure, checkRecordStructure, checkIncidentStructure,
-  checkLessonStructure, checkIndex, parseIndex, checkJudgment, checkJudgments, checkIncidentJudgment, isFixture,
+  checkLessonStructure, checkIndex, parseIndex, checkJudgment, checkJudgments, checkIncidentJudgment, checkLessonJudgment,
+  isFixture,
 } from './sie-schema.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -172,6 +173,41 @@ test('AC-T4-3: the test design states its own limit in the module, the test file
   assert.equal(checkStructure({ records: recs, index: baselineIndex() }).limit, TEST_LIMIT);
   assert.equal(checkIndex({ records: recs, index: baselineIndex() }).limit, TEST_LIMIT);
   assert.equal(checkJudgments(recs).limit, TEST_LIMIT);
+  // Fix round 1 (F-T4-2): every per-record structural and judgment result
+  // carries the limit too — passes, failures, early returns, and no-decision outcomes.
+  const brokenInc = structuredClone(openInc(1)); delete brokenInc.title;
+  const results = {
+    'checkIncidentStructure pass': checkIncidentStructure(openInc(1)),
+    'checkIncidentStructure fail': checkIncidentStructure(brokenInc),
+    'checkIncidentStructure non-object': checkIncidentStructure(null),
+    'checkLessonStructure pass': checkLessonStructure(stagedLesson()),
+    'checkLessonStructure fail': checkLessonStructure(stagedLesson({ non_applicability: '' })),
+    'checkLessonStructure non-object (early return)': checkLessonStructure(null),
+    'checkRecordStructure pass': checkRecordStructure(recs[0]),
+    'checkRecordStructure fail': checkRecordStructure({ kind: 'note', file: 'x.md', record: {} }),
+    'checkRecordStructure non-object (early return)': checkRecordStructure(null),
+    'checkIncidentJudgment present': checkIncidentJudgment(validatedIncLiteral(5)),
+    'checkIncidentJudgment missing': checkIncidentJudgment(validatedIncLiteral(5, { judgment: null })),
+    'checkIncidentJudgment no decision': checkIncidentJudgment(openInc(1)),
+    'checkIncidentJudgment non-object (early return)': checkIncidentJudgment(null),
+    'checkLessonJudgment present': checkLessonJudgment(validatedLessonLiteral()),
+    'checkLessonJudgment missing': checkLessonJudgment(validatedLessonLiteral({ validation_reference: { incident_id: 'INC-T4TEST-005' } })),
+    'checkLessonJudgment no decision (early return)': checkLessonJudgment(stagedLesson()),
+    'checkJudgment incident': checkJudgment(recs[0]),
+    'checkJudgment lesson missing': checkJudgment(d('lesson', F.les2, validatedLessonLiteral({ validation_reference: {} }))),
+    'checkJudgment not applicable': checkJudgment(recs.find((x) => x.kind === 'seed')),
+    'checkJudgment non-object': checkJudgment(null),
+  };
+  for (const [name, r] of Object.entries(results)) assert.equal(r.limit, TEST_LIMIT, `${name} carries the limit`);
+  assert.equal(results['checkIncidentStructure fail'].valid, false);
+  assert.equal(results['checkLessonStructure non-object (early return)'].valid, false);
+  assert.equal(results['checkRecordStructure non-object (early return)'].valid, false);
+  assert.equal(results['checkIncidentJudgment no decision'].outcome, 'NO_DECISION_RECORDED');
+  assert.equal(results['checkLessonJudgment no decision (early return)'].outcome, 'NO_DECISION_RECORDED');
+  assert.equal(results['checkJudgment not applicable'].outcome, 'NOT_APPLICABLE');
+  assert.equal(results['checkJudgment lesson missing'].outcome, 'JUDGMENT_MISSING');
+  for (const r of checkJudgments(recs).results) assert.equal(r.limit, TEST_LIMIT);
+  for (const r of checkStructure({ records: recs, index: baselineIndex() }).records) assert.equal(r.limit, TEST_LIMIT);
 });
 
 // ---- Schema test (structure only) ----
@@ -273,11 +309,26 @@ test('AC-T4-1: judgment text must name who judged and when; the validation decis
 });
 
 test('AC-T4-1: a structurally complete validated lesson without sufficiency judgment text PASSES structure and FAILS judgment', () => {
-  const les = validatedLessonLiteral({ validation_reference: { incident_id: 'INC-T4TEST-005' } });
-  assert.equal(checkLessonStructure(les).valid, true);
-  const j = checkJudgment(d('lesson', F.les2, les));
-  assert.equal(j.outcome, 'JUDGMENT_MISSING');
-  assert.match(j.missing.join('; '), /validation_reference\.sufficiency_judgment/);
+  // Fix round 1 (F-T4-3): omitted, null, {}, and empty-text judgments.
+  const cases = {
+    omitted: { incident_id: 'INC-T4TEST-005' },
+    null: { incident_id: 'INC-T4TEST-005', sufficiency_judgment: null },
+    '{}': { incident_id: 'INC-T4TEST-005', sufficiency_judgment: {} },
+    'empty text': { incident_id: 'INC-T4TEST-005', sufficiency_judgment: { text: '', by: 'SYNTHETIC-judge', date: at(FP, 31) } },
+  };
+  for (const [name, validation_reference] of Object.entries(cases)) {
+    const les = validatedLessonLiteral({ validation_reference });
+    assert.equal(checkLessonStructure(les).valid, true, `${name}: lesson structure passes`);
+    const recs = baselineRecords().map((x) => (x.file === F.les2 ? d('lesson', F.les2, les) : x));
+    const schema = checkStructure({ records: recs, index: baselineIndex() });
+    assert.equal(schema.index.consistent, true, `${name}: INDEX consistent`);
+    assert.equal(schema.structurally_valid, true, `${name}: schema test passes`);
+    const j = checkJudgment(d('lesson', F.les2, les));
+    assert.equal(j.outcome, 'JUDGMENT_MISSING', `${name}: judgment fails`);
+    assert.equal(j.judged, false);
+    assert.match(j.missing.join('; '), /validation_reference\.sufficiency_judgment/);
+    assert.equal(checkJudgments(recs).outcome, 'JUDGMENT_TEXT_MISSING', `${name}: set judgment fails`);
+  }
   assert.equal(checkJudgment(d('lesson', F.les2, validatedLessonLiteral())).outcome, 'JUDGMENT_PRESENT');
 });
 
@@ -354,6 +405,28 @@ test('INDEX: every entry resolves to an existing record file whose id matches', 
   assert.deepEqual(codes(malformed), ['MALFORMED_ENTRY']);
   const dupFile = checkIndex({ records: [...baselineRecords(), d('incident', F.inc1, openInc(1))], index: baselineIndex() });
   assert.ok(codes(dupFile).includes('DUPLICATE_RECORD_FILE'));
+});
+
+test('INDEX: a section value that is not a list is refused as MALFORMED_SECTION, never treated as empty (F-T4-1)', () => {
+  // Codex counterexample: Section 6 as a bare object with ids that resolve to nothing.
+  const s6 = indexWith((s) => { s[6] = { superseded_id: 'MISSING', superseding_id: 'ALSO-MISSING' }; });
+  assert.equal(s6.consistent, false);
+  assert.deepEqual(codes(s6), ['MALFORMED_SECTION']);
+  assert.equal(s6.problems[0].section, '6');
+  // A primary section that is not a list: refused, and its record has no primary entry.
+  const s1 = indexWith((s) => { s[1] = { id: 'LES-T4TEST-002', file: F.les2 }; });
+  assert.equal(s1.consistent, false);
+  assert.deepEqual(codes(s1).sort(), ['MALFORMED_SECTION', 'NO_PRIMARY_ENTRY']);
+  // Every other non-list shape, in every section, is refused the same way.
+  for (const section of ['1', '2', '3', '4', '5', '6']) {
+    for (const bad of [null, undefined, 'LES-T4TEST-002', 7, true, {}]) {
+      const r = indexWith((s) => { s[section] = bad; });
+      assert.equal(r.consistent, false, `Section ${section} = ${String(bad)}`);
+      assert.ok(codes(r).includes('MALFORMED_SECTION'), `Section ${section} = ${String(bad)}`);
+    }
+  }
+  // An empty list is still a valid (empty) section.
+  assert.equal(indexWith((s) => { s[6] = []; }).consistent, true);
 });
 
 test('INDEX: Section 6 references are secondary, not duplicate primary entries (IDX-2)', () => {

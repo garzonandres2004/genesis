@@ -17,8 +17,8 @@ never "system verified". No input is an operational record.
 | Task and project identity | Stage 3, task T4 — Schema and INDEX tests; project Genesis (`garzonandres2004/genesis`) |
 | Builder identity | Claude Code, builder role ("Claude (builder)") |
 | Model/tool version (D6 addition) | Claude Opus 5.5 (`claude-opus-5-5`) via Claude Code. This is the builder's own declaration. The T4 task brief named no model restriction |
-| Starting commit | `d4484e9` (branch `stage-3/sie-milestone-a`; T3 fix round 1; PR #36 open, not merged) |
-| Resulting commit | The commit titled "Stage 3 T4: schema, judgment, and INDEX consistency tests (AC-T4-1..AC-T4-3)" on `stage-3/sie-milestone-a`. The verifier must take the exact SHA from the branch head, not from this report |
+| Starting commit | Original build: `d4484e9` (branch `stage-3/sie-milestone-a`; T3 fix round 1; PR #36 open, not merged). Fix round 1: `e6f96df` (the original T4 build commit) |
+| Resulting commit | Original build: "Stage 3 T4: schema, judgment, and INDEX consistency tests (AC-T4-1..AC-T4-3)" (`e6f96df`). Fix round 1: the commit titled "Stage 3 T4 fix round 1: reject non-list INDEX sections; limit on every check result; lesson judgment cases (F-T4-1..F-T4-3)" on `stage-3/sie-milestone-a`. The verifier must take the exact SHA from the branch head, not from this report |
 | Risk class | **Routine** (Brief §9 T4) |
 | Authorization reference | Founder approval of the Stage 3 Execution Brief §11 boundary, 2026-11-06 ~09:40 MST (coordinator record); Founder Amendment 2026-11-06 ~10:39 MST |
 | Specification | `docs/stage-3/00-sie-specification.md`, version 0.4-draft (§6.2, §8 VAL-1, §9.1 LES-2–LES-4, §9.2, §10 EVL-1/EVL-3, §11 LOC-1–LOC-4, §12 IDX-1–IDX-6, §13 FXT-1/FXT-2, §14) |
@@ -27,7 +27,46 @@ never "system verified". No input is an operational record.
 
 Brief §9 T4 only: the schema test (structure), the judgment test (required
 judgment text for validation and sufficiency decisions), and the INDEX
-consistency test. No T5–T8 work. No existing file was changed.
+consistency test. No T5–T8 work. The original build changed no existing
+file. Fix round 1 changes only the three T4 files, in response to the Codex
+round-1 verdict (NEEDS FIXES; findings F-T4-1 to F-T4-3). See "Fix round 1"
+below.
+
+## Fix round 1 (Codex round-1 verdict: F-T4-1, F-T4-2, F-T4-3)
+
+Only these three findings were addressed. Codex accepted both builder-flagged
+items (Section 2 placement; the `by` requirement on the validation history
+entry), and both are unchanged.
+
+| Finding | What changed | Covering tests |
+|---|---|---|
+| **F-T4-1 (MAJOR)**: `checkIndex` treated any non-list section value as empty | `checkIndex` now refuses every known section (1–6) whose value is not a list. It reports `MALFORMED_SECTION`, naming the section, and the result has `consistent: false`. The value is neither resolved nor counted, and nothing is silently discarded. An empty list is still a valid empty section. `parseIndex` always produces lists, so parsed Markdown is unaffected | New test "INDEX: a section value that is not a list is refused as MALFORMED_SECTION, never treated as empty (F-T4-1)". It covers the Codex counterexample (Section 6 = `{ superseded_id: 'MISSING', superseding_id: 'ALSO-MISSING' }` gives exactly `MALFORMED_SECTION`, `consistent: false`). It also covers Section 1 as a bare object (`MALFORMED_SECTION` + `NO_PRIMARY_ENTRY`), and `null`, `undefined`, string, number, boolean, and `{}` in each of Sections 1–6 |
+| **F-T4-2 (MINOR)**: six per-record functions returned results without the limit | `checkIncidentStructure`, `checkLessonStructure`, and `checkRecordStructure` add `limit: TEST_LIMIT` on every return, including the non-object early returns. `checkIncidentJudgment`, `checkLessonJudgment`, and `checkJudgment` build every result through the shared `result()` helper, which now adds `limit: TEST_LIMIT`. That covers early returns, `NO_DECISION_RECORDED`, and `NOT_APPLICABLE`. `parseIndex`, `recordIdOf`, and `isFixture` are unchanged: they parse and look up, they do not verify | Extended test "AC-T4-3: the test design states its own limit in the module, the test file, and every result". It asserts `limit === TEST_LIMIT` on 20 results across the six functions: passes, failures, non-object early returns, `NO_DECISION_RECORDED` (incident and staged lesson), `JUDGMENT_MISSING`, `JUDGMENT_PRESENT`, and `NOT_APPLICABLE`. It also checks each per-record result inside `checkJudgments` and `checkStructure` |
+| **F-T4-3 (MINOR)**: the validated-lesson test covered only an omitted sufficiency judgment | Test only; no module change. The test is now parameterized over omitted, `null`, `{}`, and empty-text `validation_reference.sufficiency_judgment`. For each value it asserts that lesson structure passes, that `checkStructure` on the full baseline set (with the lesson swapped in) is `structurally_valid` with `index.consistent === true`, that `checkJudgment` is `JUDGMENT_MISSING` / `judged: false` naming `validation_reference.sufficiency_judgment`, and that the set outcome is `JUDGMENT_TEXT_MISSING` | Updated test "AC-T4-1: a structurally complete validated lesson without sufficiency judgment text PASSES structure and FAILS judgment" |
+
+**Existing tests updated for the fixed behaviour:** two. "AC-T4-3: the test
+design states its own limit…" was extended (F-T4-2), and "AC-T4-1: a
+structurally complete validated lesson without sufficiency judgment text…"
+was parameterized (F-T4-3). No existing assertion was removed or weakened.
+One test was added (F-T4-1).
+
+**Builder mutation check:** the builder stashed only the module change and
+ran the updated tests against the pre-fix `sie-schema.mjs`. The F-T4-1 and
+F-T4-2 tests failed (2 fail, 21 pass). With the fix restored, all 23 pass.
+The F-T4-3 test passes on both versions, as expected, because Codex found
+that gap in coverage, not in behaviour.
+
+**T2 `validateRecord` read (builder's own reading, `scripts/sie-incident.mjs`,
+not modified).** `validateRecord` reads `sufficiency_judgment` only as a key
+in the `RECORD_FIELDS` presence list. It does not read the judgment's
+`text`, `by`, or `date`. From history entries it reads only `to`, to check
+that status agrees with history. It does not read `reason`, `by`, or `date`.
+The only `reason` fields it reads are structural ones: `detector_rule.reason`
+for a manual rule, and `history[0].hypotheses_empty_reason`. Neither is
+validation or sufficiency judgment text. This matches the coordinator's
+reading. T2's separate `checkValidationEligibility` does read
+sufficiency-judgment text, `by`, and `date`, but T4 neither imports nor
+calls it.
 
 ## What was built
 
@@ -67,33 +106,40 @@ Inputs are plain objects:
 | Fixtures never appear in the INDEX under test, in any section including 6, or in the record set under test (IDX-4, FXT-1). A fixture is a record marked `fixture: true`, under a `fixtures/` directory, or with SYNTHETIC in its file name or id | `FIXTURE_IN_INDEX`, `FIXTURE_IN_RECORD_SET` |
 | IDX-5 design choice (below) | `CANDIDATE_IN_INDEX` |
 | Only Sections 1–6 exist; no CANDIDATE section (IDX-5, VOC-6) | `UNKNOWN_SECTION` |
+| Every section value is a list of entries; any other value is refused, never treated as empty (fix round 1, F-T4-1) | `MALFORMED_SECTION` |
 | No list entry outside a section; no duplicate record file or id in the set | `STRAY_ENTRY`, `DUPLICATE_RECORD_FILE`, `DUPLICATE_RECORD_ID` |
 
-## Files written (new files only)
+## Files written
 
-| File | Lines |
-|---|---|
-| `scripts/sie-schema.mjs` | 434 |
-| `scripts/sie-schema.test.mjs` | 474 |
-| `docs/stage-3/T4-builder-report.md` | this file |
+The original build (`e6f96df`) added these three files as new files. Fix
+round 1 **modifies** the same three files and no others.
+
+| File | Lines after original build | Lines after fix round 1 |
+|---|---|---|
+| `scripts/sie-schema.mjs` | 434 | 442 |
+| `scripts/sie-schema.test.mjs` | 474 | 547 |
+| `docs/stage-3/T4-builder-report.md` | this file | this file |
 
 No fixture files were added to the repository. Every test input is a
 SYNTHETIC record or INDEX built inline. One test writes a SYNTHETIC INDEX and
 record files to a `mkdtemp` directory under the OS temp dir and removes it in
-`finally`. No existing file was modified, including the Specification,
+`finally`. No other file was modified in either round, including the Specification,
 `scripts/sie-incident.mjs`, `scripts/sie-detector.mjs`, their tests, existing
 fixtures, `tasks/`, `events.jsonl`, CI, and Runner scripts.
 
 ## Tests and results (builder-observed; re-run required by the verifier)
 
-The builder ran these from the repo root on the uncommitted tree just before
-committing:
+The builder ran these from the repo root on the uncommitted fix-round-1
+tree just before committing:
 
-- `node --test scripts/sie-schema.test.mjs`: **22 tests, 22 pass, 0 fail,
-  0 skipped.**
-- `npm test` (`node --test scripts/*.test.mjs`): **187 tests, 186 pass,
-  0 fail, 1 skipped.** The skip is the pre-existing one. 165 existing + 22
-  new = 187.
+- `node --test scripts/sie-schema.test.mjs`: **23 tests, 23 pass, 0 fail,
+  0 skipped.** That is the original 22 plus the one F-T4-1 test.
+- `npm test` (`node --test scripts/*.test.mjs`): **188 tests, 187 pass,
+  0 fail, 1 skipped.** The skip is the pre-existing one. 165 non-T4 + 23 T4
+  = 188.
+
+(Original build, for the record: T4 suite 22 / 22 pass; `npm test` 187
+tests, 186 pass, 0 fail, 1 skipped.)
 - `node scripts/status.mjs`: **exit 0**. It prints "Genesis tasks: 15 total"
   (blocked 1, completed 14), unchanged.
 
@@ -105,14 +151,15 @@ Component at most).
 
 | AC | Builder claim | Evidence the verifier can inspect |
 |---|---|---|
-| AC-T4-1 | **Met.** Structure and judgment are separate code paths with separate results. Structural functions never read judgment text, and their results carry no judged/validated/sufficient field (asserted on the result keys). Judgment functions call no structural check (asserted on their source). The explicit case passes: a structurally complete VALIDATED incident with `sufficiency_judgment` null, `{}`, or `{ text: '' }` passes `checkStructure` (with a consistent INDEX) and fails `checkJudgment` (`JUDGMENT_MISSING`, naming `sufficiency_judgment`). The set outcome is `JUDGMENT_TEXT_MISSING`. The same holds for a validated lesson with no `validation_reference.sufficiency_judgment`, and for a validation history entry with no `by`. Every structurally valid record without judgment text (OPEN, FIXED, WATCH, REOPENED, staged, seed, candidate) is `judged: false`, and a set with no decisions is `NO_DECISIONS_TO_JUDGE`, not a pass. The reverse also holds: a judgment present on a structurally broken record does not make it structurally valid | `checkStructure`, `checkIncidentStructure`, `checkLessonStructure`, `checkJudgment`, `checkJudgments`, `checkIncidentJudgment`, `checkLessonJudgment`, `STRUCTURE_NOTE`, `JUDGMENT_NOTE`. The five tests prefixed "AC-T4-1" |
+| AC-T4-1 | **Met.** Structure and judgment are separate code paths with separate results. Structural functions never read judgment text, and their results carry no judged/validated/sufficient field (asserted on the result keys). Judgment functions call no structural check (asserted on their source). The explicit case passes: a structurally complete VALIDATED incident with `sufficiency_judgment` null, `{}`, or `{ text: '' }` passes `checkStructure` (with a consistent INDEX) and fails `checkJudgment` (`JUDGMENT_MISSING`, naming `sufficiency_judgment`). The set outcome is `JUDGMENT_TEXT_MISSING`. The same holds for a validated lesson whose `validation_reference.sufficiency_judgment` is omitted, `null`, `{}`, or has empty text: each passes `checkStructure` with a consistent INDEX and fails judgment (fix round 1, F-T4-3). It also holds for a validation history entry with no `by`. Every structurally valid record without judgment text (OPEN, FIXED, WATCH, REOPENED, staged, seed, candidate) is `judged: false`, and a set with no decisions is `NO_DECISIONS_TO_JUDGE`, not a pass. The reverse also holds: a judgment present on a structurally broken record does not make it structurally valid | `checkStructure`, `checkIncidentStructure`, `checkLessonStructure`, `checkJudgment`, `checkJudgments`, `checkIncidentJudgment`, `checkLessonJudgment`, `STRUCTURE_NOTE`, `JUDGMENT_NOTE`. The five tests prefixed "AC-T4-1" |
 | AC-T4-2 | **Met, both directions.** A staged lesson moved into Section 1 fails with `STAGED_IN_SECTION_1`. Listed in both Sections 1 and 4, it fails with `STAGED_IN_SECTION_1` and `MULTIPLE_PRIMARY_ENTRIES`. A validated lesson in Section 4 and a validated incident in Section 4 each fail with `VALIDATED_IN_SECTION_4`. The same refusal is shown through `parseIndex` on Markdown | `placement`, `checkIndex`. Tests "AC-T4-2: a staged lesson in Section 1…", "AC-T4-2: a validated record in Section 4…", and "INDEX Markdown: …" |
-| AC-T4-3 | **Met.** The limit is stated in the module header, the test-file header, the exported `TEST_LIMIT` constant, every `checkStructure`/`checkIndex`/`checkJudgments` result (`limit`), and this report. A test asserts the module and test-file headers and the result fields | `TEST_LIMIT`; test "AC-T4-3: the test design states its own limit…" |
+| AC-T4-3 | **Met.** The limit is stated in the module header, the test-file header, the exported `TEST_LIMIT` constant, this report, and the `limit` field of every check result. That covers the aggregate checks `checkStructure`, `checkIndex`, and `checkJudgments`. Since fix round 1 (F-T4-2) it also covers every return path of `checkIncidentStructure`, `checkLessonStructure`, `checkRecordStructure`, `checkIncidentJudgment`, `checkLessonJudgment`, and `checkJudgment`, including early returns, failures, and no-decision outcomes. `parseIndex`, `recordIdOf`, and `isFixture` are parse/lookup helpers, not check results. A test asserts the headers and the `limit` on all of these results | `TEST_LIMIT`; the `result()` helper; test "AC-T4-3: the test design states its own limit…" (extended in fix round 1 to 20 per-function results across passes, failures, early returns, and `NO_DECISION_RECORDED` / `NOT_APPLICABLE`) |
 
 Additional coverage asked for by the task brief:
 
 - **Zero / two primary entries; resolution; Section 6 secondary;
-  Section 3 statuses; fixtures; IDX-5:** the seven "INDEX" / "IDX-5" tests.
+  Section 3 statuses; fixtures; IDX-5; non-list sections (F-T4-1):** the
+  eight "INDEX" / "IDX-5" tests.
 - **Schema (incident via T2, VALIDATED/EVL-1, lesson §9.2, descriptors):**
   the five "Schema:" tests.
 - **Fixture directory:** the temp-directory test.
@@ -197,7 +244,9 @@ Additional coverage asked for by the task brief:
 
 ## Scope-compliance statement (D6 addition)
 
-- **T4 only.** New files: the module, its tests, and this report.
+- **T4 only.** Original build: three new files (the module, its tests, and
+  this report). Fix round 1: the same three files modified, no other file
+  touched. `scripts/sie-incident.mjs` was read, not modified.
 - **Read-only boundary.** The module does no file I/O and imports only T2.
   The tests' only I/O is reading the module source and a temp directory
   they create and delete. No Runner source record, `tasks/`, or
@@ -213,7 +262,7 @@ Additional coverage asked for by the task brief:
 | Limit | Set by the Task Brief | Actual |
 |---|---|---|
 | Time | One session | One session |
-| Scope | New module(s), new tests, optional SYNTHETIC fixtures, this report; no edit to existing files | One module, one test file, this report. No fixture files. No existing file changed |
+| Scope | New module(s), new tests, optional SYNTHETIC fixtures, this report; no edit to existing files. Fix round 1: edits to these three files only | One module, one test file, this report. No fixture files. No pre-T4 file changed in either round |
 | Resource/cost | $0; no dependencies; local only | $0. Node built-ins only. Local, apart from `git push` |
 | Model/tool | No restriction stated | Claude Code with Claude Opus 5.5. No subagents, no web access |
 
@@ -228,6 +277,12 @@ Additional coverage asked for by the task brief:
   tool. A `wc` on the brief outside the repo was also refused; the brief
   was read with the Read tool instead. Nothing was worked around through
   another channel.
+- **Fix round 1 permission prompts.** A `cd && git …` line, a shell line
+  using a `${…}` variable, and a compound test-plus-status-plus-`wc` line
+  were each refused. The builder replaced each with single commands. The
+  builder's mutation check used `git stash push scripts/sie-schema.mjs` and
+  `git stash pop`, and the tree was confirmed restored with
+  `git diff --stat`. No deviation from the fix-round brief.
 
 ## Verdict rationale (builder's, not a verification verdict)
 
@@ -237,15 +292,17 @@ a verification outcome.
 
 ## Verification method (to be run by the coordinator/verifier)
 
-1. Read the full diff `d4484e9..<head>`. Confirm that only these three new
-   files were added: `git diff --stat d4484e9..<head>` should list exactly
+1. Read the full diff `d4484e9..<head>`. Confirm that only these three
+   files changed: `git diff --stat d4484e9..<head>` should list exactly
    `scripts/sie-schema.mjs`, `scripts/sie-schema.test.mjs`, and
-   `docs/stage-3/T4-builder-report.md`. `git diff --diff-filter=M d4484e9..<head>`
-   should be empty.
+   `docs/stage-3/T4-builder-report.md`. For the fix round alone,
+   `git diff --stat e6f96df..<head>` should list the same three files as
+   modified, and `git diff --diff-filter=AD e6f96df..<head>` should be empty
+   (nothing added or deleted).
 2. Re-run at that commit:
-   - `node --test scripts/sie-schema.test.mjs`: expect **22 tests, 22 pass,
+   - `node --test scripts/sie-schema.test.mjs`: expect **23 tests, 23 pass,
      0 fail, 0 skipped**.
-   - `npm test`: expect **187 tests, 186 pass, 0 fail, 1 skipped** (the
+   - `npm test`: expect **188 tests, 187 pass, 0 fail, 1 skipped** (the
      pre-existing skip).
    - `node scripts/status.mjs`: exit 0, "Genesis tasks: 15 total".
 3. Read `scripts/sie-schema.mjs` against Spec §12 (IDX-1–IDX-6), §9.2, §6.2,
@@ -257,7 +314,10 @@ a verification outcome.
 4. Mutation spot-check, suggested: disable the `STAGED_IN_SECTION_1` or
    `VALIDATED_IN_SECTION_4` branch in `placement`, or make
    `checkIncidentJudgment` return `JUDGMENT_PRESENT` unconditionally, and
-   confirm the AC-T4-2 / AC-T4-1 tests fail.
+   confirm the AC-T4-2 / AC-T4-1 tests fail. For fix round 1: restore the
+   pre-fix `for (const e of Array.isArray(entries) ? entries : [])` loop, or
+   drop `limit` from `result()`, and confirm that the F-T4-1 or AC-T4-3 test
+   fails.
 5. Judge open items 1 (the IDX-5 choice), 3, 4, and 5.
 6. Record source hashes, an independence declaration (Stage 2 spec 05
    VI-9), and skipped checks separately from passed ones.
@@ -266,8 +326,8 @@ a verification outcome.
 
 | AC | Evidence |
 |---|---|
-| AC-T4-1 | `checkStructure` / `checkRecordStructure` / `checkIncidentStructure` / `checkLessonStructure` (structure) vs. `checkJudgment` / `checkJudgments` / `checkIncidentJudgment` / `checkLessonJudgment` (judgment); the 5 "AC-T4-1" tests |
+| AC-T4-1 | `checkStructure` / `checkRecordStructure` / `checkIncidentStructure` / `checkLessonStructure` (structure) vs. `checkJudgment` / `checkJudgments` / `checkIncidentJudgment` / `checkLessonJudgment` (judgment); the 5 "AC-T4-1" tests (the validated-lesson test covers omitted / `null` / `{}` / empty-text since fix round 1, F-T4-3) |
 | AC-T4-2 | `placement` (`STAGED_IN_SECTION_1`, `VALIDATED_IN_SECTION_4`), `checkIndex`, `parseIndex`; the 2 "AC-T4-2" tests and the "INDEX Markdown" test |
-| AC-T4-3 | `TEST_LIMIT`, module and test-file headers, `limit` on every result, this report; the "AC-T4-3" test |
-| INDEX consistency (brief work items) | `checkIndex`; the "INDEX:", "IDX-5", "INDEX Markdown", and temp-directory tests |
-| Tests green / scope | `npm test`; `node scripts/status.mjs`; `git diff --stat d4484e9..<head>` |
+| AC-T4-3 | `TEST_LIMIT`, module and test-file headers, `limit` on every check result (aggregate and all six per-record structural/judgment functions, every return path, since fix round 1, F-T4-2), this report; the extended "AC-T4-3" test, covering passes, failures, early returns, and no-decision outcomes |
+| INDEX consistency (brief work items) | `checkIndex` (non-list sections refused as `MALFORMED_SECTION` since fix round 1, F-T4-1); the "INDEX:" (including "a section value that is not a list…"), "IDX-5", "INDEX Markdown", and temp-directory tests |
+| Tests green / scope | `npm test`; `node scripts/status.mjs`; `git diff --stat d4484e9..<head>` and `git diff --stat e6f96df..<head>` |
