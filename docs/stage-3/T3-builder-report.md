@@ -11,6 +11,32 @@ No step of the procedure was executed: the detector was not run against
 live records, and no candidate, incident, escalation, or turn record was
 created anywhere.
 
+## Fix round 1 — 2026-11-06
+
+Codex round-1 verdict on commit `8fc1b2b`: **NEEDS FIXES** (all four ACs
+met as textual requirements; no standing-rule violation; the four
+builder-flagged items accepted). Four findings, each fixed in
+`docs/stage-3/T3-procedure.md` as specified and nothing else in scope
+changed. Line numbers are at the fix-round-1 commit.
+
+| Finding | Fix | Where (section, lines) |
+|---|---|---|
+| **F-T3-1 MAJOR** — NR-1 and §6 forbade creating "an incident", while PROC-5.1 creates an incident record; the §3 precedence rule made the candidate-to-incident path unexecutable | Distinguished *manufacturing the underlying incident* (the failure event: forbidden) from *creating an incident record about existing observations* (PROC-5.1: permitted, not manufacturing an incident) | §0.2 new paragraph (64–70); §3 precedence rule (194–202); NR-1 (204–212); §4 intro (286–290); §6 first bullet (698–703) |
+| **F-T3-2 MAJOR** — NR-3 forbade writing Runner task records, yet PROC-6 had the task become `blocked` and PROC-8 had the runner task record evidence and end | The turn's own task record is an observed Runner task record; the turn never writes it. The orchestrator, which owns it (LT-2), performs those lifecycle updates through the existing task mechanism, on the turn's request recorded in SIE records. No new role or authorization | NR-3 (232–238); PROC-6 step 4 (528–534); PROC-8 item 4 (627–632); §6 new bullet (706–709). PROC-0 item 5 checked: it already says the turn "never writes into `tasks/` or `events.jsonl`", consistent with NR-3; unchanged |
+| **F-T3-3 MINOR** — PROC-0 said "Before reading any record" yet required confirmation "from records" | PROC-0 now gates *operational* records (task records, events) and names the authorization, verdict, and task-brief records of items 1–5 as the only records read before the check passes | PROC-0 opening (297–301); §0.1 "before it reads any operational record" (48). No other sentence in the procedure said the turn reads nothing before PROC-0 |
+| **F-T3-4 MINOR** — PROC-2 item 3 cited "PROC-6 trigger 6"; PROC-6 has categories 1–5 only | A detector error is recorded verbatim in the turn record (PROC-7) and reported to the orchestrator, who handles it; it is not a PROC-6 escalation and needs no Founder review, because no PROC-6 category applies. No category added | PROC-2 item 3 (369–378). Grep found no other PROC-6 category/trigger reference outside 1–5 |
+
+**Correction to the original report (annotated, not deleted).** The
+original report claimed the procedure was complete end to end, which
+included the candidate-to-incident path (flow §5.3; Brief §T3 table,
+"Exit" row; AC-T3-1 evidence). **That claim was overstated** while the
+NR-1 / PROC-5.1 contradiction stood: NR-1 forbade creating "an
+incident", and the §3 precedence rule stopped the turn at any step in
+conflict with a rule, so PROC-5.1 could not execute as written. Likewise,
+PROC-6 step 4 and PROC-8 item 4 could not execute as written while NR-3
+forbade the writes they implied. Both contradictions are resolved by this
+fix round; the original wording is kept below with correction notes.
+
 ## Identity (CR-03 source fields)
 
 | Field | Value |
@@ -19,7 +45,7 @@ created anywhere.
 | Builder identity | Claude Code, builder role ("Claude (builder)") |
 | Model/tool version (D6 addition) | Claude Opus 5.5 (`claude-opus-5-5`) via Claude Code. This is the builder's own declaration. It corroborates the identity but does not establish it independently. The T3 task brief named no model restriction |
 | Starting commit | `6f90c11` (branch `stage-3/sie-milestone-a`; T2 fix round 1; PR #36 open, not merged). Verified with `git status` (clean) and `git log --oneline -3` before work began |
-| Resulting commit | The commit titled "Stage 3 T3: live-loop procedure (AC-T3-1..AC-T3-4)" on `stage-3/sie-milestone-a`. The verifier must take the exact SHA from the branch head, not from this report |
+| Resulting commit | Original build: `8fc1b2b` "Stage 3 T3: live-loop procedure (AC-T3-1..AC-T3-4)". Fix round 1: the commit titled "Stage 3 T3 fix round 1: reconcile incident/task-write prohibitions; repair PROC-0 and PROC-2 references (F-T3-1..F-T3-4)" on `stage-3/sie-milestone-a`, parent `8fc1b2b`. A commit cannot contain its own SHA; the verifier must take the exact SHA from the branch head, not from this report |
 | Risk class | **Governance** (Brief §9 T3: it states the loop's authorization and escalation rules). Human review required (D2) |
 | Authorization reference | Founder approval of the Stage 3 Execution Brief §11 boundary, 2026-11-06 ~09:40 MST (coordinator record); Founder Amendment 2026-11-06 ~10:39 MST (R4-events [OPEN]; Stage 3 exits on Milestone A) |
 | Specification | `docs/stage-3/00-sie-specification.md`, version 0.4-draft (§15 PRO-1–PRO-5, §2 points 3–4, §16; applied without change: §5, §6, §7, §8, §11, §12, §14.2 GOV, §19) |
@@ -28,8 +54,8 @@ created anywhere.
 
 | File | Lines | Content |
 |---|---|---|
-| `docs/stage-3/T3-procedure.md` | 762 | The live loop turn procedure (new) |
-| `docs/stage-3/T3-builder-report.md` | this file | This report (new) |
+| `docs/stage-3/T3-procedure.md` | 762 (810 after fix round 1) | The live loop turn procedure (new; modified in fix round 1) |
+| `docs/stage-3/T3-builder-report.md` | this file | This report (new; updated in fix round 1) |
 
 **Location.** `docs/stage-3/T3-procedure.md`, the location the task brief
 suggested. Neither the Specification nor an existing convention names a
@@ -60,7 +86,7 @@ it and by the string checks in "Verification method".
   C-15, C-16, H4, and the named findings); NR-8 silence is never approval.
 - **§4** — The steps, end to end:
   - PROC-0 preconditions and authorization check (stop before reading
-    anything if any fails);
+    any operational record if any fails; fix round 1, F-T3-3);
   - PROC-1 snapshot and read-only scope;
   - PROC-2 run the detector (print-only first);
   - PROC-3 file candidates (`--out`, same snapshot);
@@ -93,6 +119,24 @@ it and by the string checks in "Verification method".
 - NR-1 binds every step: "No step creates, simulates, or stages a failure,
   an incident, or a task. No demo failing test on live systems (H1 OPEN)."
   It also keeps fixtures out of operational records (FXT-1, FXT-2).
+  **[Corrected in fix round 1, F-T3-1.]** That original NR-1 wording
+  conflicted with PROC-5.1. NR-1 now reads: "No step creates, simulates,
+  or stages a real failure, or a task, and no step manufactures the
+  underlying incident (the failure event itself). Creating an incident
+  record about existing observations through PROC-5.1 (`createIncident`)
+  is permitted and is not manufacturing an incident (§0.2)." The demo
+  failing-test sentence (H1 OPEN) and the fixture sentence (FXT-1, FXT-2)
+  are unchanged in meaning.
+- **The NR-1 distinction (fix round 1).** *Manufacturing an underlying
+  incident* (creating, simulating, or staging the failure event itself)
+  is forbidden. *Creating an incident record about existing
+  observations* (PROC-5.1, after a recorded triage judgment) is
+  permitted and is not manufacturing an incident. The distinction is
+  carried in §0.2 (new paragraph), NR-1, the precedence rule at the head
+  of §3 together with the §4 introduction (an SIE record about existing
+  observations does not conflict with NR-1, so the candidate-to-incident
+  path executes; genuine conflicts still stop the turn and escalate), and
+  the first §6 bullet.
 - PROC-1 item 4: the turn "does not run, re-run, retry, resume, unblock,
   or re-queue any task, and does not add, edit, or replay any event, to
   obtain records".
@@ -104,13 +148,22 @@ it and by the string checks in "Verification method".
 - §6 lists the forbidden acts, first among them: "Create, simulate, or
   stage a failure, an incident, or a task; run a demo failing test on a
   live system; run, re-run, retry, interrupt, block, or fail a task to
-  obtain something to observe".
+  obtain something to observe". **[Corrected in fix round 1, F-T3-1.]**
+  The bullet now forbids creating, simulating, or staging a real failure,
+  or a task, and manufacturing the underlying incident, and states that
+  creating an incident record about existing observations (PROC-5.1) is
+  permitted. A new §6 bullet (F-T3-2) forbids the turn from writing any
+  Runner task record, its own included; lifecycle updates are the
+  orchestrator's (NR-3, PROC-6 step 4, PROC-8 item 4).
 
 **What the verifier should check:** read each PROC step's actions and
 confirm none of them produces a failure, an incident from nothing, or a
 task. The only writes are `writeCandidates` (PROC-3), the T2 functions
 (PROC-5), escalation records (PROC-6), turn records (PROC-7), and the
-commit/PR (PROC-8).
+commit/PR (PROC-8). After fix round 1, the turn writes no Runner task
+record at all: marking its task `blocked` and recording evidence on it
+and ending it are requested by the turn and performed by the
+orchestrator (NR-3, PROC-6 step 4, PROC-8 item 4).
 
 ### AC-T3-2 — Trigger stated exactly as WP-04 v1.1 does; no faked failures
 
@@ -211,7 +264,10 @@ decision.
   completion of this Specification or of any Stage 3 task, or by the
   absence of a failure").
 - PROC-0 stops every turn before it reads anything until a separate
-  live-loop authorization exists.
+  live-loop authorization exists. **[Corrected in fix round 1, F-T3-3:]**
+  before it reads any operational record (task records or events); the
+  authorization, verdict, and task-brief records of PROC-0 items 1–5 are
+  the only records read before the check passes.
 - PROC-8 item 4: a turn schedules or starts no further turn.
 - §9 repeats: "**No live loop is started, scheduled, or authorized**".
 
@@ -228,7 +284,7 @@ decision.
 | Escalate governance/security/material-risk items to Founder review | PROC-6 |
 | Record what was checked even when nothing was found | PROC-7, PROC-7.1 |
 | State the trigger exactly as WP-04 v1.1 does | §1.1 |
-| **Exit:** complete end to end, including the null-result case and the escalation case | PROC-0 to PROC-8; null result PROC-7.1 and flow §5.1; escalation PROC-6 and flow §5.2 |
+| **Exit:** complete end to end, including the null-result case and the escalation case | PROC-0 to PROC-8; null result PROC-7.1 and flow §5.1; escalation PROC-6 and flow §5.2. **[Corrected in fix round 1:]** at `8fc1b2b` this claim was overstated — the candidate-to-incident path (PROC-5.1, flow §5.3) could not execute while NR-1 forbade creating "an incident" (F-T3-1), and PROC-6 step 4 / PROC-8 item 4 conflicted with NR-3 (F-T3-2). Both are reconciled in fix round 1 |
 
 ## Standing-rule compliance
 
@@ -318,6 +374,23 @@ written:
 - Quotation check: see AC-T3-2. The script was written to `/tmp`, outside
   the repo, and is not part of the commit.
 
+**Fix round 1 re-run** (uncommitted tree, after both files were edited):
+
+- `npm test`: **165 tests, 164 pass, 0 fail, 1 skipped** (the
+  pre-existing skip; unchanged, no test added or changed).
+- `node scripts/status.mjs`: **exit 0**, "Genesis tasks: 15 total"
+  (blocked 1, completed 14), unchanged.
+- Quotation check: `grep -c -F` of each full trigger passage (v1.0 §F
+  and the v1.1 matrix line) and of the review note returns 1 in both
+  `docs/stage-3/T3-procedure.md` and `docs/stage-3/00-sie-specification.md`.
+  `grep -n -i 'review note'` shows every occurrence labeled as not WP-04
+  (§1.2 heading and text, PROC-0 item 2, §7, §9).
+- AC-T3-1 grep (`simulat|stage a|inject|fake`): every hit is a
+  prohibition, a statement that nothing was simulated, or the verbatim
+  D1 / WP-04 quotations.
+- Scope: `git diff --stat 8fc1b2b` lists only the two files above, both
+  modified; no other file changed, no file added.
+
 ## Verification method (to be run by the coordinator/verifier)
 
 1. Confirm the diff adds exactly two files and modifies none:
@@ -335,7 +408,14 @@ written:
 4. **AC-T3-1:** read every PROC step and §5. Confirm no step creates,
    simulates, or stages a failure, task, or incident. A search such as
    `grep -n -i 'simulat\|stage a\|inject\|fake' docs/stage-3/T3-procedure.md`
-   should find only prohibitions.
+   should find only prohibitions (and the verbatim D1 / WP-04
+   quotations). After fix round 1, also confirm the NR-1 distinction is
+   applied consistently in §0.2, the §3 precedence rule, NR-1, the §4
+   introduction, and §6, and that no step has the turn write a Runner
+   task record (NR-3, PROC-6 step 4, PROC-8 item 4, §6).
+   **Fix round 1 scope:** `git diff --stat 8fc1b2b..<head>` must list only
+   `docs/stage-3/T3-procedure.md` and `docs/stage-3/T3-builder-report.md`,
+   both modified.
 5. **AC-T3-3:** confirm PROC-6 names all five categories, routes them to
    Founder review, and states that silence or delay is never approval.
 6. **AC-T3-4:** confirm §0.1's statement, and that no step starts or

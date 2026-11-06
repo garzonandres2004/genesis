@@ -45,7 +45,7 @@ The same holds for this document:
   was created. Nothing was simulated.
 - **The first live loop is a separately authorized step after Stage 3**
   (Brief §5.5). Until that authorization exists, PROC-0 below stops every
-  turn before it reads anything.
+  turn before it reads any operational record.
 
 ### 0.2 No faked failures (AC-T3-1, AC-T3-2)
 
@@ -60,6 +60,14 @@ Every step reads records that already exist, or writes SIE records
 blocks, or fails a task in order to produce something to observe. No step
 injects, edits, or replays a task record or event. Rule NR-1 (§3) makes
 this binding on every step, and §6 lists the forbidden acts explicitly.
+
+**Manufacturing an incident is not the same as creating an incident
+record.** The prohibition targets the underlying failure event: no step
+creates, simulates, stages, or otherwise manufactures the failure itself.
+Creating an incident record *about* observations that already exist
+(PROC-5.1, `createIncident`, after a recorded triage judgment) is not
+creating or manufacturing an incident; it is the procedure's
+candidate-to-incident path, and it is permitted.
 
 ### 0.3 Provenance labels
 
@@ -185,14 +193,23 @@ conditions before every turn.
 
 These rules bind every step in §4. If a step and a rule appear to
 conflict, the rule wins and the turn stops at that step and escalates
-(PROC-6).
+(PROC-6). A step that creates an SIE record about existing observations
+(a candidate, an incident record via PROC-5.1, an escalation record, or
+the turn record) does not conflict with NR-1, because NR-1 forbids
+manufacturing the underlying failure, not recording what already exists
+(§0.2); the candidate-to-incident path therefore executes. The precedence
+rule still applies to every genuine conflict: the rule wins, the turn
+stops, and it escalates.
 
 - **NR-1 No manufactured failure [DECIDED — D1; Brief §10 item 8; Spec
-  PRO-2] (AC-T3-1).** No step creates, simulates, or stages a failure, an
-  incident, or a task. No demo failing test on live systems (H1 OPEN). No
-  fixture, synthetic record, or test input is placed among operational
-  records, and no fixture result is reported as an operational observation
-  (Spec §13 FXT-1, FXT-2).
+  PRO-2] (AC-T3-1).** No step creates, simulates, or stages a real
+  failure, or a task, and no step manufactures the underlying incident
+  (the failure event itself). Creating an incident record about existing
+  observations through PROC-5.1 (`createIncident`) is permitted and is not
+  manufacturing an incident (§0.2). No demo failing test on live systems
+  (H1 OPEN). No fixture, synthetic record, or test input is placed among
+  operational records, and no fixture result is reported as an
+  operational observation (Spec §13 FXT-1, FXT-2).
 - **NR-2 A candidate is not a failure [P — Spec §5 DET-2, DET-3, VOC-7].**
   "A candidate is an exact-match observation that a rule fired. A
   runner-caused failure is a judgment reached only after diagnosis that
@@ -212,7 +229,13 @@ conflict, the rule wins and the turn stops at that step and escalates
   nothing outside the SIE-03 working scope: no production system, no
   database, no deployment, no external service (Brief §10 item 11 holds for
   Stage 3; any wider scope for a live loop is the live-loop
-  authorization's to state, not this procedure's).
+  authorization's to state, not this procedure's). The turn's own runner
+  task record is a Runner task record it is observing, so the turn never
+  writes it either. Lifecycle updates to it (marking the turn's task
+  `blocked`, recording evidence on it, ending it) are performed by the
+  orchestrator, which owns the turn's task record (LT-2), through the
+  existing task mechanism, on the turn's request recorded in SIE records
+  (escalation record, turn record). The turn requests; it does not write.
 - **NR-4 No automatic classification [DECIDED — Register §1 principle 8,
   B1; Spec INC-6].** "SIE cannot automatically classify incidents or
   promote lessons." Every incident opened or updated is a recorded
@@ -260,15 +283,23 @@ conflict, the rule wins and the turn stops at that step and escalates
 Each step names its inputs, its actions, what it writes, and when it
 stops. A **stop** means: the turn performs no further step except PROC-7
 (the turn record) where PROC-0 has passed, and the orchestrator is told
-why.
+why. The precedence rule at the head of §3 applies to every step below.
+A step that creates an SIE record about existing observations, including
+an incident record via PROC-5.1, does not conflict with NR-1 (§0.2, §3),
+so the candidate-to-incident path executes; a genuine conflict still
+stops the turn and escalates.
 
 ### PROC-0 — Preconditions and authorization check
 
 [P — this procedure, applying Spec §15 PRO-4, PRO-5; Brief §5.5; WP-04
 governance gate (Spec §2 point 8).]
 
-**Before reading any record**, the turn confirms each of the following
-from records, not from memory or assumption:
+**Before reading any operational record** (Runner task records or
+events), the turn confirms each of the following from the authorization,
+verdict, and task-brief records named in items 1–5, not from memory or
+assumption. Those named records are the only records the turn reads
+before this check passes; no task record or event is read until all six
+items pass.
 
 1. **November 5 verdict issued and preserved** (PRO-4 (a)): the
    preserved verdict record is identified by reference.
@@ -340,7 +371,11 @@ snapshot.]
    turn records the error verbatim and stops at this step. A detector
    error is **not** a candidate, an incident, or a failure of a task, and
    the turn does not repair source records to make the scan pass (NR-3).
-   The error is escalated to the orchestrator (PROC-6 trigger 6).
+   The error is recorded verbatim in the turn record (PROC-7) and
+   reported to the orchestrator, who handles it. It is **not** a PROC-6
+   escalation and needs no Founder review: a detector or scan failure is
+   not a governance, security, material-risk, authorization-change, or
+   designated-gate item, so no PROC-6 category applies.
 
 ### PROC-3 — File detector candidates
 
@@ -490,10 +525,13 @@ treat it as decided:
    recommendation; the response-by time; and the waiting behavior.
 3. **Hand it to the orchestrator**, who brings it to the Founder with the
    recommendation (ES-3). The escalation goes up, never sideways.
-4. **Wait without proceeding on that item.** The affected item stays held
-   (the turn's task is `blocked` on it if nothing else remains, naming
-   what is needed and who can unblock it). Steps that do not depend on
-   the item may continue, and the turn record (PROC-7) is still written.
+4. **Wait without proceeding on that item.** The affected item stays
+   held. If nothing else remains, the turn requests, via the orchestrator
+   (step 3), that the orchestrator mark the turn's task `blocked` through
+   the existing task mechanism, naming what is needed and who can unblock
+   it. The turn itself writes nothing to the task record (NR-3). Steps
+   that do not depend on the item may continue, and the turn record
+   (PROC-7) is still written.
 
 **Silence or delay is never approval.** [P — Register ADR-09: "Silence and
 timeout never equal approval"; Stage 2 spec 07 ES-11; Spec §14.2 GOV:
@@ -586,9 +624,12 @@ not enforced and is not claimed."
 3. **No merge without Founder approval** after verification passes and
    the required check is green. Merging a turn's records is a protected
    action (PROC-6 category 5).
-4. The turn's runner task records its evidence (commit, PR, turn record
-   path) under the existing task mechanism and ends. It does not schedule
-   or start the next turn; whether and when later turns run is the
+4. The turn's evidence (commit, PR, turn record path) is recorded in the
+   turn record (PROC-7). The orchestrator, which owns the turn's task
+   record (LT-2), records that evidence on the runner task and ends the
+   task through the existing task mechanism. The turn itself writes
+   nothing to the runner task record (NR-3). It does not schedule or
+   start the next turn; whether and when later turns run is the
    live-loop authorization's to state (§8, item 4).
 
 ---
@@ -654,11 +695,18 @@ being produced.
 ## 6. What a live loop turn must NOT do
 
 - Start, schedule, or authorize a live loop or another turn (§0.1).
-- Create, simulate, or stage a failure, an incident, or a task; run a demo
-  failing test on a live system; run, re-run, retry, interrupt, block, or
-  fail a task to obtain something to observe (NR-1).
+- Create, simulate, or stage a real failure, or a task; manufacture the
+  underlying incident (the failure event itself); run a demo failing test
+  on a live system; run, re-run, retry, interrupt, block, or fail a task
+  to obtain something to observe (NR-1). Creating an incident record
+  about existing observations (PROC-5.1) is permitted and is not
+  manufacturing an incident (§0.2).
 - Edit, add, reorder, backfill, replay, or delete a task record or event
   (NR-3).
+- Write, edit, or update a Runner task record, including marking its own
+  task `blocked` or recording evidence on it. Those lifecycle updates are
+  the orchestrator's, through the existing task mechanism, on the turn's
+  request (NR-3, PROC-6 step 4, PROC-8 item 4).
 - Place fixture or synthetic material among operational records, or report
   a fixture result as an observation (Spec FXT-1, FXT-2).
 - Call a detector candidate a failure, a runner-caused failure, a defect,
