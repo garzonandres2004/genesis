@@ -270,8 +270,13 @@ test('N-VAL (d) failing input: everything except independent verification (D2 ro
   );
 });
 
-test('N-VAL (e) [AC-T6-5] failing input: all elements present and non-empty exposure, but window end condition not reached (CR-01) — refused even with non-empty exposure', () => {
+test('N-VAL (e) [AC-T6-5] failing input: non-empty exposure, but window end condition not reached (CR-01) — refused even with non-empty exposure', () => {
   // Failing input: the nearly-validated record, as of day 10 of the window.
+  // "Nearly validated" here means in-window exposure + sufficiency judgment
+  // recorded; independent verification is still missing (D2 role pending),
+  // so this setup does NOT claim all elements are present — it establishes
+  // the window-end refusal with non-empty exposure (fix round 1, F-T6-1
+  // verdict note on AC-T6-5 wording).
   const w = nearlyValidatedInc(6);
   const mid = midWatch(w);
   assert.equal(mid.end_condition_reached, false, 'the window end must not be reached');
@@ -332,16 +337,57 @@ test('N-VAL (f) failing input: general-but-nonempty pointer (whole repository / 
   const repoItem = { pointer: 'github.com/org/repo', timestamp: at(FP, 3), is_operational: true, kind: 'run-event' };
   const counted = exposureInWindow(endedWatch(w), [repoItem]);
   assert.equal(counted.exposure.length, 1, 'T2 counts a general pointer as exposure — the thin check is what refuses it');
+  // The thin check closes only the shape cases it covers; it does not
+  // rewire T2's exposure or eligibility path (fix round 1, F-T6-1).
   // Positive controls: pointers naming a specific item pass the thin check.
   for (const pointer of [
     'test-only://operational-shaped/3',
     'repo/commit/0123abcd',
     'tasks/INC-2026-001.json',
+    'INC-2026-001.json',
     'logs/app.log:4521',
     'run/test-1#result',
+    'report-2026-01-12.json',
+    'https://example.com/logs/app.log?line=4521',
+    'https://github.com/org/repo/commit/0123abcd',
+    'https://github.com/org/repo/issues/123',
+    'https://github.com/org/repo/blob/main/notes#L10',
   ]) {
     assert.equal(refuseUnverifiableEvidenceLink({ pointer }).verifiable, true, `${pointer} names a specific item`);
   }
+});
+
+test('N-VAL (f) failing input: general pointers with incidental markers — empty query/fragment, a view query/fragment, .git suffix, non-numeric colon suffix — refused (F-T6-1)', () => {
+  // Failing inputs (Codex round 1, F-T6-1): each carries a marker the old
+  // shape check mistook for specificity — an empty query, an empty fragment,
+  // a query naming a repository view, a .git repository suffix, or a colon
+  // suffix that is not a line/entry number. None names a specific record,
+  // event, commit, test result, or log entry.
+  const incidental = [
+    'https://github.com/org/repo?',
+    'https://github.com/org/repo#',
+    'https://github.com/org/repo?tab=readme',
+    'https://github.com/org/repo.git',
+    'https://example.com/logs/app.log:garbage',
+    'https://github.com/org/repo#readme',
+    'https://github.com/org/repo?foo=bar',
+  ];
+  for (const pointer of incidental) {
+    safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer }), 'UNVERIFIABLE_EVIDENCE_LINK', 'EVL-3');
+  }
+  // The reasons name the shape: a whole log file, a whole repository, a
+  // repository view.
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://example.com/logs/app.log:garbage' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole log file');
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://github.com/org/repo.git' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole repository');
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'https://github.com/org/repo?tab=readme' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'whole repository or general location');
+  // Positive controls for the same markers, validated: a query pair naming
+  // a specific item, a line-anchor fragment, and a numeric colon suffix
+  // each pass — the marker alone is not what passes; the selector is.
+  assert.equal(refuseUnverifiableEvidenceLink({ pointer: 'https://example.com/logs/app.log?line=4521' }).verifiable, true);
+  assert.equal(refuseUnverifiableEvidenceLink({ pointer: 'https://github.com/org/repo/blob/main/notes#L10' }).verifiable, true);
+  assert.equal(refuseUnverifiableEvidenceLink({ pointer: 'https://example.com/logs/app.log:4521' }).verifiable, true);
+  // Bare-host control: a pointer with no path and no selector is refused.
+  safetyRefuses(() => refuseUnverifiableEvidenceLink({ pointer: 'github.com' }), 'UNVERIFIABLE_EVIDENCE_LINK', 'bare host');
 });
 
 test('N-VAL guard: fixture evidence alone never validates (VAL-3)', () => {
@@ -499,6 +545,64 @@ test('N-LES (d) failing input: staged-to-validated promotion — setting a stage
   const annotated = annotateSuperseded(staged, 'LES-2026-102', { date: '2026-02-01' });
   assert.equal(annotated.status, 'UNVALIDATED-STAGED');
   assert.equal(staged.status, 'UNVALIDATED-STAGED');
+});
+
+test('N-LES (d) failing input: a staged record RELABELED to VALIDATED — mutable copy and reconstructed record, same id and provenance — is refused; the original remains staged (F-T6-3)', () => {
+  // Failing input: the staged record relabeled VALIDATED while retaining its
+  // identity (lesson_id LES-2026-101) and provenance. The old test only
+  // proved rejection of an UNCHANGED staged input (WRONG_STATUS); this one
+  // actually relabels it (Codex round 1, F-T6-3).
+  const staged = stageLesson(stagedInput());
+  const source = nearlyValidatedInc(3);
+  const watch = endedWatch(source);
+  // (1) A naive relabel — status flipped only, staged-only fields intact —
+  // is refused at the structure: a VALIDATED record cannot carry the
+  // staged-only validation_claim "NONE" / index_section, nor omit the
+  // validated-only evidence_links / validation_reference.
+  const naiveRelabel = { ...staged, status: 'VALIDATED' };
+  assert.notEqual(naiveRelabel, staged, 'the relabel is a mutable copy, not the frozen original');
+  lessonRefuses(
+    () => createValidatedLesson({ lesson: naiveRelabel, source: { kind: 'incident', record: source }, watch }),
+    'LESSON_STRUCTURE', 'validation_claim',
+  );
+  // (2) A fully-shaped relabeled copy — status VALIDATED, validated-only
+  // fields supplied, staged-only fields cleared — reaches the substantive
+  // refusal: its source incident is WATCH, not VALIDATED, so the Stage 3
+  // final refusal (D2/LES-8) blocks it, naming validated_incident_status.
+  const relabeledCopy = {
+    ...staged,
+    status: 'VALIDATED',
+    validation_claim: undefined,
+    index_section: undefined,
+    evidence_links: [{ pointer: 'test-only://operational-shaped/3' }],
+    validation_reference: { incident_id: 'INC-T6TEST-003', sufficiency_judgment: JUDGMENT },
+  };
+  lessonRefuses(
+    () => createValidatedLesson({ lesson: relabeledCopy, source: { kind: 'incident', record: source }, watch }),
+    'INCOMPLETE_VALIDATION_REFERENCE', 'validated_incident_status',
+  );
+  // (3) A reconstructed record — a fresh literal with the same lesson_id and
+  // provenance as the staged original, status VALIDATED — is refused the
+  // same way. Freezing the returned object never covered this path.
+  const reconstructed = {
+    lesson_id: 'LES-2026-101', status: 'VALIDATED', source_incident_id: 'INC-T6TEST-003',
+    lesson_statement: 'SYNTHETIC staged guidance. It applies in this narrow case.',
+    applicability: 'SYNTHETIC: when X', non_applicability: 'SYNTHETIC: not when Y',
+    review_date: '2026-06-01', provenance: PROV,
+    evidence_links: [{ pointer: 'test-only://operational-shaped/3' }],
+    validation_reference: { incident_id: 'INC-T6TEST-003', sufficiency_judgment: JUDGMENT },
+    compounding_use: 'none',
+  };
+  lessonRefuses(
+    () => createValidatedLesson({ lesson: reconstructed, source: { kind: 'incident', record: source }, watch }),
+    'INCOMPLETE_VALIDATION_REFERENCE', 'validated_incident_status',
+  );
+  // The original remains staged: relabeling a copy or reconstructing a
+  // record never touches the staged original — identity and provenance
+  // untouched, status UNVALIDATED-STAGED.
+  assert.equal(staged.status, 'UNVALIDATED-STAGED', 'the original remains staged after every relabel attempt');
+  assert.equal(staged.lesson_id, 'LES-2026-101');
+  assert.deepEqual(staged.provenance, PROV);
 });
 
 test('N-LES (e) failing input: validated-lesson creation without the complete LES-3 validation reference — refused naming the missing elements (AC-T6-4)', () => {
@@ -766,6 +870,34 @@ test('GOV (c) failing input: waiver or exception to a safety rule granted by a b
   assert.equal(founderWaiver.outcome, 'PASS');
 });
 
+test('GOV [AC-T6-3] approval date must be a valid YYYY-MM-DD calendar date — "1" and "2026-02-30" never pass (F-T6-2)', () => {
+  // Failing inputs (Codex round 1, F-T6-2): Date.parse alone accepted the
+  // non-date-shaped string "1" and normalized the impossible calendar date
+  // "2026-02-30" (read as 2026-03-02). Both are rejected here, through
+  // isRecordedFounderApproval AND through the GOV decision.
+  for (const badDate of ['1', '2026-02-30', '2026-13-01', '2026-02-29', '2026-04-31', '11/06/2026', '', '   ', '20261106', 20261106, null]) {
+    assert.equal(
+      isRecordedFounderApproval({ recorded: true, by: 'Founder', reference: 'SYNTHETIC-x', date: badDate }),
+      false, `date ${JSON.stringify(badDate)} must not be a valid approval date`,
+    );
+  }
+  // Missing date is not a valid date either.
+  assert.equal(isRecordedFounderApproval({ recorded: true, by: 'Founder', reference: 'SYNTHETIC-x' }), false);
+  // Valid calendar dates pass, including a leap-day date in a leap year.
+  assert.equal(isRecordedFounderApproval({ recorded: true, by: 'Founder', reference: 'SYNTHETIC-x', date: '2026-11-06' }), true);
+  assert.equal(isRecordedFounderApproval({ recorded: true, by: 'Founder', reference: 'SYNTHETIC-x', date: '2024-02-29' }), true);
+  // Through the GOV decision: a governance change whose approval carries an
+  // invalid date is HELD, never passed; a waiver with one is REFUSED.
+  for (const badDate of ['1', '2026-02-30']) {
+    const held = checkGovernanceChange({ kind: 'governance', founder_approval: { recorded: true, by: 'Founder', reference: 'SYNTHETIC-x', date: badDate } });
+    assert.equal(held.outcome, 'HELD_PENDING_FOUNDER_DECISION', `governance change with date ${JSON.stringify(badDate)} must be held, not passed`);
+    const refused = checkGovernanceChange({ kind: 'waiver', granted_by: 'Founder', founder_approval: { recorded: true, by: 'Founder', reference: 'SYNTHETIC-x', date: badDate } });
+    assert.equal(refused.outcome, 'REFUSED', `waiver with date ${JSON.stringify(badDate)} must be refused, not passed`);
+  }
+  // Through the GOV decision, valid dates pass — including the leap day.
+  assert.equal(checkGovernanceChange({ kind: 'governance', founder_approval: { recorded: true, by: 'Founder', reference: 'SYNTHETIC-x', date: '2024-02-29' } }).outcome, 'PASS');
+});
+
 test('GOV [AC-T6-3] silence is never approval: missing, empty, ambiguous, or non-Founder approval is never a pass', () => {
   // Missing approval.
   assert.notEqual(checkGovernanceChange({ kind: 'governance', founder_approval: null }).outcome, 'PASS');
@@ -778,6 +910,16 @@ test('GOV [AC-T6-3] silence is never approval: missing, empty, ambiguous, or non
   assert.notEqual(checkGovernanceChange({ kind: 'governance', founder_approval: { recorded: false, by: 'Founder', reference: 'SYNTHETIC-x', date: '2026-11-06' } }).outcome, 'PASS');
   // Approval recorded by a builder, not the Founder.
   assert.notEqual(checkGovernanceChange({ kind: 'governance', founder_approval: { recorded: true, by: 'builder', reference: 'SYNTHETIC-x', date: '2026-11-06' } }).outcome, 'PASS');
+  // Adversarial strictness (Codex round 1, F-T6-2 — kept, and now tested):
+  // recorded === true rejects the string "yes"; by === 'Founder' rejects
+  // lowercase "founder"; trimming rejects a whitespace-only reference.
+  assert.equal(isRecordedFounderApproval({ recorded: 'yes', by: 'Founder', reference: 'SYNTHETIC-x', date: '2026-11-06' }), false, 'recorded: "yes" is not recorded: true');
+  assert.equal(isRecordedFounderApproval({ recorded: true, by: 'founder', reference: 'SYNTHETIC-x', date: '2026-11-06' }), false, 'by: "founder" is not by: "Founder"');
+  assert.equal(isRecordedFounderApproval({ recorded: true, by: 'Founder', reference: '   ', date: '2026-11-06' }), false, 'a whitespace-only reference is not a reference');
+  assert.equal(isRecordedFounderApproval({ recorded: true, by: 'Founder', date: '2026-11-06' }), false, 'a missing reference is not a reference');
+  assert.equal(checkGovernanceChange({ kind: 'governance', founder_approval: { recorded: 'yes', by: 'Founder', reference: 'SYNTHETIC-x', date: '2026-11-06' } }).outcome, 'HELD_PENDING_FOUNDER_DECISION');
+  assert.equal(checkGovernanceChange({ kind: 'governance', founder_approval: { recorded: true, by: 'founder', reference: 'SYNTHETIC-x', date: '2026-11-06' } }).outcome, 'HELD_PENDING_FOUNDER_DECISION');
+  assert.equal(checkGovernanceChange({ kind: 'governance', founder_approval: { recorded: true, by: 'Founder', reference: '   ', date: '2026-11-06' } }).outcome, 'HELD_PENDING_FOUNDER_DECISION');
   // A bare granted_by claim is never a recorded approval (S-T6-9).
   assert.equal(isRecordedFounderApproval(null), false);
   assert.equal(isRecordedFounderApproval({}), false);

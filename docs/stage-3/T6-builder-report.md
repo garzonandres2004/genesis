@@ -54,7 +54,7 @@ and stated explicitly below (S-T6-5).
 | `refuseReuseClaim(claim)` | N-REU (a)–(c) | Returns `{ outcome: 'REFUSED', reuse_demonstrated: false, … }` naming the violated rule: (a) staged lesson; (b) no task, or a task created primarily to produce a reuse metric; (c) outside applicability, or applicability never judged (S-T6-7). The clean case returns `{ outcome: 'NO_REFUSAL', reuse_demonstrated: false }` — NOT a reuse demonstration (S-T6-2). Designed against the proposed legitimate-task-only rule, assumption marked (`LEGITIMATE_TASK_ASSUMPTION`; DV-7, C-19 unverified) |
 | `assessImprovementClaim(claim)` | N-EVAL | Returns `{ outcome: 'REFUSED' \| 'DOWNGRADED', improvement_claim_supported: false, claim: 'no improvement claim supported', … }`. Staged-lesson-only → REFUSED; unvalidated-incident-only → DOWNGRADED; no lesson → REFUSED (S-T6-1). A validated-lesson citation → REFUSED as a Group C guard (S-T6-8). No outcome ever supports an improvement claim |
 | `checkGovernanceChange(change)` + `isRecordedFounderApproval(approval)` | GOV (a)–(c) | Returns `PASS` / `HELD_PENDING_FOUNDER_DECISION` / `REFUSED` / `NOT_GOVERNANCE_ADJACENT`. (a)/(b) governance-adjacent or scope-expanding changes without recorded Founder approval → HELD; with it → PASS naming the approval reference. (c) waiver by builder/verifier → REFUSED (S-T6-3). A recorded Founder approval is `{ recorded: true, by: 'Founder', reference: non-empty, date: valid }` (S-T6-4); missing/empty/ambiguous approval is never a pass. A waiver passes only on a recorded Founder approval granted by the Founder (S-T6-9). The function recognizes an approval; it never grants one |
-| `refuseUnverifiableEvidenceLink(link)` | N-VAL (f) — thin named check | **The one gap found (stated explicitly).** T2's `exposureInWindow` refuses only the EMPTY-pointer case ("link cannot be followed to specific evidence (EVL-3)"). A NON-EMPTY but general pointer — whole repository, whole log file, directory, bare host, general claim — is counted as exposure by T2, although EVL-3 requires a specific record, event, commit, test result, or log entry and says a link that cannot be followed to the specific evidence is treated as missing. This thin check closes that gap: it throws `UNVERIFIABLE_EVIDENCE_LINK` for empty/placeholder/fixture/whole-repo/whole-log-file/directory/general-claim pointers, and returns `{ verifiable: true }` only for pointers naming a specific item (fragment/query, commit-hash-like segment, id segment, specific file, `:line`/`:entry` suffix). It is a SHAPE check only (S-T6-5): no I/O can follow a link |
+| `refuseUnverifiableEvidenceLink(link)` | N-VAL (f) — thin named check | **The one gap found (stated explicitly).** T2's `exposureInWindow` refuses only the EMPTY-pointer case ("link cannot be followed to specific evidence (EVL-3)"). A NON-EMPTY but general pointer — whole repository, whole log file, directory, bare host, general claim — is counted as exposure by T2, although EVL-3 requires a specific record, event, commit, test result, or log entry and says a link that cannot be followed to the specific evidence is treated as missing. This thin check closes the shape cases it covers: it throws `UNVERIFIABLE_EVIDENCE_LINK` for empty/placeholder/fixture/whole-repo/whole-log-file/directory/general-claim pointers, and returns `{ verifiable: true }` only for pointers carrying a VALIDATED selector — a commit-hash-like, numeric, or id-prefixed path segment; a specific file as the last path segment (not `.log`, not `.git`, not a host-like TLD suffix); a numeric `:line`/`:entry` suffix; a query pair naming a specific item; or a fragment naming a specific item. Incidental markers do NOT count: an empty query/fragment, a query/fragment naming a view (`?tab=readme`, `#readme`), a `.git` repository suffix, or a non-numeric colon suffix (`app.log:garbage`). URLs and local record paths are judged differently: a URL's first segment after the scheme is its host, never an item; a local path has no host, so a root-level record file (`INC-2026-001.json`) counts (fix round 1, F-T6-1). It is a SHAPE check only (S-T6-5): no I/O can follow a link, and it does NOT rewire T2's exposure/eligibility path — T2 still counts a general pointer; this check is what refuses it |
 
 No other N-VAL or N-LES refusal was missing. In particular, N-VAL (a)–(e)
 and (g) are all enforced by T2 (`checkFixVerified`, `checkValidationEligibility`,
@@ -93,7 +93,8 @@ throws), `WRONG_STATUS`, and `STAGED_IN_SECTION_1`.
 | N-VAL (b) regression test, zero exposure | T2 `checkValidationEligibility`, `transition` | "N-VAL (b) failing input: regression test present, zero exposure — eligibility fails naming the exposure elements" |
 | N-VAL (c) exposure, no sufficiency judgment | T2 `checkValidationEligibility`, `transition` | "N-VAL (c) failing input: exposure present, no sufficiency judgment — eligibility fails naming c5" |
 | N-VAL (d) everything except independent verification (D2 pending) | T2 `checkValidationEligibility`, `transition` | "N-VAL (d) failing input: everything except independent verification (D2 role pending) — only c3 fails" |
-| N-VAL (e) window end not reached, non-empty exposure (CR-01) | T2 `checkValidationEligibility`, `watchOutcome`, `transition` | "N-VAL (e) [AC-T6-5] failing input: all elements present and non-empty exposure, but window end condition not reached (CR-01) — refused even with non-empty exposure" |
+| N-VAL (e) window end not reached, non-empty exposure (CR-01) | T2 `checkValidationEligibility`, `watchOutcome`, `transition` | "N-VAL (e) [AC-T6-5] failing input: non-empty exposure, but window end condition not reached (CR-01) — refused even with non-empty exposure" |
+| N-VAL (f) general pointers with incidental markers — empty query/fragment, view query/fragment, `.git`, non-numeric colon suffix (F-T6-1) | NEW `refuseUnverifiableEvidenceLink` (S-T6-5 gap) | "N-VAL (f) failing input: general pointers with incidental markers — empty query/fragment, a view query/fragment, .git suffix, non-numeric colon suffix — refused (F-T6-1)" |
 | N-VAL (f) unverifiable evidence link, empty pointer (EVL-3) | T2 `exposureInWindow`, `checkValidationEligibility` + new `refuseUnverifiableEvidenceLink` | "N-VAL (f) failing input: exposure link that cannot be followed to specific evidence — empty pointer is excluded by T2 naming EVL-3" |
 | N-VAL (f) general-but-nonempty pointer (whole repo / log file / directory / claim) | NEW `refuseUnverifiableEvidenceLink` (S-T6-5 gap) | "N-VAL (f) failing input: general-but-nonempty pointer (whole repository / whole log file / directory / general claim) — T2 alone counts it, the thin check refuses it (S-T6-5 gap)" |
 | N-VAL guard: fixture evidence alone (VAL-3) | T2 `exposureInWindow`, `checkValidationEligibility` | "N-VAL guard: fixture evidence alone never validates (VAL-3)" |
@@ -106,6 +107,7 @@ throws), `WRONG_STATUS`, and `STAGED_IN_SECTION_1`.
 | N-LES (b) validated lesson, staged source (LES-5) | T7 `createValidatedLesson` | "N-LES (b) failing input: validated lesson citing a staged lesson as source — refused (LES-5)" |
 | N-LES (c) empty `non_applicability`, either kind | T4 `checkLessonStructure`, T7 `stageLesson` | "N-LES (c) failing input: lesson of either kind with empty non_applicability — schema rejection (§9.2, CR-02 (c))" |
 | N-LES (d) staged-to-validated promotion | T7 `createValidatedLesson` (`WRONG_STATUS`), `annotateSuperseded`, T4 `checkIndex` (`STAGED_IN_SECTION_1`), frozen record | "N-LES (d) failing input: staged-to-validated promotion — setting a staged record status to VALIDATED in place is refused; moving its entry to Section 1 is refused" |
+| N-LES (d) staged record relabeled to VALIDATED — mutable copy / reconstructed record, same id and provenance (F-T6-3) | T7 `createValidatedLesson` (`LESSON_STRUCTURE` for the naive relabel; `INCOMPLETE_VALIDATION_REFERENCE` naming `validated_incident_status` for the fully-shaped relabel and the reconstruction) | "N-LES (d) failing input: a staged record RELABELED to VALIDATED — mutable copy and reconstructed record, same id and provenance — is refused; the original remains staged (F-T6-3)" |
 | N-LES (e) no complete LES-3 reference | T7 `createValidatedLesson`, T4 `checkLessonJudgment` | "N-LES (e) failing input: validated-lesson creation without the complete LES-3 validation reference — refused naming the missing elements (AC-T6-4)" |
 | N-LES not refused: legitimate LES-2 staging | T7 `stageLesson` | "N-LES not refused [AC-T6-4]: legitimate staging under LES-2 stages successfully" |
 | N-HIST (a) seed + merged fix only | NEW `refuseSeedValidation` | "N-HIST (a) failing input: validation of a seed record citing only its already-merged historical fix — refused (SEED-01)" |
@@ -128,6 +130,7 @@ throws), `WRONG_STATUS`, and `STAGED_IN_SECTION_1`.
 | GOV (b) validated lesson + expansion, no approval → HELD; with approval → PASS | NEW `checkGovernanceChange` | "GOV (b) [AC-T6-3: Founder approval is the only pass path] failing input: change citing a validated lesson that expands autonomy / permissions / scope without approval — HELD" |
 | GOV (c) waiver by builder / verifier | NEW `checkGovernanceChange` | "GOV (c) failing input: waiver or exception to a safety rule granted by a builder or verifier — REFUSED (never held, never passed)" |
 | GOV silence never approval | NEW `checkGovernanceChange`, `isRecordedFounderApproval` | "GOV [AC-T6-3] silence is never approval: missing, empty, ambiguous, or non-Founder approval is never a pass" |
+| GOV approval date must be a valid YYYY-MM-DD calendar date (F-T6-2) | NEW `isRecordedFounderApproval`, `checkGovernanceChange` | "GOV [AC-T6-3] approval date must be a valid YYYY-MM-DD calendar date — \"1\" and \"2026-02-30\" never pass (F-T6-2)" |
 | GOV control: routine change | NEW `checkGovernanceChange` | "GOV control: a routine non-governance change is NOT_GOVERNANCE_ADJACENT — held for nothing, and granted nothing" |
 | Structural: module purity | source inspection | "structural: sie-safety.mjs is a pure module — no file I/O, no network; evidence level stated (EVL-7)" |
 
@@ -141,34 +144,37 @@ throws), `WRONG_STATUS`, and `STAGED_IN_SECTION_1`.
   fixtures only in this file.
 - `docs/stage-3/T6-builder-report.md` — this report.
 
-No existing file was modified. `git status` shows only these three new files.
+No existing file was modified by the original build. `git status` showed
+only these three new files. Fix round 1 (Codex round 1, F-T6-1..F-T6-3)
+modified exactly these three files and no others; `git status` shows only
+these three modified files.
 
 ## Tests and results (builder-observed; re-run required by the verifier)
 
-T6 suite alone:
+T6 suite alone (after fix round 1):
 
 ```
 node --test scripts/sie-safety.test.mjs
-ℹ tests 42
-ℹ pass 42
+ℹ tests 45
+ℹ pass 45
 ℹ fail 0
 ```
 
-Full suite:
+Full suite (after fix round 1):
 
 ```
 npm test
-ℹ tests 320
+ℹ tests 323
 ℹ suites 0
-ℹ pass 319
+ℹ pass 322
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 1
 ```
 
 Baseline at the starting commit was 278 tests (277 pass / 0 fail / 1
-pre-existing skip); the 42 new tests account for the increase to 320, with
-the same 1 pre-existing root skip.
+pre-existing skip); the 42 original T6 tests plus the 3 fix-round-1 tests
+account for the increase to 323, with the same 1 pre-existing root skip.
 
 `node scripts/status.mjs` exits 0 (15 Genesis tasks listed; no change from
 this build).
@@ -192,6 +198,78 @@ each mutation produced at least one genuinely failing test).
 | M6 | `refuseReuseClaim` returns NO_REFUSAL for a staged lesson | N-REU (a) | (a) test failed |
 | M7 | `assessImprovementClaim` reports a staged-lesson claim as supported | N-EVAL | staged-lesson + REFUSED-vs-DOWNGRADED tests failed |
 | M8 | `isRecordedFounderApproval` returns true for a missing approval (silence = approval) | GOV | (a), (b), (c), and silence tests failed |
+
+## Fix round 1 (Codex round 1, F-T6-1..F-T6-3)
+
+Codex round 1 (verdict 2026-11-06 ~14:08 MST, commit `6fbb4df`) returned
+NEEDS FIXES with three MAJOR findings, plus an "all elements present"
+overstatement in the AC-T6-5 context. This round fixes exactly those, in
+the three T6 files only. No other file was modified; no existing assertion
+or test was weakened (only strengthened/corrected per the findings); no open
+finding was decided (F-36, F-10, F-14, F-21, C-8, C-16, C-19, C-20/DV-8,
+D2 untouched); no validated lesson or VALIDATED incident was created; the
+spec was not edited; C-7 and C-15 were not reopened.
+
+- **F-T6-1 (MAJOR) — `refuseUnverifiableEvidenceLink` accepted general
+  pointers with incidental markers.** Fixed by replacing the
+  arbitrary-marker heuristic with VALIDATED selectors: a commit-hash-like,
+  numeric, or id-prefixed path segment; a specific file as the last path
+  segment (not `.log`, not `.git`, not a host-like TLD suffix); a numeric
+  `:line`/`:entry` suffix; a query pair naming a specific item; or a
+  fragment naming a specific item. Empty query/fragment, `?tab=readme`,
+  `#readme`, `repo.git`, and `app.log:garbage` are now refused. URLs and
+  local record paths are judged differently: the host exclusion applies only
+  to URLs (scheme present); a local path has no host, so the root-level
+  record `INC-2026-001.json` now passes. New test: "N-VAL (f) failing
+  input: general pointers with incidental markers … refused (F-T6-1)", plus
+  positive controls (`INC-2026-001.json`, `report-2026-01-12.json`,
+  `app.log?line=4521`, `commit/0123abcd`, `issues/123`, `notes#L10`) added
+  to the existing (f) general-pointer test. Stated honestly: the thin check
+  closes the shape cases it covers; it does NOT rewire T2's
+  exposure/eligibility path (T2 files out of scope) — the thin check stays a
+  standalone named check.
+- **F-T6-2 (MAJOR) — approval date validation.** `isValidDate` now requires
+  exactly `YYYY-MM-DD` and a real calendar date (leap years included);
+  `Date.parse` alone accepted `"1"` and normalized `"2026-02-30"`. New
+  test: "GOV [AC-T6-3] approval date must be a valid YYYY-MM-DD calendar
+  date … (F-T6-2)", exercising the rejection paths through BOTH
+  `isRecordedFounderApproval` AND the GOV decision (governance change with
+  an invalid date → HELD; waiver with one → REFUSED; leap-day `2024-02-29`
+  → PASS). The other three strict checks are kept and now tested with
+  adversarial values: `recorded: "yes"`, `by: "founder"`, whitespace-only
+  reference (added to the GOV silence test). S-T6-4 corrected accordingly.
+- **F-T6-3 (MAJOR) — N-LES (d) promotion test weakness.** The old test only
+  proved rejection of an UNCHANGED staged input (`WRONG_STATUS`). New test:
+  "N-LES (d) failing input: a staged record RELABELED to VALIDATED …
+  (F-T6-3)" — a mutable copy and a reconstructed record with status
+  `VALIDATED`, same `lesson_id` and provenance as the staged original.
+  The naive relabel is refused at the structure (`LESSON_STRUCTURE`); the
+  fully-shaped relabel and the reconstruction are refused by the Stage 3
+  final refusal (`INCOMPLETE_VALIDATION_REFERENCE` naming
+  `validated_incident_status`); the original remains staged (status,
+  lesson_id, provenance asserted unchanged). The report's claim that the
+  Stage 3 final refusal handles reused identity is now tested, not just
+  stated. The existing direct-mutation and Section 1 tests are kept, not
+  removed. S-T6-10 corrected accordingly.
+- **AC-T6-5 wording.** "All elements present" overstated the N-VAL (e)
+  setup: independent verification remains missing there too. The test name,
+  its leading comment, the mapping-table row, and the AC-T6-5 self-check now
+  say the accurate claim — window-end refusal with non-empty exposure.
+
+### Fix-round-1 mutation check (builder-observed)
+
+Three single breaking edits, applied one at a time in a temp copy of the
+repo (`/tmp/t6-fix1-mutation`, deleted afterwards), at least one per fixed
+finding; the T6 suite was re-run after each. Every mutation was caught.
+
+| # | Mutation (temp copy only) | Finding | Result |
+|---|---|---|---|
+| M9 | `hasSpecificQuery` / `hasSpecificFragment` accept any non-empty query/fragment (old incidental-marker acceptance restored) | F-T6-1 | incidental-marker (f) test failed (44 pass / 1 fail) |
+| M10 | `isValidDate` restored to `Date.parse`-only (old acceptance) | F-T6-2 | GOV date test failed (44 pass / 1 fail) |
+| M11 | `validated_incident_status` extra check dropped from `createValidatedLesson` in the temp copy (relabel refusal gone) | F-T6-3 | relabel (d) test failed, plus the pre-existing N-LES (a) WATCH test naming the same element (43 pass / 2 fail) |
+
+Temp copy verified identical to the repo after restoring each mutation
+(45/45 pass) and deleted. No mutation survived into the repo.
 
 ## Acceptance-criteria self-check (claims — the verifier decides)
 
@@ -223,7 +301,11 @@ each mutation produced at least one genuinely failing test).
   condition even with non-empty exposure): the N-VAL (e) test — nearly
   validated record, non-empty exposure, mid-window (`end_condition_reached:
   false`) → element `a_window_end_reached` fails, `watchOutcome` is
-  `continue-watch`, transition refuses.
+  `continue-watch`, transition refuses. Corrected wording (fix round 1):
+  the setup has in-window exposure + sufficiency judgment but independent
+  verification is still missing (D2 role pending), so it does NOT claim all
+  elements are present — it establishes the window-end refusal with
+  non-empty exposure.
 
 ## Silent-spec decisions (for the coordinator to confirm or correct)
 
@@ -252,7 +334,11 @@ None decides an open finding.
   is void, not pending). Basis: GOV wording + Register ADR-09.
 - **S-T6-4 — Recorded Founder approval shape.** The spec fixes no field
   shape. This build requires `{ recorded: true, by: 'Founder', reference:
-  non-empty, date: valid }`. Anything else — missing, empty, ambiguous,
+  non-empty, date: valid YYYY-MM-DD calendar date }`. The date must match
+  `YYYY-MM-DD` and be a real calendar date (leap years included): `Date.parse`
+  alone accepted the non-date-shaped string `"1"` and normalized the
+  impossible calendar date `"2026-02-30"`, so neither is a valid approval
+  date (fix round 1, F-T6-2). Anything else — missing, empty, ambiguous,
   granted by anyone else — is not approval. Basis: AC-T6-3 + ADR-09
   ("Silence and timeout never equal approval"). An unknown `kind` is also
   refused (`BAD_INPUT`): an unnamed kind is never passed.
@@ -260,12 +346,25 @@ None decides an open finding.
   found).** EVL-3 requires a specific record/event/commit/test result/log
   entry, but T2 enforces only the empty-pointer case. The thin check is a
   SHAPE check only (no I/O can follow a link): a pointer passes only when it
-  carries a specific-item marker (fragment/query, commit-hash-like segment,
-  numeric or id-prefixed segment, specific file, `:line`/`:entry` suffix),
-  with the host segment excluded (so `github.com` does not count as a file).
-  A general-looking pointer with a specific-shaped marker could still pass —
-  the check is conservative on the refusal side only. Basis: EVL-3; the
-  alternative (leaving the whole-repo case unenforced) would leave a
+  carries a VALIDATED selector — a commit-hash-like, numeric, or id-prefixed
+  path segment; a specific file as the last path segment (not `.log`, not
+  `.git`, not a host-like TLD suffix); a numeric `:line`/`:entry` suffix; a
+  query pair naming a specific item; or a fragment naming a specific item.
+  Incidental markers do NOT count: an empty query/fragment, a query/fragment
+  naming a view (`?tab=readme`, `#readme`), a `.git` repository suffix, or a
+  non-numeric colon suffix (`app.log:garbage`) (fix round 1, F-T6-1: the
+  original heuristic equated arbitrary query/fragment/extension/colon
+  presence with specificity). URLs and local record paths are judged
+  differently: a URL's first segment after the scheme is its host, never an
+  item; a local path has no host, so a root-level record file
+  (`INC-2026-001.json`) counts — the spec does not require every evidence
+  pointer to contain a host or directory (fix round 1, F-T6-1: the original
+  host exclusion applied `.slice(1)` to every pointer, refusing root-level
+  records). The check closes the shape cases it covers; it does NOT rewire
+  T2's exposure/eligibility path — the thin check stays a standalone named
+  check. A general-looking pointer with a validated selector could still
+  pass — the check is conservative on the refusal side only. Basis: EVL-3;
+  the alternative (leaving the whole-repo case unenforced) would leave a
   specified refusal with no enforcement.
 - **S-T6-6 — N-HIST descriptor shape.** Seed records carry no creation time
   and no incident lifecycle status (T5), so the function takes a
@@ -286,7 +385,15 @@ None decides an open finding.
 - **S-T6-10 — N-LES (d) has no API to refuse.** No function performs an
   in-place promotion, so there is no refusal function to write; enforcement
   is the deep-frozen staged record, `WRONG_STATUS`, and
-  `STAGED_IN_SECTION_1`. No new function was invented for this case.
+  `STAGED_IN_SECTION_1`. Fix round 1 (F-T6-3) adds the relabel coverage:
+  a staged record relabeled VALIDATED — a mutable copy or a reconstructed
+  record retaining the staged lesson's id and provenance — is refused by
+  `createValidatedLesson`: the naive relabel at the structure
+  (`LESSON_STRUCTURE`, staged-only fields on a VALIDATED record), the
+  fully-shaped relabel and the reconstruction by the Stage 3 final refusal
+  (`INCOMPLETE_VALIDATION_REFERENCE` naming `validated_incident_status`),
+  and the original stays staged. The report's claim that the Stage 3 final
+  refusal handles reused identity is now tested, not just stated.
 
 ## What is NOT claimed
 
@@ -331,8 +438,13 @@ None decides an open finding.
   with no `supersedes_staged_id` field is refused in Stage 3 by the
   D2/LES-8 final refusal in `createValidatedLesson`, not by an id-reuse
   check (T4's structure check catches the reuse only when
-  `supersedes_staged_id` is present). Checked, not a gap in Stage 3; flagged
-  for any future stage where validated lessons can exist.
+  `supersedes_staged_id` is present). Fix round 1 (F-T6-3) tests this: the
+  N-LES (d) relabel test relabels a staged record to VALIDATED — mutable
+  copy and reconstructed record, same lesson_id and provenance — and both
+  are refused (`INCOMPLETE_VALIDATION_REFERENCE` naming
+  `validated_incident_status` for the fully-shaped relabel/reconstruction),
+  with the original remaining staged. Flagged for any future stage where
+  validated lessons can exist.
 - **No mutation survived into the repo.** The mutation check ran in
   `/tmp/t6-mutation` (deleted afterwards); `git status` shows only the three
   new files.

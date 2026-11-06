@@ -39,10 +39,25 @@
 //   approval HELD_PENDING_FOUNDER_DECISION; waiver by builder/verifier
 //   REFUSED).
 // - S-T6-4: recorded Founder approval shape { recorded: true,
-//   by: "Founder", reference: non-empty, date: valid }.
+//   by: "Founder", reference: non-empty, date: valid YYYY-MM-DD calendar
+//   date } (fix round 1, F-T6-2: Date.parse alone accepted "1" and
+//   normalized "2026-02-30", so the date must match YYYY-MM-DD and be a
+//   real calendar date, leap years included).
 // - S-T6-5: N-VAL (f) thin check is a SHAPE check only (no I/O can follow a
 //   link); it refuses empty/placeholder/fixture/whole-repo/whole-log-file/
-//   directory/general-claim pointers.
+//   directory/general-claim pointers. Fix round 1 (F-T6-1): specificity
+//   requires a VALIDATED selector — a commit-hash-like, numeric, or
+//   id-prefixed path segment; a specific file as the last path segment
+//   (not .log, not .git, not a host-like TLD suffix); a numeric :line /
+//   :entry suffix; a query pair naming a specific item; or a fragment
+//   naming a specific item. Incidental markers do NOT count: an empty
+//   query/fragment, a query/fragment naming a view (?tab=readme, #readme),
+//   a .git repository suffix, or a non-numeric colon suffix
+//   (app.log:garbage). URLs and local record paths are judged differently:
+//   a URL's first segment after the scheme is its host, never an item; a
+//   local path has no host, so a root-level record file
+//   (INC-2026-001.json) counts. The check closes the shape cases it
+//   covers; it does NOT rewire T2's exposure/eligibility path.
 // - S-T6-6: N-HIST takes a validation-attempt descriptor (seed records carry
 //   no creation time or incident fields, T5).
 // - S-T6-7: N-REU applicability is caller-judged (within_applicability);
@@ -51,7 +66,14 @@
 // - S-T6-9: a waiver passes only on a recorded Founder approval granted by
 //   the Founder; a bare granted_by claim is never approval.
 // - S-T6-10: N-LES (d) in-place promotion has no API to refuse; enforcement
-//   is the frozen staged record + WRONG_STATUS + STAGED_IN_SECTION_1.
+//   is the frozen staged record + WRONG_STATUS + STAGED_IN_SECTION_1 +
+//   the relabeled-copy / reconstructed-record refusal (fix round 1,
+//   F-T6-3): a staged record relabeled VALIDATED, retaining its lesson_id
+//   and provenance, is refused by createValidatedLesson
+//   (INCOMPLETE_VALIDATION_REFERENCE naming validated_incident_status —
+//   the Stage 3 final refusal, D2/LES-8), and the original stays staged.
+//   The report's claim that the Stage 3 final refusal handles reused
+//   identity is now tested, not just stated.
 
 export const EVIDENCE_LEVEL = 'Component (fixture tests); Structural (this module). Nothing here is Operational or Outcome (EVL-7).';
 
@@ -78,7 +100,24 @@ export class SafetyRefusal extends Error {
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim() !== '';
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const isValidDate = (v) => isNonEmptyString(v) && !Number.isNaN(Date.parse(v));
+// Accepted approval-date format (S-T6-4, fix round 1, F-T6-2): exactly
+// YYYY-MM-DD, and a real calendar date. Date.parse alone is not a date
+// validator: it accepts non-date-shaped strings such as "1" and normalizes
+// impossible calendar dates such as "2026-02-30" (which it reads as
+// 2026-03-02). Month and day are therefore checked against the calendar,
+// including leap years.
+const isValidDate = (v) => {
+  if (typeof v !== 'string') return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return false;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (month < 1 || month > 12) return false;
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  return day >= 1 && day <= daysInMonth;
+};
 
 function badInput(what) {
   throw new SafetyRefusal('BAD_INPUT', `${what} refused: input must be an object naming the attempt (§14.2)`);
@@ -92,40 +131,81 @@ function badInput(what) {
 // a whole log file, a directory, or a general claim — is counted as exposure
 // by T2, although EVL-3 says "a link that cannot be followed to the specific
 // evidence is treated as missing" and a specific record, event, commit, test
-// result, or log entry is required. This thin named check closes that gap.
-// It is a SHAPE check only (S-T6-5): this module performs no I/O and cannot
-// truly follow a link. A pointer passes only when it names a specific item:
-// a `#` fragment or `?` query naming an entry, a commit-hash-like segment
-// (7-40 hex chars), an id segment (numeric, or INC-/LES-/CAND-/record-/
-// event-/test-/run-/task-/incident-/lesson-prefixed), a file path naming a
-// specific file, or a `:line`/`:entry` suffix. Everything else — empty,
-// placeholder, fixture/synthetic, whole repository, whole log file,
-// directory, bare host, general claim — is refused as unverifiable.
+// result, or log entry is required. This thin named check closes the shape
+// cases it covers. It is a SHAPE check only (S-T6-5): this module performs
+// no I/O and cannot truly follow a link, and it does NOT rewire T2's
+// exposure or eligibility path — T2 still counts a general pointer, and
+// this check is what refuses it.
+//
+// Specificity requires a VALIDATED selector (fix round 1, F-T6-1). The old
+// shape errors are corrected: an empty query/fragment, a query/fragment
+// naming a view (?tab=readme, #readme), a `.git` repository suffix, and a
+// non-numeric colon suffix (app.log:garbage) are NOT specificity —
+// arbitrary query, fragment, extension, or colon presence never counts.
+// URLs and local record paths are judged differently: a URL's first segment
+// after the scheme is its host, never an item; a local path has no host, so
+// a root-level record file (INC-2026-001.json) counts — the spec does not
+// require every evidence pointer to contain a host or directory.
 
 const PLACEHOLDER_POINTERS = new Set(['todo', 'tbd', 'placeholder', 'example', 'n/a', 'none', 'null']);
 
-function stripScheme(pointer) {
-  const m = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/(.*)$/.exec(pointer);
-  return m ? m[1] : pointer;
-}
+// A path segment names a specific item when it is a commit-hash-like token
+// (7-40 hex chars), a numeric id, or an id-prefixed token.
+const ID_PREFIX = /^(INC-|LES-|CAND-|record-|event-|test-|run-|task-|incident-|lesson-)/i;
+const HASH_LIKE = /^[0-9a-f]{7,40}$/i;
+const NUMERIC_ID = /^\d+$/;
+const isSpecificSegment = (seg) => {
+  const base = seg.split(':')[0];
+  return HASH_LIKE.test(base) || NUMERIC_ID.test(base) || ID_PREFIX.test(base);
+};
 
-function hasSpecificItemMarker(pointer) {
-  if (pointer.includes('#') || pointer.includes('?')) return true;
-  const rest = stripScheme(pointer);
-  // The first segment after stripping the scheme is the host, not an item:
-  // "github.com" must not count as a specific file. Only later segments can
-  // name the specific record, event, commit, test result, or log entry.
-  const segments = rest.split('/').filter((s) => s !== '').slice(1);
-  for (const seg of segments) {
-    if (seg.includes(':')) return true; // :line / :entry suffix (e.g. app.log:4521)
-    const base = seg.split(':')[0];
-    if (/^[0-9a-f]{7,40}$/i.test(base)) return true; // commit-hash-like
-    if (/^\d+$/.test(base)) return true; // numeric id
-    if (/^(INC-|LES-|CAND-|record-|event-|test-|run-|task-|incident-|lesson-)/i.test(base)) return true;
-    if (/\.[a-zA-Z0-9]{2,}$/.test(base) && !/\.log$/i.test(base)) return true; // specific file (a .log alone is a whole log file, refused above)
-  }
-  return false;
-}
+// The last path segment names a specific file when it carries an extension
+// that is not a whole-log-file suffix (.log), not a repository suffix
+// (.git), and not a host-like TLD suffix (.com, .org, ...). Only the last
+// segment can be the file: intermediate segments are directories.
+const HOST_TLDS = new Set(['com', 'org', 'net', 'io', 'dev', 'app', 'co', 'uk', 'us', 'edu', 'gov', 'mil', 'int', 'info', 'biz', 'me', 'tv', 'ai', 'xyz', 'site', 'online', 'tech', 'cloud', 'local', 'internal', 'lan', 'home']);
+const isSpecificFile = (segment) => {
+  const base = segment.split(':')[0];
+  if (/\.git$/i.test(base)) return false; // a repository suffix, not a file
+  if (/\.log$/i.test(base)) return false; // a whole log file, not an entry
+  const m = /\.([a-zA-Z0-9]{2,})$/.exec(base);
+  if (!m) return false;
+  return !HOST_TLDS.has(m[1].toLowerCase()); // a host-like suffix is not a file
+};
+
+// A `:line` / `:entry` suffix counts only when its value is a number
+// (optionally a range, e.g. :4521-4530). `app.log:garbage` is not a suffix.
+const hasLineSuffix = (segment) => {
+  const idx = segment.lastIndexOf(':');
+  if (idx === -1) return false;
+  return /^\d+(-\d+)?$/.test(segment.slice(idx + 1));
+};
+
+// A query counts only when a pair names a specific item: a selector key
+// (id/commit/sha/line/entry/record/event/test/run/task/incident/lesson),
+// or a hash-like, numeric, or id-prefixed value. `?tab=readme` names a
+// repository view, not an item; an empty query names nothing.
+const SELECTOR_QUERY_KEYS = new Set(['id', 'commit', 'sha', 'line', 'entry', 'record', 'event', 'test', 'run', 'task', 'incident', 'lesson']);
+const hasSpecificQuery = (query) => {
+  if (query === '') return false;
+  return query.split('&').some((pair) => {
+    if (pair === '') return false;
+    const [k = '', v = ''] = pair.split('=');
+    if (SELECTOR_QUERY_KEYS.has(k.toLowerCase())) return true;
+    return HASH_LIKE.test(v) || NUMERIC_ID.test(v) || ID_PREFIX.test(v);
+  });
+};
+
+// A fragment counts only when it names a specific item: a line anchor
+// (L<n>), a number, a hash, an id-prefixed token, or a
+// line-/entry-/record-/...-prefixed token. `#readme` names a view.
+const hasSpecificFragment = (fragment) => {
+  if (fragment === '') return false;
+  if (/^L\d+(-L\d+)?$/.test(fragment)) return true;
+  if (NUMERIC_ID.test(fragment) || HASH_LIKE.test(fragment)) return true;
+  if (ID_PREFIX.test(fragment)) return true;
+  return /^(line|entry|record|event|test|run|task|incident|lesson|commit)[-_=][\w.-]+$/i.test(fragment);
+};
 
 export function refuseUnverifiableEvidenceLink(link) {
   const pointer = isPlainObject(link) ? link.pointer : link;
@@ -147,20 +227,50 @@ export function refuseUnverifiableEvidenceLink(link) {
     throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
       `${what} refused: pointer ${JSON.stringify(p)} names a directory, not a specific record, event, commit, test result, or log entry (EVL-3)`);
   }
-  const rest = stripScheme(p);
-  if (!rest.includes('/')) {
-    throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
-      `${what} refused: pointer ${JSON.stringify(p)} is a bare host or general claim with no specific item (EVL-3)`);
+  // Split off fragment and query before judging the path: an empty query or
+  // fragment, or one naming a view, is not a specific-item selector.
+  const hashIdx = p.indexOf('#');
+  const fragment = hashIdx === -1 ? '' : p.slice(hashIdx + 1);
+  const beforeFrag = hashIdx === -1 ? p : p.slice(0, hashIdx);
+  const qIdx = beforeFrag.indexOf('?');
+  const query = qIdx === -1 ? '' : beforeFrag.slice(qIdx + 1);
+  const path = qIdx === -1 ? beforeFrag : beforeFrag.slice(0, qIdx);
+  // URLs and local record paths are judged differently: a URL's first
+  // segment after the scheme is its host, never an item; a local path has
+  // no host, so a root-level record file (INC-2026-001.json) counts.
+  const scheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.exec(path);
+  const rest = scheme ? path.slice(scheme[0].length) : path;
+  const segments = rest.split('/').filter((s) => s !== '');
+  const itemSegments = scheme ? segments.slice(1) : segments;
+  const last = itemSegments[itemSegments.length - 1] ?? '';
+  const lastBase = last.split(':')[0];
+  if (
+    itemSegments.some(isSpecificSegment)
+    || isSpecificFile(last)
+    || hasLineSuffix(last)
+    || hasSpecificQuery(query)
+    || hasSpecificFragment(fragment)
+  ) {
+    return { verifiable: true, pointer: p, basis: 'names a specific record, event, commit, test result, or log entry (EVL-3); shape check only, the link was not followed (no I/O)' };
   }
-  if (/\.log$/i.test(p)) {
+  if (/\.log$/i.test(lastBase)) {
     throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
       `${what} refused: pointer ${JSON.stringify(p)} names a whole log file, not a specific log entry (EVL-3)`);
   }
-  if (!hasSpecificItemMarker(p)) {
+  if (/\.git$/i.test(lastBase)) {
     throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
-      `${what} refused: pointer ${JSON.stringify(p)} names only a whole repository or general location; it cannot be followed to a specific record, event, commit, test result, or log entry (EVL-3)`);
+      `${what} refused: pointer ${JSON.stringify(p)} names a whole repository (.git suffix), not a specific record, event, commit, test result, or log entry (EVL-3)`);
   }
-  return { verifiable: true, pointer: p, basis: 'names a specific record, event, commit, test result, or log entry (EVL-3); shape check only, the link was not followed (no I/O)' };
+  if (scheme && segments.length <= 1) {
+    throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
+      `${what} refused: pointer ${JSON.stringify(p)} is a bare host with no specific item (EVL-3)`);
+  }
+  if (!path.includes('/')) {
+    throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
+      `${what} refused: pointer ${JSON.stringify(p)} is a bare host or general claim with no specific item (EVL-3)`);
+  }
+  throw new SafetyRefusal('UNVERIFIABLE_EVIDENCE_LINK',
+    `${what} refused: pointer ${JSON.stringify(p)} names only a whole repository or general location; it cannot be followed to a specific record, event, commit, test result, or log entry (EVL-3)`);
 }
 
 // ---- N-HIST: seed-record refusal (spec §14.2, §12 Section 5) ----
@@ -357,8 +467,10 @@ const GOVERNANCE_KINDS = Object.freeze(['governance', 'authorization', 'security
 const GOV_KINDS = Object.freeze([...GOVERNANCE_KINDS, 'compounding', 'waiver', 'other']);
 
 // A recorded Founder approval (S-T6-4): recorded, by the Founder, with a
-// non-empty reference and a valid date. Anything else — missing, empty,
-// ambiguous, granted by anyone else — is not approval.
+// non-empty reference and a valid YYYY-MM-DD calendar date (fix round 1,
+// F-T6-2: Date.parse alone accepted "1" and normalized "2026-02-30").
+// Anything else — missing, empty, ambiguous, granted by anyone else — is
+// not approval.
 export function isRecordedFounderApproval(founderApproval) {
   if (!isPlainObject(founderApproval)) return false;
   return founderApproval.recorded === true
