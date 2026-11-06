@@ -425,6 +425,21 @@ test('INDEX: a section value that is not a list is refused as MALFORMED_SECTION,
       assert.ok(codes(r).includes('MALFORMED_SECTION'), `Section ${section} = ${String(bad)}`);
     }
   }
+  // Fix round 2 (F-T4-4): values JSON.stringify cannot serialize (a BigInt, a
+  // circular object) are refused the same way, never thrown on.
+  const circular = { superseded_id: 'MISSING' };
+  circular.self = circular;
+  for (const section of ['1', '2', '3', '4', '5', '6']) {
+    for (const [label, bad, kind] of [['BigInt 1n', 1n, 'bigint'], ['circular object', circular, 'object']]) {
+      let r;
+      assert.doesNotThrow(() => { r = indexWith((s) => { s[section] = bad; }); }, `Section ${section} = ${label}`);
+      assert.equal(r.consistent, false, `Section ${section} = ${label}`);
+      const m = r.problems.find((p) => p.code === 'MALFORMED_SECTION');
+      assert.ok(m, `Section ${section} = ${label}`);
+      assert.equal(m.section, section);
+      assert.match(m.message, new RegExp(`^Section ${section} must be a list of entries, got ${kind} <unserializable>`));
+    }
+  }
   // An empty list is still a valid (empty) section.
   assert.equal(indexWith((s) => { s[6] = []; }).consistent, true);
 });

@@ -94,6 +94,16 @@ const isValidDate = (v) => isNonEmptyString(v) && !Number.isNaN(Date.parse(v));
 const isEmptyValue = (v) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '')
   || (Array.isArray(v) && v.length === 0) || (isPlainObject(v) && Object.keys(v).length === 0);
 const problem = (code, message, extra = {}) => ({ code, message, ...extra });
+// Fix round 2 (F-T4-4): a diagnostic description of any value that cannot
+// throw. JSON.stringify throws on a BigInt or a circular object; that case
+// falls back to the value's kind alone. The preview is bounded.
+const describeValue = (v) => {
+  const kind = v === null ? 'null' : typeof v;
+  let shown;
+  try { shown = JSON.stringify(v); } catch { return `${kind} <unserializable>`; }
+  if (typeof shown !== 'string') return kind; // undefined, function, symbol
+  return `${kind} ${shown.length > 80 ? `${shown.slice(0, 80)}…` : shown}`;
+};
 
 const ID_FIELD = { incident: 'incident_id', lesson: 'lesson_id', seed: 'seed_id', 'detector-candidate': 'candidate_id' };
 
@@ -305,9 +315,10 @@ export function checkIndex({ records, index } = {}) {
       continue;
     }
     // Fix round 1 (F-T4-1): a section value must be a list of entries. Any
-    // other value is refused, never discarded as an empty section.
+    // other value is refused, never discarded as an empty section. The
+    // diagnostic uses describeValue, which cannot throw (fix round 2, F-T4-4).
     if (!Array.isArray(entries)) {
-      problems.push(problem('MALFORMED_SECTION', `Section ${key} must be a list of entries, got ${JSON.stringify(entries)}; its content is neither resolved nor counted (§12)`, { section: key }));
+      problems.push(problem('MALFORMED_SECTION', `Section ${key} must be a list of entries, got ${describeValue(entries)}; its content is neither resolved nor counted (§12)`, { section: key }));
       continue;
     }
     for (const e of entries) {
