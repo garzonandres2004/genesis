@@ -13,7 +13,7 @@ import {
   EVENT_NOT_EVALUATED, IncidentRefusal, createIncident, validateRecord, transition, recordFurtherRecurrence,
   deeperReviewStatus, annotateCorrectedVerdict, promoteHypothesisToConclusion, recordValidationEvidence,
   evaluateRecurrence, evaluateRecordRecurrence, watchWindow, watchEnd, exposureInWindow, watchOutcome,
-  extendByFullWindow, checkValidationEligibility, checkWatchConsistency,
+  extendByFullWindow, checkValidationEligibility, checkWatchConsistency, checkFixVerified,
 } from './sie-incident.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -45,10 +45,20 @@ const fixedRec = () => transition(openRec(), 'FIXED', {
   fix_reference: 'SYNTHETIC-PR-1', fix_description: 'SYNTHETIC: changed prompt text in SYNTHETIC-file',
 });
 const windowC = () => watchWindow(null, null, FP, RC, 'W-C', RULE);
-const watchRec = () => transition(fixedRec(), 'WATCH', {
+// SYNTHETIC fix-verification (VAL-1 elements (1) + (2)), required by FIXED -> WATCH
+// since the DV-2 Founder clarification (C-15 CLOSED). Records only these two
+// fields, so exposure and independent verification stay unset.
+const FIX_VERIFICATION = () => ({
+  reproduction_evidence: { kind: 'reproduced-failure', pointer: 'SYNTHETIC-repro-1' },
+  regression_test: { id: 'SYNTHETIC-test-1', before: { result: 'fail', pointer: 'SYNTHETIC-run-before' }, after: { result: 'pass', pointer: 'SYNTHETIC-run-after' } },
+});
+const fixVerify = (rec, values = FIX_VERIFICATION()) => recordValidationEvidence(rec, values, { reason: 'SYNTHETIC fix verification', evidence: 'SYNTHETIC-fv', date: at(RC, 1.5) });
+const fixVerifiedRec = () => fixVerify(fixedRec());
+const WATCH_OPTS = () => ({
   reason: 'SYNTHETIC fix present', evidence: 'SYNTHETIC-presence-1', date: FP,
   fix_presence_evidence: { pointer: 'SYNTHETIC-presence-1', time: FP }, watch_window: windowC(),
 });
+const watchRec = () => transition(fixVerifiedRec(), 'WATCH', WATCH_OPTS());
 
 // SYNTHETIC test input shaped like operational evidence (is_operational: true),
 // used only to exercise the filter's keep-branch. It is not operational
@@ -92,7 +102,7 @@ test('AC-T2-1: states are exactly OPEN, FIXED, WATCH, VALIDATED, REOPENED; trans
   });
 });
 
-test('AC-T2-1: happy path OPEN -> FIXED -> WATCH, each with its evidence requirement', () => {
+test('AC-T2-1: happy path OPEN -> FIXED -> WATCH, each with its evidence requirement (incl. fix-verified)', () => {
   const o = openRec();
   assert.equal(o.status, 'OPEN');
   const f = fixedRec();
@@ -104,7 +114,15 @@ test('AC-T2-1: happy path OPEN -> FIXED -> WATCH, each with its evidence require
   assert.equal(w.watch_start.reading, 'W-C');
   assert.equal(w.watch_start.label, 'PROVISIONAL');
   assert.equal(w.watch_start.time, FP);
-  assert.deepEqual(w.history.map((h) => h.to), ['OPEN', 'FIXED', 'WATCH']);
+  // The fix-verification is recorded on the FIXED record (an annotation, no status change).
+  assert.deepEqual(w.history.map((h) => [h.type, h.to]), [['created', 'OPEN'], ['transition', 'FIXED'], ['annotation', undefined], ['transition', 'WATCH']]);
+  // The FIXED -> WATCH entry records that the fix-verified gate ran and passed.
+  const entry = w.history.at(-1);
+  assert.equal(entry.fix_verified.check, 'fix-verified');
+  assert.equal(entry.fix_verified.verified, true);
+  assert.deepEqual(entry.fix_verified.missing, []);
+  assert.equal(entry.fix_verified.elements.c1_reproduced_failure.satisfied, true);
+  assert.equal(entry.fix_verified.elements.c2_regression_test_fail_before_pass_after.satisfied, true);
 });
 
 test('AC-T2-1: REOPENED is reachable from FIXED, WATCH, and VALIDATED only', () => {
@@ -136,8 +154,11 @@ test('AC-T2-1: each transition is refused when its required evidence is missing'
   const base = { reason: 'SYNTHETIC', evidence: 'SYNTHETIC', date: at(FP, 1) };
   refuses(() => transition(openRec(), 'FIXED', { ...base, fix_description: 'd' }), /missing fix_reference/);
   refuses(() => transition(openRec(), 'FIXED', { ...base, fix_reference: 'r' }), /missing fix_description/);
-  refuses(() => transition(fixedRec(), 'WATCH', { ...base, watch_window: windowC() }), /missing fix_presence_evidence/);
-  refuses(() => transition(fixedRec(), 'WATCH', { ...base, fix_presence_evidence: { pointer: 'p' } }), /missing watch_window/);
+  // Fix-verification supplied, so only the named missing field is refused (existing messages and code).
+  for (const rec of [fixedRec(), fixVerifiedRec()]) {
+    assert.throws(() => transition(rec, 'WATCH', { ...base, watch_window: windowC() }), (e) => e.code === 'MISSING_EVIDENCE' && /missing fix_presence_evidence/.test(e.message));
+    assert.throws(() => transition(rec, 'WATCH', { ...base, fix_presence_evidence: { pointer: 'p' } }), (e) => e.code === 'MISSING_EVIDENCE' && /missing watch_window/.test(e.message));
+  }
   // sufficiency judgment missing (everything else in place)
   assert.throws(() => transition(withEvidence(watchRec()), 'VALIDATED', { ...base, watch: endedWatch() }),
     (e) => e.details.failing.includes('c5_sufficiency_judgment'));
@@ -165,12 +186,90 @@ test('AC-T2-1: OPEN -> FIXED forbids claiming validation or proven effectiveness
 
 test('AC-T2-1: FIXED -> WATCH never assumes a start; a not-started window is recorded as such', () => {
   const missing = watchWindow(null, null, null, RC, 'W-C', RULE);
-  const w = transition(fixedRec(), 'WATCH', {
+  const w = transition(withEvidence(fixedRec()), 'WATCH', {
     reason: 'SYNTHETIC', evidence: 'SYNTHETIC', date: FP, fix_presence_evidence: { pointer: 'SYNTHETIC-p' }, watch_window: missing,
   });
   assert.equal(w.watch_start.started, false);
   assert.equal(w.watch_start.time, null);
   assert.equal(w.watch_start.message, 'watch not started: missing fix-presence evidence');
+});
+
+// ---- DV-2 door 1 (C-15 CLOSED, Founder clarification): fix-verified gate on FIXED -> WATCH ----
+
+const refusedNotVerified = (rec, missingField, reasonRe) => {
+  assert.throws(() => transition(rec, 'WATCH', WATCH_OPTS()), (e) => e instanceof IncidentRefusal
+    && e.code === 'FIX_NOT_VERIFIED'
+    && e.details.missing.includes(missingField)
+    && e.message.includes(`${missingField}:`)
+    && reasonRe.test(e.message), missingField);
+};
+const fv = FIX_VERIFICATION();
+
+test('DV-2 fix-verified: FIXED -> WATCH is REFUSED when reproduction_evidence is missing', () => {
+  refusedNotVerified(fixVerify(fixedRec(), { regression_test: fv.regression_test }), 'reproduction_evidence', /no reproduced failure recorded/);
+  refusedNotVerified(fixedRec(), 'reproduction_evidence', /no reproduced failure recorded/); // nothing recorded at all
+  assert.throws(() => transition(fixedRec(), 'WATCH', WATCH_OPTS()), (e) => e.code === 'FIX_NOT_VERIFIED'
+    && JSON.stringify(e.details.missing) === JSON.stringify(['reproduction_evidence', 'regression_test']));
+});
+
+test('DV-2 fix-verified: FIXED -> WATCH is REFUSED when reproduction_evidence is a documented-analysis (not a reproduced failure)', () => {
+  const rec = fixVerify(fixedRec(), { ...fv, reproduction_evidence: { kind: 'documented-analysis', pointer: 'SYNTHETIC-analysis', limit: 'SYNTHETIC' } });
+  refusedNotVerified(rec, 'reproduction_evidence', /documented reproduction analysis .* does not satisfy this element \(DV-4\)/);
+});
+
+test('DV-2 fix-verified: FIXED -> WATCH is REFUSED when regression_test is missing', () => {
+  refusedNotVerified(fixVerify(fixedRec(), { reproduction_evidence: fv.reproduction_evidence }), 'regression_test', /no regression test with a failing-before and passing-after result \(DV-5\)/);
+});
+
+test('DV-2 fix-verified: FIXED -> WATCH is REFUSED when the regression test has only a passing-after result', () => {
+  const rec = fixVerify(fixedRec(), { ...fv, regression_test: { id: 'SYNTHETIC-t', after: { result: 'pass', pointer: 'SYNTHETIC-after' } } });
+  refusedNotVerified(rec, 'regression_test', /a passing post-fix result alone does not satisfy this element; no failing-before result \(DV-5\)/);
+});
+
+test('DV-2 fix-verified: FIXED -> WATCH is REFUSED when the regression test has only a failing-before result', () => {
+  const rec = fixVerify(fixedRec(), { ...fv, regression_test: { id: 'SYNTHETIC-t', before: { result: 'fail', pointer: 'SYNTHETIC-before' } } });
+  refusedNotVerified(rec, 'regression_test', /no regression test with a failing-before and passing-after result \(DV-5\)/);
+});
+
+test('DV-2 fix-verified: FIXED -> WATCH SUCCEEDS when both elements are present (with fix_presence_evidence + watch_window)', () => {
+  const rec = fixVerifiedRec();
+  assert.deepEqual(checkFixVerified(rec), {
+    check: 'fix-verified', verified: true, missing: [],
+    elements: {
+      c1_reproduced_failure: { satisfied: true, reason: 'reproduced failure recorded' },
+      c2_regression_test_fail_before_pass_after: { satisfied: true, reason: 'fails before the fix and passes after it' },
+    },
+  });
+  const w = transition(rec, 'WATCH', WATCH_OPTS());
+  assert.equal(w.status, 'WATCH');
+  assert.equal(w.history.at(-1).fix_verified.verified, true);
+  // The gate is not validation: element (3) and every post-watch element stay required (door 2).
+  const check = checkValidationEligibility(withEvidence(w), endedWatch(), { sufficiency_judgment: JUDGMENT });
+  assert.deepEqual(check.failing, ['c3_independent_verification']);
+});
+
+test('DV-2 fix-verified: independent_verification absent does NOT block FIXED -> WATCH', () => {
+  const rec = fixVerifiedRec();
+  assert.equal(rec.independent_verification, D2_NOT_SATISFIED); // the default: nothing available
+  const w = transition(rec, 'WATCH', WATCH_OPTS());
+  assert.equal(w.status, 'WATCH');
+  assert.deepEqual(w.history.at(-1).independent_verification, { recorded: false, note: `not available; not required at FIXED -> WATCH (${D2_NOT_SATISFIED})` });
+  const nulled = fixVerify(rec, { independent_verification: null });
+  assert.equal(transition(nulled, 'WATCH', WATCH_OPTS()).history.at(-1).independent_verification.recorded, false);
+});
+
+test('DV-2 fix-verified: independent_verification present is recorded in the history entry and does NOT satisfy VAL-1 element (3)', () => {
+  const iv = { verifier: 'SYNTHETIC-verifier', method: 'SYNTHETIC', target: 'SYNTHETIC', verdict: 'SYNTHETIC' };
+  const w = transition(fixVerify(fixedRec(), { ...FIX_VERIFICATION(), independent_verification: iv }), 'WATCH', WATCH_OPTS());
+  const entry = w.history.at(-1);
+  assert.equal(entry.independent_verification.recorded, true);
+  assert.deepEqual(entry.independent_verification.value, iv);
+  assert.match(entry.independent_verification.note, /does not satisfy VAL-1 element \(3\)/);
+  // GUARD: element (3) stays NOT SATISFIED while the D2 role is pending.
+  const check = checkValidationEligibility(withEvidence(w, { independent_verification: iv }), endedWatch(), { sufficiency_judgment: JUDGMENT });
+  assert.equal(check.elements.c3_independent_verification.satisfied, false);
+  assert.match(check.elements.c3_independent_verification.reason, /NOT SATISFIED — D2 role pending/);
+  assert.equal(check.independently_validated, false);
 });
 
 // ---- AC-T2-2: no VALIDATED without a link, or before the window end ----
@@ -199,10 +298,14 @@ test('AC-T2-2: refused when exposure is empty; refused on zero recurrence alone;
   // Exposure only outside the window: link non-empty, exposure empty.
   const outside = withEvidence(watchRec(), { exposure_evidence_link: [opItem(-5)] });
   assert.throws(() => transition(outside, 'VALIDATED', opts), (e) => e.details.failing.includes('b_operational_exposure_in_window') && e.details.failing.includes('c4_meaningful_exposure'));
-  // Zero recurrence alone: recurrence_count 0, nothing else recorded.
+  // Zero recurrence alone: recurrence_count 0, nothing recorded beyond what
+  // FIXED -> WATCH requires (fix-verified, DV-2 door 1). Every post-watch
+  // element is still refused (door 2).
   const zero = watchRec();
   assert.equal(zero.recurrence_count, 0);
-  assert.throws(() => transition(zero, 'VALIDATED', { ...opts, sufficiency_judgment: undefined }), (e) => e.details.failing.length >= 6);
+  assert.throws(() => transition(zero, 'VALIDATED', { ...opts, sufficiency_judgment: undefined }), (e) => e.code === 'NOT_ELIGIBLE'
+    && ['b_operational_exposure_in_window', 'c3_independent_verification', 'c4_meaningful_exposure', 'c5_sufficiency_judgment', 'c6_exposure_evidence_link']
+      .every((k) => e.details.failing.includes(k)) && e.details.failing.length === 5);
   // Merged PR alone: the only evidence is the fix reference (a PR).
   const prOnly = fixedRec();
   refuses(() => transition(prOnly, 'VALIDATED', opts), /FIXED -> VALIDATED refused/);
@@ -786,22 +889,24 @@ test('Immutability: transition does not mutate its input and appends exactly one
 test('Immutability: every step is append-only across the whole lifecycle', () => {
   const steps = [openRec()];
   steps.push(fixedRec());
-  steps.push(watchRec());
-  steps.push(withEvidence(steps[2]));
-  steps.push(annotateCorrectedVerdict(steps[3], { corrected_verdict_evidence: { pointer: 'SYNTHETIC-cv', reason: 'S' }, date: at(FP, 4) }));
-  steps.push(reopen(steps[4], 'SYNTHETIC-b'));
+  steps.push(fixVerify(steps[1]));
+  steps.push(transition(steps[2], 'WATCH', WATCH_OPTS()));
+  steps.push(withEvidence(steps[3]));
+  steps.push(annotateCorrectedVerdict(steps[4], { corrected_verdict_evidence: { pointer: 'SYNTHETIC-cv', reason: 'S' }, date: at(FP, 4) }));
+  steps.push(reopen(steps[5], 'SYNTHETIC-b'));
   for (let i = 1; i < steps.length; i += 1) {
     assert.equal(steps[i].history.length, steps[i - 1].history.length + 1);
     assert.deepEqual(steps[i].history.slice(0, -1), steps[i - 1].history);
   }
-  refuses(() => transition(steps[3], 'REOPENED', { reason: 'S', evidence: 'S', recurrence_evidence: recEv('SYNTHETIC-b') }), /valid date is required/);
+  refuses(() => transition(steps[4], 'REOPENED', { reason: 'S', evidence: 'S', recurrence_evidence: recEv('SYNTHETIC-b') }), /valid date is required/);
 });
 
-test('Read-only boundary: the module does no file I/O and states the boundary, VAL-6, C-15, and DV-3 in its header', () => {
+test('Read-only boundary: the module does no file I/O and states the boundary, VAL-6, the C-15 closure, and DV-3 in its header', () => {
   assert.ok(!/from 'node:fs'|from "node:fs"|require\(/.test(source));
   assert.ok(!/\bimport\b/.test(source.split('\n').filter((l) => !l.startsWith('//')).join('\n')));
   assert.match(source, /READ-ONLY BOUNDARY/);
   assert.match(source, /never writes\s*\n?\/\/\s*into tasks\/ or events\.jsonl/);
-  assert.match(source, /C-15 \/ DV-2 OPEN/);
+  assert.match(source, /C-15 \/ DV-2 CLOSED by the Founder clarification/);
+  assert.ok(!/C-15 \/ DV-2 OPEN/.test(source));
   assert.match(source, /C-16 \/ DV-3 OPEN/);
 });

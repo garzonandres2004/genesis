@@ -1,5 +1,5 @@
 // SIE incident records, status machine, and watch computation (Stage 3 T2).
-// Implements docs/stage-3/00-sie-specification.md (0.4-draft) §6 (INC-1..INC-6,
+// Implements docs/stage-3/00-sie-specification.md (0.5-draft) §6 (INC-1..INC-6,
 // §6.2 fields), §7 (WAT-1..WAT-6, EXP-1, EXP-2, the §7.1 pseudocode, the §7.2
 // boundary notes) and §8 (VAL-1..VAL-6), as pure functions over plain
 // in-memory incident-record objects.
@@ -21,11 +21,13 @@
 // "NOT SATISFIED — D2 role pending" (H4), so WATCH -> VALIDATED is always
 // refused. Nothing this module returns on fixture input is a validation.
 //
-// LIFECYCLE ORDER — C-15 / DV-2 OPEN (Founder ruling required). WP-04 v1.1
-// reads "fixed → validated → watched" ("A validated incident enters watch");
-// brief AC-T2-1 reads "open → fixed → watch → validated". This module follows
-// the brief's order (AC-T2-1). The order is NOT settled; if the Founder rules
-// otherwise, this status machine is reworked.
+// LIFECYCLE ORDER — C-15 / DV-2 CLOSED by the Founder clarification
+// (2026-11-06 ~12:56 MST), the two-door reading. The order stays the brief's
+// (AC-T2-1): open → fixed → watch → validated. Door 1: FIXED -> WATCH requires
+// the fix-verified check (VAL-1 elements (1) + (2), checkFixVerified) and is
+// REJECTED without it. Door 2: WATCH -> VALIDATED keeps all of VAL-1. This is
+// the Founder's clarification, not WP-04 wording (WP-04 v1.1 reads "fixed →
+// validated → watched").
 //
 // MEANINGFUL EXPOSURE — C-16 / DV-3 OPEN (Founder ruling required). WP-04's
 // "at least 2 unrelated users in the live system" is an additional mandatory
@@ -434,7 +436,24 @@ export function transition(record, to, opts = {}) {
     if (!isPlainObject(opts.watch_window)) missing.push('watch_window (a named watchWindow() computation; §6.2 watch_start/watch_window)');
     if (missing.length) throw new IncidentRefusal('MISSING_EVIDENCE', `transition FIXED -> WATCH refused: missing ${missing.join(' and ')} (§6.1)`, { missing });
     const rule = ruleOf(opts.watch_window);
-    const next = appendHistory(record, { ...entry, watch_rule: rule });
+    // DV-2 door 1 (C-15 CLOSED, Founder clarification): fix-verified is mandatory.
+    const fixVerified = checkFixVerified(record);
+    if (!fixVerified.verified) {
+      const why = fixVerified.missing.map((k) => `${k}: ${fixVerified.elements[FIX_VERIFIED_ELEMENTS[k]].reason}`).join('; ');
+      throw new IncidentRefusal('FIX_NOT_VERIFIED', `transition FIXED -> WATCH refused: fix not verified (§6.1 fix-verified; DV-2 Founder clarification): ${why}`, { missing: fixVerified.missing, fix_verified: fixVerified });
+    }
+    // Independent verification is recorded where available, never required
+    // (D2 role pending). It does not satisfy VAL-1 element (3) (GUARD).
+    const iv = record.independent_verification;
+    const ivAvailable = iv !== null && iv !== undefined && iv !== D2_NOT_SATISFIED;
+    const next = appendHistory(record, {
+      ...entry,
+      watch_rule: rule,
+      fix_verified: fixVerified,
+      independent_verification: ivAvailable
+        ? { recorded: true, value: structuredClone(iv), note: `recorded only; does not satisfy VAL-1 element (3), which stays ${D2_NOT_SATISFIED}` }
+        : { recorded: false, note: `not available; not required at FIXED -> WATCH (${D2_NOT_SATISFIED})` },
+    });
     next.status = 'WATCH';
     next.fix_presence_evidence = structuredClone(opts.fix_presence_evidence);
     // WAT-2: the start is never assumed. A not-started window is recorded as such.
@@ -943,6 +962,41 @@ function checkEndArithmetic(watch, mismatches) {
     mismatches.push(`end_condition_reached (supplied ${shown(watch.end_condition_reached)}; as of ${watch.as_of ?? 'not given'} the end ${iso(expectedEnd)} is ${reached ? '' : 'not '}reached)`);
   }
 }
+
+// ---- §6.1 fix-verified (DV-2 door 1; C-15 CLOSED by Founder clarification) ----
+
+// Record field -> VAL-1 element it carries.
+const FIX_VERIFIED_ELEMENTS = Object.freeze({
+  reproduction_evidence: 'c1_reproduced_failure',
+  regression_test: 'c2_regression_test_fail_before_pass_after',
+});
+
+// VAL-1 elements (1) and (2), as recorded on the record. Required by
+// FIXED -> WATCH and re-checked on WATCH -> VALIDATED (VAL-1 stays whole there).
+// Does NOT cover element (3): independent verification stays NOT SATISFIED
+// while the D2 role is pending, whatever is recorded (GUARD).
+export function checkFixVerified(record) {
+  const el = {};
+  const set = (name, satisfied, reason) => { el[name] = { satisfied, reason }; };
+
+  // (c1) reproduced failure (DV-4: documented analysis alone does not satisfy)
+  const re = record.reproduction_evidence;
+  if (requirePointer(re) && re.kind === 'reproduced-failure') set('c1_reproduced_failure', true, 'reproduced failure recorded');
+  else if (isPlainObject(re) && re.kind === 'documented-analysis') set('c1_reproduced_failure', false, 'a documented reproduction analysis without a reproduced failure does not satisfy this element (DV-4)');
+  else set('c1_reproduced_failure', false, 'no reproduced failure recorded');
+
+  // (c2) regression test fails before the fix AND passes after (DV-5)
+  const rt = record.regression_test;
+  const before = isPlainObject(rt) && requirePointer(rt.before) && rt.before.result === 'fail';
+  const after = isPlainObject(rt) && requirePointer(rt.after) && rt.after.result === 'pass';
+  if (before && after && isNonEmptyString(rt.id)) set('c2_regression_test_fail_before_pass_after', true, 'fails before the fix and passes after it');
+  else if (after && !before) set('c2_regression_test_fail_before_pass_after', false, 'a passing post-fix result alone does not satisfy this element; no failing-before result (DV-5)');
+  else set('c2_regression_test_fail_before_pass_after', false, 'no regression test with a failing-before and passing-after result (DV-5)');
+
+  const missing = Object.keys(FIX_VERIFIED_ELEMENTS).filter((k) => !el[FIX_VERIFIED_ELEMENTS[k]].satisfied);
+  return { check: 'fix-verified', verified: missing.length === 0, elements: el, missing };
+}
+
 // ---- §8 VAL-1 eligibility (conjunctive) ----
 
 // Returns each element satisfied / not satisfied with its reason. `watch` is a
@@ -986,19 +1040,10 @@ export function checkValidationEligibility(record, watch, { sufficiency_judgment
   else if (!consistency.consistent) bReason = notAssessed;
   set('b_operational_exposure_in_window', n > 0, bReason, { excluded: exposure.excluded });
 
-  // (c1) reproduced failure (DV-4: documented analysis alone does not satisfy)
-  const re = record.reproduction_evidence;
-  if (requirePointer(re) && re.kind === 'reproduced-failure') set('c1_reproduced_failure', true, 'reproduced failure recorded');
-  else if (isPlainObject(re) && re.kind === 'documented-analysis') set('c1_reproduced_failure', false, 'a documented reproduction analysis without a reproduced failure does not satisfy this element (DV-4)');
-  else set('c1_reproduced_failure', false, 'no reproduced failure recorded');
-
-  // (c2) regression test fails before the fix AND passes after (DV-5)
-  const rt = record.regression_test;
-  const before = isPlainObject(rt) && requirePointer(rt.before) && rt.before.result === 'fail';
-  const after = isPlainObject(rt) && requirePointer(rt.after) && rt.after.result === 'pass';
-  if (before && after && isNonEmptyString(rt.id)) set('c2_regression_test_fail_before_pass_after', true, 'fails before the fix and passes after it');
-  else if (after && !before) set('c2_regression_test_fail_before_pass_after', false, 'a passing post-fix result alone does not satisfy this element; no failing-before result (DV-5)');
-  else set('c2_regression_test_fail_before_pass_after', false, 'no regression test with a failing-before and passing-after result (DV-5)');
+  // (c1) reproduced failure, (c2) regression test fail-before/pass-after:
+  // the same check FIXED -> WATCH requires (checkFixVerified).
+  const fv = checkFixVerified(record);
+  for (const name of Object.values(FIX_VERIFIED_ELEMENTS)) set(name, fv.elements[name].satisfied, fv.elements[name].reason);
 
   // (c3) independent verification, subject to D2 (H4, VAL-5)
   if (D2_ROLE_STATUS === 'PENDING') set('c3_independent_verification', false, `${D2_NOT_SATISFIED} (H4); the incident is NOT labeled independently validated`);

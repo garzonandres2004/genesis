@@ -96,7 +96,7 @@ cannot be edited in place.
 
 | Item | Handling in T2 |
 |---|---|
-| DV-2 / **C-15 OPEN** | Built to the brief's order, OPEN → FIXED → WATCH → VALIDATED (AC-T2-1). C-15 is recorded in the module header and here. The order is **not settled**. If the Founder rules for WP-04's "fixed → validated → watched", T2's status machine is reworked |
+| DV-2 / **C-15 OPEN** | Built to the brief's order, OPEN → FIXED → WATCH → VALIDATED (AC-T2-1). C-15 is recorded in the module header and here. The order is **not settled**. If the Founder rules for WP-04's "fixed → validated → watched", T2's status machine is reworked. **[Amended, DV-2 clarification round: C-15 CLOSED by the Founder's clarification (2026-11-06 ~12:56 MST), the two-door reading.** The order is kept. FIXED → WATCH now requires the fix-verified check, VAL-1 elements (1) + (2) (`checkFixVerified`, refusal `FIX_NOT_VERIFIED`). WATCH → VALIDATED keeps all of VAL-1. This is the Founder's clarification, not WP-04 wording.**]** |
 | DV-3 / **C-16 OPEN** | Not enforced and not defined. `DV3_MARKER` (`meaningful_exposure_wp04_two_user_condition: 'NOT ENFORCED — C-16 OPEN'`) is attached to every `exposureInWindow` result, to element `c4_meaningful_exposure`, to the eligibility result, and to the `eligible-for-validation-judgment` outcome. Element (4) is evaluated under the operative EXP-1/EXP-2 rules only. **No Stage 3 validation may claim to satisfy DV-3 until it is defined and enforced** |
 | DV-4 RESOLVED | Element `c1_reproduced_failure` requires `reproduction_evidence.kind === 'reproduced-failure'` with a pointer. `documented-analysis` is refused with a DV-4 reason |
 | DV-5 RESOLVED | Element `c2_…` requires `before.result === 'fail'` AND `after.result === 'pass'`, both with pointers. Pass-after alone is refused with a DV-5 reason |
@@ -139,7 +139,7 @@ validated learning (EVL-7: evidence level Component at most).
 
 | AC | Builder claim | Evidence the verifier can inspect |
 |---|---|---|
-| AC-T2-1 | **Met (order per brief; C-15 OPEN).** States are exactly the five. The transition table matches §6.1 as corrected by CR-03. REOPENED is reachable from FIXED, WATCH, and VALIDATED only. OPEN → REOPENED is refused, naming CR-03. The other 18 unlisted state pairs (self-transitions included), plus an unknown target from every state, are refused by name. Each transition is refused when its evidence is missing. A backward move without a reason or evidence pointer is refused | `TRANSITIONS`, `transition`. Tests "AC-T2-1: states are exactly…", "…happy path…", "…REOPENED is reachable…", "…OPEN -> REOPENED is refused…", "…every unlisted transition…", "…required evidence is missing", "…backward move…", "…OPEN -> FIXED forbids…", "…FIXED -> WATCH never assumes a start…" |
+| AC-T2-1 | **Met (order per brief; C-15 OPEN).** States are exactly the five. The transition table matches §6.1 as corrected by CR-03. REOPENED is reachable from FIXED, WATCH, and VALIDATED only. OPEN → REOPENED is refused, naming CR-03. The other 18 unlisted state pairs (self-transitions included), plus an unknown target from every state, are refused by name. Each transition is refused when its evidence is missing. A backward move without a reason or evidence pointer is refused. **[Amended, DV-2 clarification round (C-15 CLOSED):** FIXED → WATCH also requires the fix-verified check, and the transition is rejected with `FIX_NOT_VERIFIED` without it; see "DV-2 clarification round" below.**]** | `TRANSITIONS`, `transition`. Tests "AC-T2-1: states are exactly…", "…happy path…", "…REOPENED is reachable…", "…OPEN -> REOPENED is refused…", "…every unlisted transition…", "…required evidence is missing", "…backward move…", "…OPEN -> FIXED forbids…", "…FIXED -> WATCH never assumes a start…" |
 | AC-T2-2 | **Met as a refusal mechanism.** WATCH → VALIDATED always calls `checkValidationEligibility`. It refuses on an empty or missing link (`c6`), and before the end condition even when every other element is satisfied (`a`). **[Corrected, fix round 1 (F-T2-1):** as originally built, (`a`) checked the end condition of whatever watch computation was supplied, not of the incident's recorded window, so this claim was incomplete. Now (`a`) is satisfied only by a watch consistent with the recorded `watch_window` (the recorded window itself, or a WAT-5 extension chain of it) whose own end arithmetic is consistent and whose end is reached; see "Fix round 1".**]** It also refuses on: empty exposure; zero recurrence alone; a merged PR alone; fixture, synthetic, staged-lesson, merged-PR, or non-operational exposure; DV-5; DV-4; and H4. The DV-6 conjunction is tested in both directions. Because element (3) is NOT SATISFIED while D2 is pending, **no path reaches VALIDATED** (VAL-6) | `checkValidationEligibility`, `exposureInWindow`. The 9 tests prefixed "AC-T2-2" and the "VAL-1: eligibility check names every element…" test |
 | AC-T2-3 | **Met.** The two evidence types sit in separate fields. Corrected-verdict evidence never increments `recurrence_count`. On FIXED/WATCH it is an annotation with no status change, and passing it to a REOPENED transition is refused. VALIDATED → REOPENED on recurrence evidence is refused (INC-3). On corrected-verdict evidence it succeeds, the prior VALIDATED entry is kept unchanged, and it is annotated SUPERSEDED in the new entry | `transition`, `annotateCorrectedVerdict`. The four tests prefixed "AC-T2-3" |
 | AC-T2-4 | **Met; every computation is PROVISIONAL.** Every result from all five watch functions, across all three readings and the not-started case, names the reading and counting rule and is labeled PROVISIONAL. None contains "final". The source has no `provisional: false` and no `'FINAL'`. The W-C boundary cases (a) and (b), the missing-start messages, MIN(day, 10th task) in all three regimes, the exposure filter, the §7.1 outcome order, and WAT-5 extension are all tested | The eight tests prefixed "AC-T2-4" |
@@ -157,7 +157,10 @@ Additional coverage required by the task brief:
 
 1. **C-15 (DV-2) lifecycle order — OPEN, Founder ruling required.** T2 is
    built to AC-T2-1's order. If the Founder rules otherwise, T2 is
-   reworked.
+   reworked. **[CLOSED 2026-11-06 ~12:56 MST by the Founder's
+   clarification (two-door reading); see "DV-2 clarification round".**
+   **Guard:** the fix-verified check does NOT satisfy VAL-1 element (3),
+   which stays NOT SATISFIED until the D2 role is approved.**]**
 2. **C-16 (DV-3) "at least 2 unrelated users" — OPEN, Founder ruling
    required.** It is not enforced or defined. It is marked NOT ENFORCED
    everywhere exposure is evaluated. No validation may claim DV-3.
@@ -222,7 +225,10 @@ Additional coverage required by the task brief:
 ## Explicit unverified areas (D6 addition)
 
 - Whether WP-04 v1.1 orders validation before watch (C-15). If it does, the
-  machine is wrong.
+  machine is wrong. **[Amended, DV-2 clarification round:** C-15 is CLOSED
+  by the Founder's clarification, which keeps this order with
+  fix-verification at FIXED → WATCH. What WP-04's own text means is still
+  not verified here, and the clarification is not attributed to WP-04.**]**
 - Every [REF] content item the module encodes (WAT-1 30-days/10-tasks
   matches the quoted text; WAT-5 full-window extension and WAT-6 stay [REF],
   UNVERIFIED — DV-7/C-19).
@@ -276,6 +282,8 @@ Additional coverage required by the task brief:
 
 The builder submits T2 **for verification**. AC-T2-1–AC-T2-5 are claimed met
 as mechanisms. AC-T2-1 is met to the brief's order, with C-15 open.
+**[Amended, DV-2 clarification round:** C-15 is now CLOSED, and FIXED →
+WATCH enforces the fix-verified check.**]**
 AC-T2-2 is met as refusals; VALIDATED is unreachable by design while D2 is
 pending. AC-T2-4 is met with every computation PROVISIONAL. AC-T2-5 is met
 as a mechanism, with SIE-07 and the DV-9 threshold open. Open item 6 (the
@@ -329,6 +337,9 @@ The builder does not assign a verification outcome.
 - **No DV-3 satisfaction.** WP-04's two-user condition is NOT ENFORCED
   (C-16).
 - **No settled lifecycle order.** The order follows AC-T2-1 with C-15 OPEN.
+  **[Amended, DV-2 clarification round:** the order is now settled by the
+  Founder's clarification (C-15 CLOSED), not by this report or by WP-04
+  wording.**]**
 - **No final watch computation.** Every computation is PROVISIONAL under
   H5 and SIE-02.
 - **No resolution** of the DV-9 second-recurrence threshold, SIE-07, DV-7,
@@ -555,7 +566,10 @@ was added.
     extension is carried by the supplied watch's lineage.
 - **No open finding was decided:** DV-2/C-15, DV-3/C-16, DV-9 threshold,
   R4-events, H5/SIE-02, D2, and the six confirmed silent-spec decisions are
-  all unchanged.
+  all unchanged. **[Amended, DV-2 clarification round:** DV-2/C-15 has
+  since been CLOSED by the Founder's clarification. That was a Founder
+  decision, not a builder one. The others listed here are still
+  unchanged.**]**
 
 ### Scope compliance (fix round 1)
 
@@ -563,3 +577,117 @@ was added.
 - No merge, no PR opened/closed/commented, and no deploy, spending,
   secrets, Runner change, or source-record change.
 - No network calls apart from the instructed `git push`.
+
+---
+
+## DV-2 clarification round — mandatory fix-verified gate (C-15 CLOSED)
+
+**Decision implemented (not re-decided).** On 2026-11-06 at about 12:56 MST
+the Founder approved the two-door reading of DV-2 (orchestrator
+`AUTHORIZATIONS.md`, "Genesis — DV-2 two-door reading APPROVED"; Spec
+0.5-draft §2.9 DV-2, §6.1, §8 VAL-1).
+- **Door 1:** fix-verification is mandatory for FIXED → WATCH. If it is
+  missing, the transition is rejected.
+- **Door 2:** VALIDATED keeps all post-watch requirements.
+
+This is the Founder's clarification, not WP-04 wording. It closes C-15
+only.
+
+**Starting state.** The FIXED → WATCH branch of `transition` required only
+`fix_presence_evidence`, `record_creation_time`, and `watch_window`.
+Elements (1) and (2) were checked only by `checkValidationEligibility`,
+which runs on WATCH → VALIDATED. So the gate was not enforced.
+
+### Change (`scripts/sie-incident.mjs`)
+
+- **New export `checkFixVerified(record)`.** It contains the c1/c2 logic
+  moved out of `checkValidationEligibility`, unchanged. It returns
+  `{ check: 'fix-verified', verified, elements, missing }`.
+  - c1 requires `reproduction_evidence.kind === 'reproduced-failure'` with
+    a pointer. `documented-analysis` does not satisfy it (DV-4).
+  - c2 requires a non-empty `regression_test.id`, `before.result === 'fail'`
+    with a pointer, and `after.result === 'pass'` with a pointer (DV-5).
+- **`checkValidationEligibility` now uses `checkFixVerified`** for c1/c2.
+  The element names, satisfied values, and reasons are identical to
+  before, and VAL-1 stays whole on WATCH → VALIDATED (door 2).
+- **The FIXED → WATCH branch of `transition`** runs the gate *after* its
+  existing checks (unknown opts, the missing-evidence refusal, the named
+  watch rule). Those checks still refuse first with their existing codes
+  and messages.
+  - Without fix-verification the transition is refused with code
+    **`FIX_NOT_VERIFIED`**. `details.missing` lists `reproduction_evidence`
+    and/or `regression_test`, and the message gives each element's
+    DV-4/DV-5 reason.
+  - On success the history entry records `fix_verified` (the full check
+    result) and `independent_verification`.
+- **Independent verification, where available:** a value other than null
+  or `NOT SATISFIED — D2 role pending` is recorded as
+  `{ recorded: true, value, note }`, and the note states that it does not
+  satisfy VAL-1 element (3). Otherwise the entry records
+  `{ recorded: false, note }`. It never blocks the gate.
+- **Guard:** element `c3_independent_verification` is unchanged and stays
+  NOT SATISFIED while `D2_ROLE_STATUS === 'PENDING'`, whatever is recorded.
+- **Header:** the LIFECYCLE ORDER block now records C-15 / DV-2 CLOSED and
+  the two-door reading. The C-16 / DV-3 block, VAL-6, and the D2 statements
+  are unchanged.
+
+### Tests (`scripts/sie-incident.test.mjs`)
+
+**Updated:**
+- Helpers: `watchRec` now records fix-verification on the FIXED record
+  (`fixVerify` → `recordValidationEvidence`, `reproduction_evidence` +
+  `regression_test` only), then moves to WATCH. New helpers:
+  `FIX_VERIFICATION`, `fixVerify`, `fixVerifiedRec`, `WATCH_OPTS`.
+- "AC-T2-1: happy path … (incl. fix-verified)" asserts the annotation
+  entry, and that the FIXED → WATCH entry records
+  `fix_verified.verified === true` with both elements satisfied.
+- "AC-T2-1: each transition is refused when its required evidence is
+  missing": the missing-`fix_presence_evidence` and missing-`watch_window`
+  refusals are asserted both with and without fix-verification. They keep
+  the same `MISSING_EVIDENCE` code and messages.
+- "AC-T2-1: FIXED -> WATCH never assumes a start" now builds on
+  `withEvidence(fixedRec())`.
+- "AC-T2-2: … zero recurrence alone …": with fix-verification now mandatory
+  at WATCH, the assertion was `failing.length >= 6`. It is now the exact
+  set b, c3, c4, c5, c6 (5 elements, `NOT_ELIGIBLE`), which is stricter
+  than before.
+- "Immutability: every step is append-only …" includes the fix-verification
+  step in its chain.
+- The header test is renamed "… the C-15 closure …". It asserts
+  `C-15 / DV-2 CLOSED by the Founder clarification` and the absence of
+  `C-15 / DV-2 OPEN`.
+
+**New:**
+1. "DV-2 fix-verified: FIXED -> WATCH is REFUSED when reproduction_evidence is missing"
+2. "… REFUSED when reproduction_evidence is a documented-analysis (not a reproduced failure)"
+3. "… REFUSED when regression_test is missing"
+4. "… REFUSED when the regression test has only a passing-after result"
+5. "… REFUSED when the regression test has only a failing-before result"
+6. "… SUCCEEDS when both elements are present (with fix_presence_evidence + watch_window)"
+7. "DV-2 fix-verified: independent_verification absent does NOT block FIXED -> WATCH"
+8. "DV-2 fix-verified: independent_verification present is recorded in the history entry and does NOT satisfy VAL-1 element (3)"
+
+### Results (builder-observed)
+
+- `node --test scripts/sie-incident.test.mjs`: **60 tests, 60 pass, 0 fail.**
+- `npm test`: **196 tests, 174 pass, 21 fail, 1 skipped.**
+  - All 21 failures are in `scripts/sie-schema.test.mjs` (T4), and every
+    one is the new `FIX_NOT_VERIFIED` refusal.
+  - T4's `watchInc` helper moves a FIXED record to WATCH without recording
+    fix-verification.
+  - This round was not permitted to edit T4's files. **This round was
+    therefore not committed** until T4's helper records fix-verification
+    before FIXED → WATCH.
+
+### Open items (updated)
+
+- **Item 1 (C-15) is CLOSED** (2026-11-06 ~12:56 MST, Founder
+  clarification).
+  - **Guard:** the fix-verified check does NOT satisfy VAL-1 element (3).
+    Element (3) stays NOT SATISFIED until the D2 role is approved.
+- Items 2 (C-16), 3 (C-20 threshold), and 4 (R4-events) stay OPEN exactly
+  as before. Items 5–14 stand.
+- **New item 15:** `validateRecord` does not require fix-verification on an
+  existing WATCH record. The gate is on the transition, as specified, so a
+  hand-built WATCH literal is not checked for it. This is reported, not
+  changed.
