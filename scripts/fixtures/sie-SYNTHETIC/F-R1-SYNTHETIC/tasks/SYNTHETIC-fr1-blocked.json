@@ -1,0 +1,1 @@
+{"id":"SYNTHETIC-fr1-blocked","title":"SYNTHETIC fixture F-R1: blocked with two invented blockers","synthetic":"SYNTHETIC fixture - hand-constructed test input, not an operational record","project":"SYNTHETIC-fixture","status":"blocked","attempts":0,"runs":[],"blockers":["SYNTHETIC invented blocker A","SYNTHETIC invented blocker B"],"created":"2026-01-01","updated":"2026-01-01"}

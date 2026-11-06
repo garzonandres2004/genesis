@@ -1,0 +1,1 @@
+{"id":"SYNTHETIC-fr4-control","title":"SYNTHETIC fixture F-R4 control: blocker key on one task only (must not match R4)","synthetic":"SYNTHETIC fixture - hand-constructed test input, not an operational record","project":"SYNTHETIC-fixture","status":"blocked","attempts":0,"runs":[],"blockers":["SYNTHETIC control blocker key Y"],"created":"2026-01-01","updated":"2026-01-01"}
