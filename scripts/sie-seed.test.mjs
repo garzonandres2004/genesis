@@ -115,7 +115,7 @@ test('T5 SEED-SHA: AC-T5-3 UNVERIFIED CANDIDATE, hypotheses separate, independen
   const t = flat(own);
   assert.match(text, /^# SEED-SHA .*UNVERIFIED CANDIDATE/m);
   assert.equal(field(text, 'label'), 'UNVERIFIED CANDIDATE (operator-class error)');
-  assert.equal(field(text, 'membership in the ten corpus items'), 'UNCONFIRMED');
+  assert.equal(field(text, 'membership in the ten corpus items'), 'eleventh (C-7 CLOSED)');
   assert.ok(t.includes('The operator-class-error hypothesis is separate from a runner-defect hypothesis.'));
   assert.ok(t.includes('Independent evidence is required before any classification.'));
   assert.ok(t.includes('This record is never a confirmed failure and never a confirmed runner-caused failure.'));
@@ -148,7 +148,7 @@ test('T5 INDEX Section 5 draft: all 11 seed ids, status historical observation, 
     if (i < CORPUS.length) assert.ok(line.includes(`corpus item: "${CORPUS[i]}"`), line);
   }
   assert.match(entryLines[10], /UNVERIFIED CANDIDATE/);
-  assert.match(entryLines[10], /membership in the ten UNCONFIRMED/);
+  assert.match(entryLines[10], /membership: eleventh \(C-7 CLOSED\)/);
   assert.deepEqual(unnegated(text, '\\bvalidated\\b'), []);
   const records = IDS.map((id) => ({ file: `${id}.md`, kind: 'seed', record: { seed_id: field(read(`${id}.md`), 'seed_id'), status: field(read(`${id}.md`), 'status') } }));
   const result = checkIndex({ records, index: parsed });

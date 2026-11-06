@@ -15,8 +15,8 @@ are historical evidence, never incident records; they carry no incident
 lifecycle status, no lesson, and never count toward Milestone B. Corpus item
 names for SEED-01 to SEED-10 are quoted from the WP-04 v1.1 seed corpus list
 (spec §2 point 5, retrieval 2026-11-06). SEED-SHA is the truncated-base-SHA
-item (prep §4.7), labeled UNVERIFIED CANDIDATE; its membership in the ten
-corpus items is UNCONFIRMED.
+item (prep §4.7), labeled UNVERIFIED CANDIDATE; its corpus membership is
+eleventh (C-7 CLOSED), per spec §2 point 5 and §17.
 
 ## Section 5: Historical seed observations
 
@@ -30,4 +30,4 @@ corpus items is UNCONFIRMED.
 - `SEED-08` `SEED-08.md` — corpus item: "claim-commit identity cosmetic note" — status: historical observation — NOT VALIDATED — fixed is not validated; no retroactive validation.
 - `SEED-09` `SEED-09.md` — corpus item: "thin event log" — status: historical observation — NOT VALIDATED — fixed is not validated; no retroactive validation.
 - `SEED-10` `SEED-10.md` — corpus item: "test outputs not durably stored" — status: historical observation — NOT VALIDATED — fixed is not validated; no retroactive validation.
-- `SEED-SHA` `SEED-SHA.md` — corpus item: truncated-base-SHA item (prep §4.7), UNVERIFIED CANDIDATE (operator-class error), membership in the ten UNCONFIRMED — status: historical observation — NOT VALIDATED — fixed is not validated; no retroactive validation.
+- `SEED-SHA` `SEED-SHA.md` — corpus item: truncated-base-SHA item (prep §4.7), UNVERIFIED CANDIDATE (operator-class error), membership: eleventh (C-7 CLOSED) — status: historical observation — NOT VALIDATED — fixed is not validated; no retroactive validation.

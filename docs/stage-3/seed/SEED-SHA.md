@@ -7,8 +7,9 @@ is a draft location only; it is not the operational location. Stage 3 task
 T5 draft: not verified, not Founder-approved.
 
 **Label: UNVERIFIED CANDIDATE (operator-class error).** "Candidate" here
-means an unconfirmed seed-corpus item. It is not a detector candidate and not
-a CANDIDATE lesson (spec VOC-7).
+means the alleged event and its classification are unconfirmed; corpus
+membership is not in question (eleventh item, C-7 CLOSED). It is not a
+detector candidate and not a CANDIDATE lesson (spec VOC-7).
 
 | Field | Value |
 |---|---|
@@ -17,7 +18,7 @@ a CANDIDATE lesson (spec VOC-7).
 | status | historical observation |
 | label | UNVERIFIED CANDIDATE (operator-class error) |
 | classification | None. Not classified as an operator-class error, as a runner defect, or as anything else |
-| membership in the ten corpus items | UNCONFIRMED |
+| membership in the ten corpus items | eleventh (C-7 CLOSED) |
 | validation | NOT VALIDATED; not independently validated |
 | incident record | None. A seed record is not an incident record (spec §6.2) and carries no incident lifecycle status |
 | lesson | None |
@@ -32,12 +33,14 @@ This record is never a confirmed failure and never a confirmed runner-caused fai
   reconstruction attributed to WP-04, not a WP-04 quotation (spec §0.2).
 - The item is not one of the ten names in the WP-04 v1.1 seed corpus list as
   retrieved (spec §2 point 5, retrieval 2026-11-06).
-- **Membership: UNCONFIRMED.** The prep's "ten … plus the truncated-base-SHA
-  candidate" wording suggests an eleventh item, but this T5 draft records
-  membership in the ten as UNCONFIRMED, per the T5 task brief. Spec
-  0.5-draft §2 point 5 and §17 instead record conflict C-7 as CLOSED, with
-  this item as an eleventh. This record does not decide C-7; the discrepancy
-  is flagged in the T5 builder report for the coordinator and verifier.
+- **Membership: eleventh (C-7 CLOSED).** Spec §2 point 5 records that none
+  of the ten is the truncated-base-SHA item, which is therefore an eleventh
+  item, confirming the prep's "ten … plus the truncated-base-SHA candidate"
+  wording; spec §17 records C-7 as CLOSED on that basis. This record follows
+  the spec and does not itself decide C-7.
+- History (stale brief wording, not this record's position): the T5 task
+  brief said membership in the ten was UNCONFIRMED, quoting pre-resolution
+  gap text; corrected in T5 fix round 1 (F-T5-1).
 - [BASE]: not asserted for this item (see the reconstruction caveat in spec
   §0.2).
 - Date, source record, the affected task or claim, and every detail beyond
@@ -88,8 +91,9 @@ a fix, or a lesson (FXT-2).
 - It does not show an operator-class error, a runner defect, a fix, or a
   lesson. It is not a confirmed failure and not a confirmed runner-caused
   failure.
-- It does not show whether this item is one of the ten corpus items
-  (UNCONFIRMED).
+- Its corpus membership (eleventh item, C-7 CLOSED) comes from spec §2
+  point 5 and §17, not from this record; membership says nothing about
+  whether the alleged event occurred or how it should be classified.
 - It is not an incident record and does not establish one. It may not be the
   sole basis of any incident validation, and it never counts toward
   Milestone B.

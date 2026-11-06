@@ -17,8 +17,10 @@ says and nothing more.
 | Task and project identity | Stage 3, task T5 — Seed records; project Genesis (`garzonandres2004/genesis`) |
 | Builder identity | Claude Code, builder role ("Claude (builder)") |
 | Model/tool version (D6 addition) | Claude Opus 5.5 (`claude-opus-5-5`) via Claude Code. This is the builder's own declaration. The T5 task brief named no model restriction |
-| Starting commit | Work began at `374928e` (branch `stage-3/sie-milestone-a`; T4 fix round 2; PR #36 open, not merged), working tree clean. While T5 was being drafted, the DV-2 builder committed `34a12bc` and `f710b1a` to the same branch in the shared clone. The T5 commit's parent is therefore **`f710b1a`**. T5 touched none of those commits' files |
-| Resulting commit | "Stage 3 T5: seed records for the ten corpus items plus the truncated-base-SHA candidate (AC-T5-1..AC-T5-3)" on `stage-3/sie-milestone-a`. The verifier must take the exact SHA from the branch, not from this report |
+| Starting commit (fix round 1) | `908152d` ("Stage 3 T5 report: correct commit references"), branch `stage-3/sie-milestone-a`, working tree clean, PR #36 open, not merged |
+| Resulting commit (fix round 1) | "Stage 3 T5 fix round 1: SEED-SHA membership eleventh (C-7 CLOSED) per spec §2 pt 5 / §17 (F-T5-1)", parent `908152d`. The verifier must take the exact SHA from the branch, not from this report |
+| Starting commit (original T5) | Work began at `374928e` (branch `stage-3/sie-milestone-a`; T4 fix round 2; PR #36 open, not merged), working tree clean. While T5 was being drafted, the DV-2 builder committed `34a12bc` and `f710b1a` to the same branch in the shared clone. The T5 commit's parent is therefore **`f710b1a`**. T5 touched none of those commits' files |
+| Resulting commit (original T5) | "Stage 3 T5: seed records for the ten corpus items plus the truncated-base-SHA candidate (AC-T5-1..AC-T5-3)" on `stage-3/sie-milestone-a`. The verifier must take the exact SHA from the branch, not from this report |
 | Risk class | **Routine** (Brief §9 T5) |
 | Authorization reference | Founder approval of the Stage 3 Execution Brief §11 boundary, 2026-11-06 ~09:40 MST (coordinator record); Founder Amendment 2026-11-06 ~10:39 MST |
 | Specification | `docs/stage-3/00-sie-specification.md`, read at head (version 0.5-draft): §2 point 5, §3, §6.2, §11 LOC-1–LOC-4, §12 Section 5, §13 FXT-1/FXT-2 and the F-SHA row, §14.2 N-HIST |
@@ -28,7 +30,8 @@ says and nothing more.
 Brief §9 T5 only: one draft seed record per WP-04 v1.1 corpus item (10), a
 draft record for the truncated-base-SHA item as an UNVERIFIED CANDIDATE
 (the eleventh), a draft of INDEX Section 5, one small AC check test, and
-this report. This is a document task. No existing file was changed.
+this report. This is a document task. The original T5 commit changed no
+existing file; fix round 1 modifies four of the T5 files (see "Fix round 1").
 
 ## What was drafted
 
@@ -48,7 +51,7 @@ operational location is decided with F-14.
 | `SEED-08.md` | SEED-08 | "claim-commit identity cosmetic note" |
 | `SEED-09.md` | SEED-09 | "thin event log" |
 | `SEED-10.md` | SEED-10 | "test outputs not durably stored" |
-| `SEED-SHA.md` | SEED-SHA | truncated-base-SHA item (prep §4.7), UNVERIFIED CANDIDATE (operator-class error); membership in the ten UNCONFIRMED |
+| `SEED-SHA.md` | SEED-SHA | truncated-base-SHA item (prep §4.7), UNVERIFIED CANDIDATE (operator-class error); membership: eleventh (C-7 CLOSED) |
 | `INDEX-section-5-DRAFT.md` | — | Section 5 only (spec §12), 11 entries |
 
 **Record shape (every seed record).** A field table: `seed_id`,
@@ -110,7 +113,7 @@ from T4's `scripts/sie-schema.mjs`. It writes nothing. 37 tests:
 - AC-T5-3 on SEED-SHA: see below;
 - the INDEX draft: all 11 ids and files in order, no stray entries, Section 5
   only, the status and NOT VALIDATED line on every entry, and the SEED-SHA
-  entry labeled UNVERIFIED CANDIDATE with membership UNCONFIRMED. It is
+  entry labeled UNVERIFIED CANDIDATE with membership eleventh (C-7 CLOSED). It is
   consistent under T4's `checkIndex` (no problems), with the 11 records as
   `kind: 'seed'`;
 - a scan-honesty test showing that the negation scan flags affirmative forms
@@ -155,13 +158,23 @@ isolated worktree was needed.
 - `node scripts/status.mjs`: **exit 0**. It prints "Genesis tasks: 15 total"
   (blocked 1, completed 14), unchanged.
 
+Fix round 1 re-run (uncommitted fix tree on top of `908152d`, just before
+committing), same counts:
+
+- `node --test scripts/sie-seed.test.mjs`: **37 tests, 37 pass, 0 fail,
+  0 skipped.**
+- `npm test`: **233 tests, 232 pass, 0 fail, 1 skipped** (the pre-existing
+  skip).
+- `node scripts/status.mjs`: **exit 0**; "Genesis tasks: 15 total" (blocked
+  1, completed 14), unchanged.
+
 ## Per-AC evidence (claims — the verifier decides)
 
 | AC | Builder claim | Check run and result |
 |---|---|---|
 | AC-T5-1 | **Met.** No seed record carries status `validated`. All 11 have `status` = `historical observation`. Every "independently validated" sits inside "not independently validated" | (1) Grep `status[^a-z]*[|:=]\s*`?validated` (case-insensitive) over `docs/stage-3/seed/`: **0 matches**. (2) Grep `.{0,12}independently validated` (case-insensitive, only-matching): **11 matches, one per record, each `…IDATED; not independently validated`** (the `validation` row). (3) Test: every `\bvalidated\b` outside the WP-04 quotation is immediately negated, in all 11 records and in the INDEX draft; `status` row equals `historical observation`; `validation` row equals `NOT VALIDATED; not independently validated` |
 | AC-T5-2 | **Met.** All 11 records carry the identical canonical sentence "Already-merged fixes are fixed, not validated; no retroactive validation is claimed." Each also states that whether a fix exists or was merged is not in the retrieved text. The INDEX draft carries the spec §12 line on every entry | Grep, fixed string, over `docs/stage-3/seed/`: **11 files, 1 occurrence each**. The per-record AC-T5-2 test (×11) |
-| AC-T5-3 | **Met.** SEED-SHA is labeled UNVERIFIED CANDIDATE (operator-class error) in its title, header, `label` row, and INDEX entry. Its membership in the ten is recorded as UNCONFIRMED. It states: "The operator-class-error hypothesis is separate from a runner-defect hypothesis." and "Independent evidence is required before any classification." `classification` is "None". Any fixture is described as SYNTHETIC-fixture-only and kept separate. The only F-SHA description cited is the spec §13 row; no F-SHA fixture file exists, and none is claimed. It is never presented as a confirmed runner-caused failure | Grep `runner-caused\|confirmed failure` in SEED-SHA: **2 lines**, "This record is never a confirmed failure and never a confirmed runner-caused failure." (l. 26) and "It is not a confirmed failure and not a confirmed runner-caused failure." (l. 89–90). Both are negations. Test: every occurrence of those phrases is negated; there is no `is/was/are/were (a) (confirmed) runner-caused failure/runner defect/operator-class error`; every "classified as" is preceded by "not". Glob `scripts/**/*SHA*`: no files |
+| AC-T5-3 | **Met.** SEED-SHA is labeled UNVERIFIED CANDIDATE (operator-class error) in its title, header, `label` row, and INDEX entry. Its membership is recorded as eleventh (C-7 CLOSED), per spec §2 point 5 and §17. It states: "The operator-class-error hypothesis is separate from a runner-defect hypothesis." and "Independent evidence is required before any classification." `classification` is "None". Any fixture is described as SYNTHETIC-fixture-only and kept separate. The only F-SHA description cited is the spec §13 row; no F-SHA fixture file exists, and none is claimed. It is never presented as a confirmed runner-caused failure | Grep `runner-caused\|confirmed failure` in SEED-SHA: **2 lines**, "This record is never a confirmed failure and never a confirmed runner-caused failure." (l. 27 after fix round 1) and "It is not a confirmed failure and not a confirmed runner-caused failure." (l. 92–93 after fix round 1). Both are negations. Test: every occurrence of those phrases is negated; there is no `is/was/are/were (a) (confirmed) runner-caused failure/runner defect/operator-class error`; every "classified as" is preceded by "not". Glob `scripts/**/*SHA*`: no files |
 
 Exit criterion (brief §9 T5): seed records exist for all ten corpus items
 plus the truncated-base-SHA candidate, and the INDEX Section 5 draft is
@@ -174,16 +187,15 @@ complete (11 entries). **Claimed met, as drafts.**
    (`records/projects/genesis/sie/seed/`) was **not** created. No path is
    presented as operational. No full INDEX.md was written. When F-14 is
    decided, the records move or are reconciled.
-2. **Truncated-base-SHA membership: UNCONFIRMED (per the T5 brief) — and a
-   DISCREPANCY to reconcile.** Spec 0.5-draft §2 point 5, §17 C-7, and §18
-   T5 row say C-7 is **CLOSED**: the quoted list has exactly 10 items, none
-   of them the SHA item, so the SHA item is an eleventh. The T5 brief
-   instead says the retrieval does not confirm membership, and records it as
-   UNCONFIRMED. The builder followed the T5 brief: SEED-SHA is drafted as a
-   separate eleventh record, with membership UNCONFIRMED. SEED-SHA's
-   provenance section names the discrepancy. **The builder did not decide
-   C-7 and did not edit the spec.** For the coordinator and verifier to
-   reconcile.
+2. **Truncated-base-SHA membership — RESOLVED discrepancy (fix round 1,
+   F-T5-1).** Spec 0.5-draft §2 point 5, §17 C-7, and §18 T5 row record C-7
+   as **CLOSED**: the quoted list has exactly 10 items, none of them the SHA
+   item, so the SHA item is an eleventh. SEED-SHA, the INDEX draft, and the
+   test now record membership as **eleventh (C-7 CLOSED)**. History (stale
+   brief wording): the original T5 brief said membership was UNCONFIRMED,
+   quoting T0-era gap text; the original T5 commit followed it. Codex
+   round 1 adjudicated the spec as right and the brief as stale. The spec
+   was not edited.
 3. **Corpus detail beyond the quoted names is unknown.** No dates, sources,
    narratives, or fix references are in the retrieved text, and none were
    added. **Observation, not used:** `node scripts/status.mjs` lists task
@@ -217,8 +229,10 @@ complete (11 entries). **Claimed met, as drafts.**
 - **Passing the T5 test proves only that the draft files carry the required
   labels and statements and lack the forbidden affirmative forms.** It
   verifies no corpus item.
-- **No open finding or decision taken:** F-14 (location), C-7 (see open item
-  2), F-36, F-10, F-16, F-21, F-34, DV-3/C-16, DV-7, DV-8, the DV-9
+- **C-7 is not decided here.** The spec already closed C-7 (§2 point 5,
+  §17). Fix round 1 only aligns the T5 records with that closure; it does
+  not itself decide C-7.
+- **No open finding or decision taken:** F-14 (location), F-36, F-10, F-16, F-21, F-34, DV-3/C-16, DV-7, DV-8, the DV-9
   threshold, R4-events (no event key invented), H5/SIE-02 (watch
   computations stay PROVISIONAL; T5 adds none), SIE-04, and the D2
   operational model are all unchanged.
@@ -230,9 +244,12 @@ complete (11 entries). **Claimed met, as drafts.**
 
 - **T5 only.** New files only: 11 seed records + the INDEX Section 5 draft
   under `docs/stage-3/seed/`, `scripts/sie-seed.test.mjs`, and this report.
-  No existing file was modified. That includes the Specification,
+  The original T5 commit modified no existing file. **Fix round 1 modifies
+  4 existing files** (all T5's own): `docs/stage-3/seed/SEED-SHA.md`,
+  `docs/stage-3/seed/INDEX-section-5-DRAFT.md`, `scripts/sie-seed.test.mjs`,
+  and this report. Neither round touched the Specification,
   `scripts/sie-incident.mjs` and its test, `scripts/sie-schema.mjs`, the
-  fixtures, `tasks/`, `events.jsonl`, CI, and the Runner scripts.
+  fixtures, `tasks/`, `events.jsonl`, CI, or the Runner scripts.
 - **Concurrency.** `git status` at start was clean. Before commit it showed
   only the T5 files. No other builder's files were staged, stashed, or
   touched. The DV-2 builder's commits `34a12bc` and `f710b1a` landed on the
@@ -256,8 +273,9 @@ complete (11 entries). **Claimed met, as drafts.**
 
 ## Deviations and escalations
 
-- **No deviation from the brief.** The C-7 discrepancy (open item 2) is
-  flagged, not resolved.
+- **No deviation from the brief.** The C-7 discrepancy (open item 2) was
+  flagged in the original round and is resolved in fix round 1 by aligning
+  the records with the spec.
 - **Permission prompts.** These were refused: a `cd && git …` line, a
   `wc` on the brief outside the repo, a shell heredoc that wrote a
   generator script, and a compound grep line. Each was replaced by a single
@@ -276,8 +294,9 @@ met on the draft files. The builder does not assign a verification outcome.
    `34a12bc` and `f710b1a`. The T5 range should list only the 12 files
    under `docs/stage-3/seed/`, `scripts/sie-seed.test.mjs`, and
    `docs/stage-3/T5-builder-report.md`. `git diff --diff-filter=D
-   f710b1a..<head>` should be empty. The only modification after the first
-   T5 commit is to this report (commit-reference correction).
+   f710b1a..<head>` should be empty. After the first T5 commit, `908152d`
+   modified only this report (commit-reference correction), and fix round 1
+   modified only the four files listed in "Fix round 1".
 2. Re-run at that commit: `node --test scripts/sie-seed.test.mjs` (expect
    37/37); `npm test` (expect 0 fail, 1 pre-existing skip); and
    `node scripts/status.mjs` (exit 0).
@@ -288,10 +307,50 @@ met on the draft files. The builder does not assign a verification outcome.
 5. Mutation spot-check, suggested: put `| status | validated |` in a record,
    or append an affirmative "is a confirmed runner-caused failure" line to
    SEED-SHA. Confirm the test fails.
-6. Reconcile open item 2 (C-7 vs. the T5 brief). Judge open item 3 (whether
+6. Verify the F-T5-1 fix: `git diff --stat 908152d..<head>` lists only the
+   four fix-round-1 files; the SEED-SHA membership field and INDEX entry
+   read "eleventh (C-7 CLOSED)"; no UNCONFIRMED membership claim remains
+   except the labeled stale-brief history; UNVERIFIED CANDIDATE is intact;
+   the spec is unchanged. Judge open item 3 (whether
    task-record sources should ever be attached; SIE-04).
 7. Record source hashes, an independence declaration (Stage 2 spec 05
    VI-9), and skipped checks separately from passed ones.
+
+## Fix round 1
+
+Codex round-1 verdict on `ecd4b23` + `908152d`: NEEDS FIXES, one finding.
+
+**F-T5-1 (MAJOR) — C-7 membership contradicted the spec.** Spec §2 point 5
+and §17 close C-7 with the SHA item as an eleventh; the T5 records said
+UNCONFIRMED, following a stale brief. Fixed:
+
+- `docs/stage-3/seed/SEED-SHA.md`: membership field now
+  `eleventh (C-7 CLOSED)`; the provenance paragraph states eleventh per spec
+  §2 point 5 / §17, with one labeled line recording the stale brief wording
+  as history; the "What it does not show" membership bullet no longer
+  presents membership as unshown; the intro "Candidate" sentence now places
+  the uncertainty on the alleged event and its classification, not on
+  membership. UNVERIFIED CANDIDATE, classification (None), status,
+  validation, hypotheses, fixture section, and the WP-04 quotation are
+  unchanged.
+- `docs/stage-3/seed/INDEX-section-5-DRAFT.md`: the introductory statement
+  and the SEED-SHA entry now read eleventh (C-7 CLOSED).
+- `scripts/sie-seed.test.mjs`: two assertions replaced, nothing else:
+  1. SEED-SHA AC-T5-3 test: `field(text, 'membership in the ten corpus
+     items')` now equals `'eleventh (C-7 CLOSED)'` (was `'UNCONFIRMED'`);
+  2. INDEX test: `entryLines[10]` now matches
+     `/membership: eleventh \(C-7 CLOSED\)/` (was
+     `/membership in the ten UNCONFIRMED/`).
+- `docs/stage-3/T5-builder-report.md` (this file): membership claims, test
+  description, AC-T5-3 evidence (including shifted SEED-SHA line numbers),
+  open item 2, "What is NOT claimed", Identity, Tests and results,
+  scope compliance, verification step 6, and this section.
+
+Results this round: T5 suite 37/37 pass, 0 fail, 0 skipped; `npm test` 233
+tests, 232 pass, 0 fail, 1 skipped (pre-existing); `node scripts/status.mjs`
+exit 0. AC-T5-1 to AC-T5-3 still hold. The spec was not edited; F-14,
+R4-events, DV-3/C-16, DV-7, DV-8, the DV-9 threshold, and every other open
+item are unchanged.
 
 ## Evidence-to-acceptance mapping
 
