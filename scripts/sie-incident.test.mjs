@@ -13,7 +13,7 @@ import {
   EVENT_NOT_EVALUATED, IncidentRefusal, createIncident, validateRecord, transition, recordFurtherRecurrence,
   deeperReviewStatus, annotateCorrectedVerdict, promoteHypothesisToConclusion, recordValidationEvidence,
   evaluateRecurrence, evaluateRecordRecurrence, watchWindow, watchEnd, exposureInWindow, watchOutcome,
-  extendByFullWindow, checkValidationEligibility,
+  extendByFullWindow, checkValidationEligibility, checkWatchConsistency,
 } from './sie-incident.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -262,6 +262,94 @@ test('AC-T2-2: DV-6 conjunctive — end reached and evidence present are both re
   // watchOutcome: evidence mid-window never closes the watch early.
   const ex = exposureInWindow(midWatch(), [opItem(3)]);
   assert.equal(watchOutcome(midWatch(), ex, 0, true).outcome, 'continue-watch');
+});
+
+// F-T2-1 (fix round 1): the supplied watch must be the record's recorded
+// watch_window (W-C, start FP, record creation RC, RULE) or a WAT-5 extension of it.
+const assertWindowRefused = (watch, field) => {
+  const rec = withEvidence(watchRec());
+  const check = checkValidationEligibility(rec, watch, { sufficiency_judgment: JUDGMENT });
+  assert.equal(check.eligible, false);
+  assert.equal(check.watch_consistency.consistent, false);
+  const a = check.elements.a_window_end_reached;
+  assert.equal(a.satisfied, false, field);
+  assert.match(a.reason, /inconsistent with the recorded watch_window/);
+  assert.ok(a.mismatches.some((m) => m.startsWith(field)), `${field}: ${a.mismatches.join('; ')}`);
+  // no exposure is filtered through a mismatched watch
+  assert.equal(check.elements.b_operational_exposure_in_window.satisfied, false);
+  assert.match(check.elements.b_operational_exposure_in_window.reason, /not assessed/);
+  assert.throws(() => transition(rec, 'VALIDATED', { reason: 'S', evidence: 'S', date: at(FP, 40), watch, sufficiency_judgment: JUDGMENT }),
+    (e) => e.code === 'NOT_ELIGIBLE' && e.details.failing.includes('a_window_end_reached') && e.message.includes(`a_window_end_reached: supplied watch computation is inconsistent`) && e.message.includes(field));
+};
+
+test('AC-T2-2 / F-T2-1: a watch for a different window (different start/end) does not satisfy the end condition', () => {
+  // Same reading and rule, but a window starting a day earlier (fix presence at FP - 1 day).
+  const other = watchEnd(watchWindow(null, null, at(FP, -1), RC, 'W-C', RULE), [], RULE, at(FP, 30));
+  assert.equal(other.end_condition_reached, true); // reached for ITS window, not the recorded one
+  assertWindowRefused(other, 'start');
+  // A hand-shifted "extension" that does not start at the recorded window's end.
+  const shifted = { ...extendByFullWindow(watchEnd(windowC(), [], RULE, at(FP, 31))), start: at(FP, 25) };
+  assertWindowRefused(watchEnd(shifted, [], RULE, at(FP, 60)), 'start');
+});
+
+test('AC-T2-2 / F-T2-1: a watch under a different reading does not satisfy the end condition (Codex counterexample)', () => {
+  // Recorded: W-C from Jan 12 (ends Feb 11). Supplied: W-A from Jan 1 (ends Jan 31), as of Feb 1.
+  const wa = watchEnd(watchWindow('2026-01-01T00:00:00.000Z', null, null, RC, 'W-A', RULE), [], RULE, '2026-02-01T00:00:00.000Z');
+  assert.equal(wa.end_condition_reached, true);
+  assertWindowRefused(wa, 'reading');
+  // January 15 exposure is not smuggled in through the supplied window.
+  const rec = withEvidence(watchRec(), { exposure_evidence_link: [opItem(3)] });
+  assert.equal(checkValidationEligibility(rec, wa).elements.b_operational_exposure_in_window.satisfied, false);
+});
+
+test('AC-T2-2 / F-T2-1: a watch under a different counting rule does not satisfy the end condition', () => {
+  const rule2 = 'SYNTHETIC alternative counting rule';
+  assertWindowRefused(watchEnd(watchWindow(null, null, FP, RC, 'W-C', rule2), [], rule2, at(FP, 31)), 'counting_rule');
+});
+
+test('AC-T2-2 / F-T2-1: a watch with a different record-creation time does not satisfy the end condition', () => {
+  // Start is still FP (MAX(FP, RC - 1 day)); only the record-creation time differs.
+  const w = watchEnd(watchWindow(null, null, FP, at(RC, -1), 'W-C', RULE), [], RULE, at(FP, 31));
+  assert.equal(w.start, FP);
+  assertWindowRefused(w, 'record_creation_time');
+});
+
+test('AC-T2-2 / F-T2-1: a premature supplied end does not satisfy the end condition', () => {
+  // Mid-window watch relabeled as ended.
+  assertWindowRefused({ ...midWatch(), end_condition_reached: true }, 'end_condition_reached');
+  // End time moved before the recorded window's day limit with no task limit.
+  assertWindowRefused({ ...midWatch(), end_time: at(FP, 9), end_condition_reached: true }, 'end_time');
+  // A task limit claimed without 10 tasks counted.
+  assertWindowRefused({ ...midWatch(), task_limit: at(FP, 9), end_time: at(FP, 9), end_condition_reached: true }, 'task_limit');
+  // The honest mid-window watch is consistent and simply not reached.
+  const honest = checkValidationEligibility(withEvidence(watchRec()), midWatch(), { sufficiency_judgment: JUDGMENT });
+  assert.equal(honest.watch_consistency.consistent, true);
+  assert.match(honest.elements.a_window_end_reached.reason, /window end condition not reached/);
+});
+
+test('AC-T2-2 / F-T2-1: a legitimate full-window extension of the recorded window is consistent; its end is judged on its own merits', () => {
+  const rec = withEvidence(watchRec(), { exposure_evidence_link: [opItem(35)] });
+  assert.deepEqual(checkWatchConsistency(rec, endedWatch()), { consistent: true, mismatches: [] });
+  const second = extendByFullWindow(endedWatch());
+  // Mid second window: consistent, end not reached.
+  const mid2 = checkValidationEligibility(rec, watchEnd(second, [], RULE, at(FP, 45)), { sufficiency_judgment: JUDGMENT });
+  assert.equal(mid2.watch_consistency.consistent, true);
+  assert.equal(mid2.elements.a_window_end_reached.satisfied, false);
+  assert.match(mid2.elements.a_window_end_reached.reason, /window end condition not reached/);
+  // Second window ended: consistent, end reached, in-window exposure counted; only D2 (c3) fails.
+  const end2 = watchEnd(second, [], RULE, at(FP, 61));
+  const ok = checkValidationEligibility(rec, end2, { sufficiency_judgment: JUDGMENT });
+  assert.equal(ok.watch_consistency.consistent, true);
+  assert.equal(ok.elements.a_window_end_reached.satisfied, true);
+  assert.equal(ok.elements.b_operational_exposure_in_window.satisfied, true);
+  assert.deepEqual(ok.failing, ['c3_independent_verification']);
+  // A third window chained from the second is also consistent.
+  const third = watchEnd(extendByFullWindow(end2), [], RULE, at(FP, 91));
+  assert.equal(third.window_number, 3);
+  assert.equal(checkWatchConsistency(rec, third).consistent, true);
+  // An extension whose lineage is stripped is refused.
+  const { prior_windows: _drop, ...stripped } = end2;
+  assert.equal(checkWatchConsistency(rec, stripped).consistent, false);
 });
 
 test('AC-T2-2 / VAL-6: no path reaches VALIDATED on SYNTHETIC input; an in-place upgrade is refused', () => {
@@ -606,6 +694,77 @@ test('Record completeness: a missing required field is refused, naming the field
   assert.equal(check.verdict, null);
   assert.equal(check.incomplete, true);
   refuses(() => transition(incomplete, 'FIXED', { reason: 'S', evidence: 'S', date: RC, fix_reference: 'r', fix_description: 'd' }), /missing required field "provenance"/);
+
+  // F-T2-2 (fix round 1): null, empty, and malformed mandatory VALUES in an
+  // existing record (all 24 keys present) are refused, naming the field.
+  const fixOpts = { reason: 'S', evidence: 'S', date: RC, fix_reference: 'r', fix_description: 'd' };
+  const mutate = (base, change) => { const r = structuredClone(base); change(r); return r; };
+  const cases = [
+    ['incident_id', (r) => { r.incident_id = null; }],
+    ['title', (r) => { r.title = ''; }],
+    ['observed_facts', (r) => { r.observed_facts = []; }],
+    ['observed_facts', (r) => { delete r.observed_facts[0].source_pointer; }],
+    ['observed_facts', (r) => { r.observed_facts[0].source_pointer = ''; }],
+    ['provenance', (r) => { r.provenance = null; }],
+    ['provenance', (r) => { r.provenance = {}; }],
+    ['detector_rule', (r) => { r.detector_rule = null; }],
+    ['detector_rule', (r) => { r.detector_rule = 'R9'; }],
+    ['candidate_record_id', (r) => { r.detector_rule = 'R3'; r.candidate_record_id = ''; }],
+    ['candidate_record_id', (r) => { r.detector_rule = 'R3'; r.candidate_record_id = null; }],
+    ['detector_rule', (r) => { r.detector_rule = { rule: 'manual' }; r.candidate_record_id = null; }],
+    ['record_creation_time', (r) => { r.record_creation_time = null; }],
+    ['record_creation_time', (r) => { r.record_creation_time = 'not-a-date'; }],
+    ['hypotheses', (r) => { r.hypotheses = []; }], // empty without history[0].hypotheses_empty_reason
+    ['hypotheses', (r) => { r.hypotheses[0].author = ''; }],
+  ];
+  for (const [field, change] of cases) {
+    const bad = mutate(openRec(), change);
+    assert.equal(Object.keys(bad).length, 24, field);
+    const v = validateRecord(bad);
+    assert.equal(v.complete, false, field);
+    assert.ok(v.problems.some((p) => p.includes(`"${field}"`)), `${field}: ${v.problems.join('; ')}`);
+    const c = checkValidationEligibility(bad, endedWatch());
+    assert.equal(c.verdict, null, field);
+    assert.equal(c.incomplete, true, field);
+    let result;
+    assert.throws(() => { result = transition(bad, 'FIXED', fixOpts); }, (e) => e.code === 'INCOMPLETE_RECORD' && e.message.includes(`"${field}"`), field);
+    assert.equal(result, undefined, field);
+  }
+  // An empty hypotheses list WITH the creation reason stays complete.
+  const noHyp = createIncident(fields({ hypotheses: [] }), { ...CREATION, hypotheses_empty_reason: 'SYNTHETIC: none yet' });
+  assert.equal(validateRecord(noHyp).complete, true);
+  // Codex counterexample: all six values blanked at once; FIXED is refused, naming each.
+  const codex = mutate(openRec(), (r) => {
+    r.incident_id = null; r.title = ''; r.observed_facts = []; r.provenance = null; r.detector_rule = null; r.record_creation_time = null;
+  });
+  assert.throws(() => transition(codex, 'FIXED', fixOpts), (e) => e.code === 'INCOMPLETE_RECORD'
+    && ['incident_id', 'title', 'observed_facts', 'provenance', 'detector_rule', 'record_creation_time'].every((k) => e.message.includes(`"${k}"`)));
+  // Status-dependent values on a WATCH record: malformed watch_window, watch_start, fix_presence_evidence.
+  const watchCases = [
+    ['watch_window', (r) => { r.watch_window = { started: true, start: FP }; }], // names no reading or counting rule
+    ['watch_window', (r) => { r.watch_window = { ...r.watch_window, start: 'never' }; }],
+    ['watch_window', (r) => { r.watch_window = {}; }],
+    ['watch_start', (r) => { r.watch_start = { reading: 'W-C' }; }],
+    ['fix_presence_evidence', (r) => { r.fix_presence_evidence = { pointer: '' }; }],
+    ['fix_reference', (r) => { r.fix_reference = ''; }],
+  ];
+  for (const [field, change] of watchCases) {
+    const bad = mutate(withEvidence(watchRec()), change);
+    const v = validateRecord(bad);
+    assert.equal(v.complete, false, field);
+    assert.ok(v.problems.some((p) => p.includes(`"${field}"`)), `${field}: ${v.problems.join('; ')}`);
+    assert.equal(checkValidationEligibility(bad, endedWatch(), { sufficiency_judgment: JUDGMENT }).verdict, null, field);
+    let result;
+    assert.throws(() => { result = transition(bad, 'VALIDATED', { reason: 'S', evidence: 'S', date: at(FP, 31), watch: endedWatch(), sufficiency_judgment: JUDGMENT }); },
+      (e) => e.code === 'INCOMPLETE_RECORD' && e.message.includes(`"${field}"`), field);
+    assert.equal(result, undefined, field);
+    refuses(() => annotateCorrectedVerdict(bad, { corrected_verdict_evidence: { pointer: 'p', reason: 'r' }, date: at(FP, 4) }), new RegExp(`"${field}"`));
+    refuses(() => recordValidationEvidence(bad, { regression_test: null }, { reason: 'S', evidence: 'S', date: at(FP, 4) }), new RegExp(`"${field}"`));
+  }
+  // Valid records at every lifecycle stage still pass, including the SYNTHETIC VALIDATED literal.
+  for (const r of [openRec(), fixedRec(), watchRec(), withEvidence(watchRec()), reopen(watchRec(), 'SYNTHETIC-b'), syntheticValidatedLiteral()]) {
+    assert.deepEqual(validateRecord(r), { complete: true, problems: [] }, r.status);
+  }
 });
 
 // ---- Immutability / history ----

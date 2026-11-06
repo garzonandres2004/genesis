@@ -32,7 +32,7 @@ cannot be edited in place.
 
 | Spec item | Export(s) | What it does |
 |---|---|---|
-| §6.2 record model | `RECORD_FIELDS`, `createIncident(fields, creation)`, `validateRecord(record)` | Builds an OPEN record with exactly the 24 §6.2 fields. It sets `recurrence_count` to 0, empty `recurrence_evidence` and `corrected_verdict_evidence`, and `history[0]` (type `created`, reason, opener, date). `independent_verification` starts as `NOT SATISFIED — D2 role pending` (H4). A missing required field is refused with an `IncidentRefusal` (`INCOMPLETE_RECORD`) that names every missing field. Nothing required is defaulted. `validateRecord` checks an existing record: exact field set, valid status, status-dependent required fields, `recurrence_count` = number of recurrence entries, and status matching the last status-changing history entry |
+| §6.2 record model | `RECORD_FIELDS`, `createIncident(fields, creation)`, `validateRecord(record)` | Builds an OPEN record with exactly the 24 §6.2 fields. It sets `recurrence_count` to 0, empty `recurrence_evidence` and `corrected_verdict_evidence`, and `history[0]` (type `created`, reason, opener, date). `independent_verification` starts as `NOT SATISFIED — D2 role pending` (H4). A missing required field is refused with an `IncidentRefusal` (`INCOMPLETE_RECORD`) that names every missing field. Nothing required is defaulted. `validateRecord` checks an existing record: exact field set, valid status, status-dependent required fields, `recurrence_count` = number of recurrence entries, and status matching the last status-changing history entry. **[Amended, fix round 1 (F-T2-2):** as originally built, `validateRecord` checked most mandatory fields for presence only, so an existing record with null/empty mandatory values passed. It now checks mandatory VALUES too; see "Fix round 1" below.**]** |
 | §6.1 INC-1 status machine | `STATES`, `TRANSITIONS`, `transition(record, to, opts)` | Pure: it returns a new frozen record and appends exactly one history entry (reason, evidence pointer, date). Every transition requires `reason`, `evidence` (pointer), and `date`. Each transition accepts only its own option keys. Anything else is refused, for example `validated` or `sufficiency_judgment` on OPEN → FIXED (the FORBIDS clause). OPEN → REOPENED is refused with a CR-03 error. Every other unlisted transition is refused, naming `from -> to` |
 | INC-2 / INC-3 / CR-03 evidence split | `transition` (REOPENED branches), `annotateCorrectedVerdict`, `recordFurtherRecurrence` | Recurrence evidence goes only to `recurrence_evidence` and increments `recurrence_count`. Corrected-verdict evidence goes only to `corrected_verdict_evidence` and never increments the count. On FIXED/WATCH a corrected verdict is an annotation with no status change. VALIDATED → REOPENED accepts only `corrected_verdict_evidence`; `recurrence_evidence` there is refused (INC-3). The new history entry carries `supersedes: { history_seq, status: 'VALIDATED', annotation: 'SUPERSEDED', reason }`, and the earlier VALIDATED entry is left untouched |
 | INC-4 separation | `promoteHypothesisToConclusion` | Adds a NEW conclusion entry citing the reproduction evidence and the hypothesis id. The hypothesis entry keeps its original fields unchanged and gains an `annotations` entry. Without reproduction evidence it is refused |
@@ -100,7 +100,7 @@ cannot be edited in place.
 | DV-3 / **C-16 OPEN** | Not enforced and not defined. `DV3_MARKER` (`meaningful_exposure_wp04_two_user_condition: 'NOT ENFORCED — C-16 OPEN'`) is attached to every `exposureInWindow` result, to element `c4_meaningful_exposure`, to the eligibility result, and to the `eligible-for-validation-judgment` outcome. Element (4) is evaluated under the operative EXP-1/EXP-2 rules only. **No Stage 3 validation may claim to satisfy DV-3 until it is defined and enforced** |
 | DV-4 RESOLVED | Element `c1_reproduced_failure` requires `reproduction_evidence.kind === 'reproduced-failure'` with a pointer. `documented-analysis` is refused with a DV-4 reason |
 | DV-5 RESOLVED | Element `c2_…` requires `before.result === 'fail'` AND `after.result === 'pass'`, both with pointers. Pass-after alone is refused with a DV-5 reason |
-| DV-6 RESOLVED | Eligibility needs (a) end reached AND (b) in-window operational evidence, conjunctively. `watchOutcome` returns `continue-watch` mid-window even with exposure and complete elements |
+| DV-6 RESOLVED | Eligibility needs (a) end reached AND (b) in-window operational evidence, conjunctively. `watchOutcome` returns `continue-watch` mid-window even with exposure and complete elements. **[Amended, fix round 1 (F-T2-1):** as originally built, (a) trusted the supplied watch's `end_condition_reached` without checking that the watch was the incident's recorded window, so the end condition was not bound to the recorded window. It now is; the conjunctive rule itself is unchanged.**]** |
 | DV-7, DV-8 OPEN (C-19, C-20) | Not touched. This report claims no WP-04 VAL-1/VAL-2 Group A/B row and does not treat them as Group C |
 | DV-9 counting RESOLVED; threshold OPEN (C-20) | Counting follows the cross-task definition (`evaluateRecurrence`). The working threshold `recurrence_count >= 2` is **unchanged**. What a "second recurrence" means under cross-task counting is **not resolved** here |
 | R4-events [OPEN] | Event-type occurrences are reported `not_evaluated` with `EVENT_NOT_EVALUATED`. No event key is defined; a test asserts the source contains none |
@@ -140,7 +140,7 @@ validated learning (EVL-7: evidence level Component at most).
 | AC | Builder claim | Evidence the verifier can inspect |
 |---|---|---|
 | AC-T2-1 | **Met (order per brief; C-15 OPEN).** States are exactly the five. The transition table matches §6.1 as corrected by CR-03. REOPENED is reachable from FIXED, WATCH, and VALIDATED only. OPEN → REOPENED is refused, naming CR-03. The other 18 unlisted state pairs (self-transitions included), plus an unknown target from every state, are refused by name. Each transition is refused when its evidence is missing. A backward move without a reason or evidence pointer is refused | `TRANSITIONS`, `transition`. Tests "AC-T2-1: states are exactly…", "…happy path…", "…REOPENED is reachable…", "…OPEN -> REOPENED is refused…", "…every unlisted transition…", "…required evidence is missing", "…backward move…", "…OPEN -> FIXED forbids…", "…FIXED -> WATCH never assumes a start…" |
-| AC-T2-2 | **Met as a refusal mechanism.** WATCH → VALIDATED always calls `checkValidationEligibility`. It refuses on an empty or missing link (`c6`), and before the end condition even when every other element is satisfied (`a`). It also refuses on: empty exposure; zero recurrence alone; a merged PR alone; fixture, synthetic, staged-lesson, merged-PR, or non-operational exposure; DV-5; DV-4; and H4. The DV-6 conjunction is tested in both directions. Because element (3) is NOT SATISFIED while D2 is pending, **no path reaches VALIDATED** (VAL-6) | `checkValidationEligibility`, `exposureInWindow`. The 9 tests prefixed "AC-T2-2" and the "VAL-1: eligibility check names every element…" test |
+| AC-T2-2 | **Met as a refusal mechanism.** WATCH → VALIDATED always calls `checkValidationEligibility`. It refuses on an empty or missing link (`c6`), and before the end condition even when every other element is satisfied (`a`). **[Corrected, fix round 1 (F-T2-1):** as originally built, (`a`) checked the end condition of whatever watch computation was supplied, not of the incident's recorded window, so this claim was incomplete. Now (`a`) is satisfied only by a watch consistent with the recorded `watch_window` (the recorded window itself, or a WAT-5 extension chain of it) whose own end arithmetic is consistent and whose end is reached; see "Fix round 1".**]** It also refuses on: empty exposure; zero recurrence alone; a merged PR alone; fixture, synthetic, staged-lesson, merged-PR, or non-operational exposure; DV-5; DV-4; and H4. The DV-6 conjunction is tested in both directions. Because element (3) is NOT SATISFIED while D2 is pending, **no path reaches VALIDATED** (VAL-6) | `checkValidationEligibility`, `exposureInWindow`. The 9 tests prefixed "AC-T2-2" and the "VAL-1: eligibility check names every element…" test |
 | AC-T2-3 | **Met.** The two evidence types sit in separate fields. Corrected-verdict evidence never increments `recurrence_count`. On FIXED/WATCH it is an annotation with no status change, and passing it to a REOPENED transition is refused. VALIDATED → REOPENED on recurrence evidence is refused (INC-3). On corrected-verdict evidence it succeeds, the prior VALIDATED entry is kept unchanged, and it is annotated SUPERSEDED in the new entry | `transition`, `annotateCorrectedVerdict`. The four tests prefixed "AC-T2-3" |
 | AC-T2-4 | **Met; every computation is PROVISIONAL.** Every result from all five watch functions, across all three readings and the not-started case, names the reading and counting rule and is labeled PROVISIONAL. None contains "final". The source has no `provisional: false` and no `'FINAL'`. The W-C boundary cases (a) and (b), the missing-start messages, MIN(day, 10th task) in all three regimes, the exposure filter, the §7.1 outcome order, and WAT-5 extension are all tested | The eight tests prefixed "AC-T2-4" |
 | AC-T2-5 | **Met as a mechanism; the procedure stays OPEN (SIE-07); the threshold's meaning stays OPEN (DV-9).** `recurrence_count >= 2` produces the `mandatory-deeper-review` outcome and the record's history-entry marker. Count 1 does not trigger it. The marker has exactly the keys `mandatory_deeper_review`, `rule`, `threshold`, `procedure` ("OPEN — SIE-07"), and `effect`. It has no conductor, steps, or outcome | `DEEPER_REVIEW_MARKER`, `addRecurrence`, `deeperReviewStatus`, `recordFurtherRecurrence`. The two AC-T2-5 tests and the `recordFurtherRecurrence` test |
@@ -333,3 +333,233 @@ The builder does not assign a verification outcome.
   H5 and SIE-02.
 - **No resolution** of the DV-9 second-recurrence threshold, SIE-07, DV-7,
   or DV-8.
+
+---
+
+## Fix round 1 — Codex round-1 verdict NEEDS FIXES (F-T2-1, F-T2-2)
+
+**Still a claim to be checked, not evidence.** This section amends the
+report above; the original content is kept, with inline "[Amended]" /
+"[Corrected]" notes where a claim changed.
+
+| Field | Value |
+|---|---|
+| Starting commit | `1117813` (branch `stage-3/sie-milestone-a`; PR #36 open, not merged) |
+| Resulting commit | The commit titled "Stage 3 T2 fix round 1: bind watch eligibility to recorded window; enforce existing-record completeness (F-T2-1, F-T2-2)". The verifier must take the exact SHA from the branch head |
+| Builder | Claude Code, builder role ("Claude (builder)"), Claude Opus 5.5 (self-declared) |
+| Files changed | `scripts/sie-incident.mjs` (844 → 1034 lines), `scripts/sie-incident.test.mjs` (648 → 807 lines), this report. No other file |
+
+### F-T2-1 — watch eligibility bound to the recorded window
+
+**What changed.**
+
+- New exported helper `checkWatchConsistency(record, watch)` returns
+  `{ consistent, mismatches }`. Each mismatch names the field that differs.
+- `checkValidationEligibility` runs it first. It runs before element (a) is
+  assessed and before `exposureInWindow` filters anything through the
+  supplied watch.
+  - If the watch is inconsistent, element `a_window_end_reached` is
+    `satisfied: false`. Its reason reads "supplied watch computation is
+    inconsistent with the recorded watch_window; end condition not assessed
+    (F-T2-1)" and lists the mismatching fields, which are also returned in
+    `mismatches`.
+  - No exposure is counted in that case. Elements (b) and (c4) report "not
+    assessed", and `eligible` is `false`.
+  - The result now also carries `watch_consistency`.
+- `transition(…, 'VALIDATED')` is unchanged in structure. It still refuses
+  through the existing `NOT_ELIGIBLE` path, naming
+  `a_window_end_reached: supplied watch computation is inconsistent …`.
+- `extendByFullWindow` now records the chain's lineage in `prior_windows`:
+  every earlier window as `{ window_number, start, end_time }`, in ascending
+  order. `watchEnd` carries `prior_windows` and `extends_window_starting`
+  through for an extension window. Both additions are additive fields. No
+  existing field changed.
+
+**Consistency relationship adopted.** This is stated in the module comment
+above `checkWatchConsistency`. A supplied watch is consistent with
+`record.watch_window` only if ALL of the following hold:
+
+1. It has the same reading, the same counting rule, the same
+   `record_creation_time`, and the same `started` flag as the recorded
+   window.
+2. It is EITHER:
+   - the recorded window itself, with the same `window_number` and the same
+     `start`; OR
+   - a chain of WAT-5 full-window extensions of it, as produced by
+     `extendByFullWindow`. That means a higher `window_number`, and a
+     `prior_windows` list that:
+     - lists every earlier window from the recorded one, with consecutive
+       window numbers;
+     - starts its first entry at the recorded `start`;
+     - starts each later entry at the previous entry's `end_time`;
+     - has each `end_time` after its own start and no later than that start
+       + 30 days;
+     - ends at an `end_time` equal to the supplied `start`.
+3. Its own end is internally consistent with the `watchEnd` arithmetic
+   (WAT-1):
+   - `day_limit` = start + 30 days;
+   - `end_time` = MIN(`day_limit`, `task_limit`), or `day_limit` when there
+     is no `task_limit`;
+   - a `task_limit` appears only when ≥ 10 tasks were counted;
+   - `end_condition_reached` is true exactly when `as_of` ≥ `end_time`;
+   - a not-started watch never has `end_condition_reached` true.
+
+Anything else is inconsistent and refused.
+
+- **Known limit:** the 10th-task instant comes from the caller's task
+  sequence (SIE-02 OPEN). The module cannot re-derive it, so each window's
+  end is checked only against its 30-day bound.
+- **Unchanged:** the DV-6 conjunctive rule (end reached AND in-window
+  validated evidence present) is unchanged, and D2/H4 still keeps element
+  (c3) NOT SATISFIED. No path reaches VALIDATED (VAL-6).
+
+### F-T2-2 — existing-record completeness checks values
+
+**What changed.** `validateRecord` now checks mandatory VALUES, mirroring
+`createIncident`, for existing records at any status. A value check runs
+only when the key is present. A missing key is still named as before.
+
+- **Null or empty values** are named `missing required field "<field>" (null or empty value)`.
+- **Malformed values** are named `malformed required field "<field>": <why>`.
+
+The checks:
+
+- `incident_id`, `title`: non-empty strings.
+- `record_creation_time`: a valid date.
+- `provenance`: a non-empty object.
+- `observed_facts`: a non-empty list. Each entry needs a non-empty `fact`
+  and a non-empty `source_pointer`.
+- `hypotheses`: each entry needs `id`, `text`, `author`, and `date`. An empty
+  list is complete only if `history[0].hypotheses_empty_reason` is
+  non-empty.
+- `detector_rule` must take one of two forms:
+  - R1–R6, with a non-empty `candidate_record_id`. Otherwise the refusal
+    names `candidate_record_id`.
+  - `{ rule: 'manual', reason }`, with a non-empty `reason`.
+
+  Null or empty is named as missing. Any other value is named as malformed
+  `detector_rule`.
+- For FIXED, WATCH, VALIDATED, and REOPENED: `fix_reference` and
+  `fix_description` must be non-empty strings. This check already existed.
+- For WATCH and VALIDATED:
+  - `fix_presence_evidence` must be a pointer object;
+  - `watch_start` must name its reading and counting rule, with `started`
+    and a valid time (or time null when not started);
+  - `watch_window` must name its reading and counting rule, with `started`
+    and a valid start (or a not-started message).
+- The existing checks are kept: list-typed fields, the `recurrence_count`
+  equality, and history and status agreement.
+
+Not required before their step: `exposure_evidence_link`,
+`regression_test`, `reproduction_evidence`, `sufficiency_judgment`, the fix
+fields on OPEN, and the watch fields on OPEN/FIXED/REOPENED.
+
+There is no parallel completeness path. These public functions call
+`requireComplete` → `validateRecord`, and so refuse with
+`INCOMPLETE_RECORD`, naming the field(s), with no transition or record
+produced:
+
+- `transition`
+- `recordFurtherRecurrence`
+- `annotateCorrectedVerdict`
+- `promoteHypothesisToConclusion`
+- `recordValidationEvidence`
+
+`checkValidationEligibility` calls `validateRecord` directly and returns
+`verdict: null, incomplete: true`. The read-only helpers
+`deeperReviewStatus` and `evaluateRecordRecurrence` do not call it, as
+before. They produce no verdict on the record's validity.
+
+**SYNTHETIC VALIDATED literal.** It was checked against the tightened
+rules. It is complete as written (a new assertion checks this), so it was
+**not** changed.
+
+### Tests (fix round 1)
+
+**Added (6 tests),** placed after "AC-T2-2: DV-6 conjunctive — …":
+
+- "AC-T2-2 / F-T2-1: a watch for a different window (different start/end) does not satisfy the end condition"
+- "AC-T2-2 / F-T2-1: a watch under a different reading does not satisfy the end condition (Codex counterexample)"
+- "AC-T2-2 / F-T2-1: a watch under a different counting rule does not satisfy the end condition"
+- "AC-T2-2 / F-T2-1: a watch with a different record-creation time does not satisfy the end condition"
+- "AC-T2-2 / F-T2-1: a premature supplied end does not satisfy the end condition"
+- "AC-T2-2 / F-T2-1: a legitimate full-window extension of the recorded window is consistent; its end is judged on its own merits" (positive test: windows 2 and 3 are accepted; an extension with its lineage stripped is refused)
+
+**Updated (1 test, extended, no existing assertion changed):** "Record
+completeness: a missing required field is refused, naming the field; no
+verdict is produced". It now covers:
+
+- `incident_id = null` and `title = ''`;
+- `observed_facts = []`, and an `observed_facts` entry with a missing or
+  empty `source_pointer`;
+- `provenance = null` and `provenance = {}`;
+- `detector_rule = null` and `detector_rule = 'R9'`;
+- `detector_rule = 'R3'` with `candidate_record_id` empty or null;
+- `{ rule: 'manual' }` with no reason;
+- `record_creation_time` null or invalid;
+- an empty `hypotheses` list with no reason, and a hypothesis with an empty
+  author;
+- the Codex six-field counterexample (`transition(…, 'FIXED')` is now
+  refused, naming all six fields);
+- on a WATCH record: a malformed `watch_window` (three forms), a malformed
+  `watch_start`, `fix_presence_evidence`, and `fix_reference`.
+
+Each case asserts the following:
+
+- the refusal names the field;
+- the eligibility check returns `verdict: null`;
+- the transition throws `INCOMPLETE_RECORD` and returns no result;
+- for WATCH cases, `annotateCorrectedVerdict` and `recordValidationEvidence`
+  also refuse.
+
+It also checks that valid records at every stage still pass, including the
+SYNTHETIC VALIDATED literal.
+
+**No existing test was changed** to accommodate the fix. All 46 original T2
+tests passed unchanged against the fixed module before the new coverage
+was added.
+
+**Builder-observed results:**
+
+- `node --test scripts/sie-incident.test.mjs`: **52 tests, 52 pass, 0 fail,
+  0 skipped**.
+- `npm test`: **165 tests, 164 pass, 0 fail, 1 skipped** (the pre-existing
+  skip; 113 existing + 52 T2).
+- `node scripts/status.mjs`: exit 0, "Genesis tasks: 15 total" (blocked 1,
+  completed 14), unchanged.
+
+### Per-AC evidence (updated)
+
+| AC | Change in fix round 1 |
+|---|---|
+| AC-T2-1 | Unchanged. `transition` additionally refuses incomplete existing records by value (F-T2-2) |
+| AC-T2-2 | Element (a) is now bound to the recorded `watch_window` (F-T2-1). Evidence: `checkWatchConsistency`, `checkValidationEligibility`, the `WATCH>VALIDATED` branch, and the 6 added "AC-T2-2 / F-T2-1" tests, plus the original 9 "AC-T2-2" tests |
+| AC-T2-3 | Unchanged |
+| AC-T2-4 | Unchanged, apart from additive lineage fields (`prior_windows`, and `extends_window_starting` carried through `watchEnd`). Every computation is still PROVISIONAL, and the "every watch computation…" test still passes |
+| AC-T2-5 | Unchanged |
+
+### Open items (updated)
+
+- Open items 1–13 above stand.
+- **Item 8 (FIXED → WATCH requires a window)** is now also the anchor for
+  F-T2-1: the recorded window is the only reference eligibility accepts.
+- **New item 14: the consistency relationship is a builder design,** adopted
+  to fix F-T2-1 and open to review. It covers the recorded window and
+  `extendByFullWindow` chains only.
+  - It cannot re-verify a 10th-task end, because the task sequence is caller
+    data under SIE-02 (OPEN).
+  - A hand-built object that copies the lineage fields exactly would pass.
+    The check guards against inconsistent computations, not against
+    forgery. Like the rest of the module, it does no I/O.
+  - `record.watch_window` is not rewritten when a window is extended. The
+    extension is carried by the supplied watch's lineage.
+- **No open finding was decided:** DV-2/C-15, DV-3/C-16, DV-9 threshold,
+  R4-events, H5/SIE-02, D2, and the six confirmed silent-spec decisions are
+  all unchanged.
+
+### Scope compliance (fix round 1)
+
+- Only the three files above were touched.
+- No merge, no PR opened/closed/commented, and no deploy, spending,
+  secrets, Runner change, or source-record change.
+- No network calls apart from the instructed `git push`.

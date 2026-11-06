@@ -135,6 +135,7 @@ function toMs(v) {
 }
 
 const iso = (ms) => new Date(ms).toISOString();
+const shown = (v) => (v === undefined ? 'absent' : JSON.stringify(v));
 
 function deepFreeze(v) {
   if (v !== null && typeof v === 'object' && !Object.isFrozen(v)) {
@@ -271,15 +272,71 @@ export function createIncident(fields, creation = {}) {
   return deepFreeze(record);
 }
 
-// Structural completeness of an existing record. Incomplete records get no
+const isEmptyValue = (v) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '')
+  || (Array.isArray(v) && v.length === 0) || (isPlainObject(v) && Object.keys(v).length === 0);
+
+// A recorded watch window (a watchWindow() / extendByFullWindow() result):
+// names its reading and counting rule (WAT-4) and states whether it started.
+function isValidWindow(w) {
+  if (!isPlainObject(w) || !READINGS.includes(w.reading) || !isNonEmptyString(w.counting_rule) || typeof w.started !== 'boolean') return false;
+  return w.started ? toMs(w.start) !== null : isNonEmptyString(w.message);
+}
+
+// A recorded watch_start (as set by FIXED -> WATCH): a started start has a
+// valid time; a not-started one has time null (WAT-2: never assumed).
+function isValidWatchStart(s) {
+  if (!isPlainObject(s) || !READINGS.includes(s.reading) || !isNonEmptyString(s.counting_rule) || typeof s.started !== 'boolean') return false;
+  return s.started ? toMs(s.time) !== null : s.time === null;
+}
+
+// Completeness of an existing record, at any status. Incomplete records get no
 // verdict. Also refuses a status that does not match the append-only history
 // (a record "upgraded in place", VAL-3 / INC-5).
+// Fix round 1 (F-T2-2): mandatory fields are checked as VALUES, not only as
+// keys, mirroring createIncident's checks. Null, empty-string, empty-list, and
+// malformed mandatory values are refused, naming the field. Fields that are
+// legitimately null until their step sets them are not required before it.
 export function validateRecord(record) {
   const problems = [];
   if (!isPlainObject(record)) return { complete: false, problems: ['record is not an object'] };
   const keys = Object.keys(record);
   for (const k of RECORD_FIELDS) if (!keys.includes(k)) problems.push(`missing required field "${k}"`);
   for (const k of keys) if (!RECORD_FIELDS.includes(k)) problems.push(`unknown field "${k}" (§6.2 fields only)`);
+  // Value checks run only for keys that are present (an absent key is named above).
+  const requireValue = (k, ok, malformed) => {
+    if (!keys.includes(k) || ok) return;
+    problems.push(isEmptyValue(record[k]) ? `missing required field "${k}" (null or empty value)` : `malformed required field "${k}": ${malformed}`);
+  };
+  requireValue('incident_id', isNonEmptyString(record.incident_id), 'must be a non-empty string');
+  requireValue('title', isNonEmptyString(record.title), 'must be a non-empty string');
+  requireValue('record_creation_time', toMs(record.record_creation_time) !== null, 'must be a valid date');
+  requireValue('provenance', isPlainObject(record.provenance) && Object.keys(record.provenance).length > 0, 'must be a non-empty object');
+  requireValue('observed_facts',
+    Array.isArray(record.observed_facts) && record.observed_facts.length > 0
+      && record.observed_facts.every((f) => isPlainObject(f) && isNonEmptyString(f.fact) && isNonEmptyString(f.source_pointer)),
+    'each fact needs a non-empty fact and source_pointer (§6.2)');
+  if (keys.includes('hypotheses') && Array.isArray(record.hypotheses)) {
+    if (record.hypotheses.length === 0) {
+      const created = Array.isArray(record.history) ? record.history[0] : null;
+      if (!(isPlainObject(created) && isNonEmptyString(created.hypotheses_empty_reason))) {
+        problems.push('missing required field "hypotheses" (empty requires a stated reason: history[0].hypotheses_empty_reason)');
+      }
+    } else if (!record.hypotheses.every((h) => isPlainObject(h) && ['id', 'text', 'author', 'date'].every((k) => isNonEmptyString(h[k])))) {
+      problems.push('malformed required field "hypotheses": each needs id, text, author, date (§6.2)');
+    }
+  }
+  if (keys.includes('detector_rule')) {
+    const dr = record.detector_rule;
+    if (DETECTOR_RULES.includes(dr)) {
+      if (keys.includes('candidate_record_id') && !isNonEmptyString(record.candidate_record_id)) {
+        problems.push(`missing required field "candidate_record_id" (detector_rule ${dr} requires the candidate record id)`);
+      }
+    } else if (isEmptyValue(dr)) {
+      problems.push('missing required field "detector_rule" (null or empty value)');
+    } else if (!(isPlainObject(dr) && dr.rule === 'manual' && isNonEmptyString(dr.reason))) {
+      problems.push('malformed required field "detector_rule": must be R1-R6 or { rule: "manual", reason } with a non-empty reason (§6.2)');
+    }
+  }
   if (!STATES.includes(record.status)) problems.push(`status "${record.status}" is not one of ${STATES.join(', ')}`);
   if (!Number.isInteger(record.recurrence_count) || record.recurrence_count < 0) problems.push('recurrence_count must be a non-negative integer');
   for (const k of ['observed_facts', 'hypotheses', 'reproduction_supported_conclusions', 'recurrence_evidence', 'corrected_verdict_evidence']) {
@@ -301,7 +358,15 @@ export function validateRecord(record) {
     for (const k of ['fix_reference', 'fix_description']) if (!isNonEmptyString(record[k])) problems.push(`missing required field "${k}" for ${record.status}`);
   }
   if (['WATCH', 'VALIDATED'].includes(record.status)) {
-    for (const k of ['fix_presence_evidence', 'watch_start', 'watch_window']) if (record[k] == null) problems.push(`missing required field "${k}" for ${record.status}`);
+    const checks = {
+      fix_presence_evidence: [requirePointer(record.fix_presence_evidence), 'must be an evidence object with a non-empty pointer'],
+      watch_start: [isValidWatchStart(record.watch_start), 'must name its reading and counting rule and state started with a valid time (or time null if not started)'],
+      watch_window: [isValidWindow(record.watch_window), 'must be a window object naming its reading and counting rule, with started and a valid start (or a not-started message)'],
+    };
+    for (const [k, [ok, why]] of Object.entries(checks)) {
+      if (ok) continue;
+      problems.push(isEmptyValue(record[k]) ? `missing required field "${k}" for ${record.status}` : `malformed required field "${k}" for ${record.status}: ${why}`);
+    }
   }
   return { complete: problems.length === 0, problems };
 }
@@ -383,6 +448,8 @@ export function transition(record, to, opts = {}) {
   if (key === 'WATCH>VALIDATED') {
     refuseUnknownOpts(opts, [...COMMON_OPTS, 'sufficiency_judgment', 'watch'], from, to,
       'WATCH -> VALIDATED FORBIDS validation on a merged PR alone, zero recurrence alone, fixture evidence, a staged lesson, or by upgrading in place');
+    // opts.watch must be consistent with record.watch_window (F-T2-1); an
+    // inconsistent watch fails element (a) and is refused here as NOT_ELIGIBLE.
     const check = checkValidationEligibility(record, opts.watch, { sufficiency_judgment: opts.sufficiency_judgment });
     if (!check.eligible) {
       const why = check.failing.map((n) => `${n}: ${check.elements[n].reason}`).join('; ');
@@ -683,6 +750,10 @@ export function watchEnd(window, taskSequence, countingRule, asOf) {
     governed_by: governedBy,
     as_of: asOfMs === null ? null : iso(asOfMs),
     end_condition_reached: asOfMs !== null && asOfMs >= end,
+    // WAT-5 lineage of an extension window is carried through (see checkWatchConsistency).
+    ...(Array.isArray(window.prior_windows)
+      ? { extends_window_starting: window.extends_window_starting ?? null, prior_windows: window.prior_windows.map((p) => ({ ...p })) }
+      : {}),
   };
 }
 
@@ -753,25 +824,134 @@ export function watchOutcome(window, exposure, recurrenceCount, validationElemen
 
 // WAT-5: extension by a FULL window, starting where the previous one ended.
 // watchEnd and exposureInWindow are re-applied to the new window.
+// prior_windows records every earlier window in the chain ({ window_number,
+// start, end_time }, ascending) so the extension can be checked against the
+// incident's recorded window (checkWatchConsistency, F-T2-1).
 export function extendByFullWindow(endResult) {
   const rule = ruleOf(endResult);
   if (!endResult.started || endResult.end_condition_reached !== true) {
     throw new IncidentRefusal('NOT_ENDED', 'window extension refused: the current window has not reached its end condition (WAT-5)');
   }
+  const windowNumber = endResult.window_number ?? 1;
+  const prior = Array.isArray(endResult.prior_windows) ? endResult.prior_windows.map((p) => ({ ...p })) : [];
+  prior.push({ window_number: windowNumber, start: endResult.start, end_time: endResult.end_time });
   return {
     ...rule,
     started: true,
     start: endResult.end_time,
     record_creation_time: endResult.record_creation_time ?? null,
-    window_number: (endResult.window_number ?? 1) + 1,
+    window_number: windowNumber + 1,
     extends_window_starting: endResult.start,
+    prior_windows: prior,
   };
 }
 
+// ---- F-T2-1 (fix round 1): watch-window consistency ----
+//
+// CONSISTENCY RELATIONSHIP. A supplied watch computation is consistent with the
+// incident's RECORDED watch_window (stored by FIXED -> WATCH) iff ALL hold:
+//  1. Same reading, same counting rule, same record_creation_time, and the same
+//     started flag as the recorded window.
+//  2. It is EITHER the recorded window itself (same window_number and same
+//     start), OR a chain of WAT-5 full-window extensions of it as produced by
+//     extendByFullWindow: a higher window_number, and prior_windows listing every
+//     earlier window from the recorded one with consecutive window numbers, the
+//     first starting at the recorded start, each later one starting at the
+//     previous end_time, each end_time after its start and no later than its
+//     start + 30 days, and the supplied start equal to the last listed end_time.
+//  3. Its own end is internally consistent with the watchEnd arithmetic (WAT-1):
+//     day_limit = start + 30 days; end_time = MIN(day_limit, task_limit), or
+//     day_limit when there is no task_limit; a task_limit only with >= 10 tasks
+//     counted; end_condition_reached exactly when as_of >= end_time. A
+//     not-started watch never has end_condition_reached true.
+// Limit: the 10th-task instant comes from the caller's task sequence (SIE-02
+// OPEN) and cannot be re-derived here; each window end is bounded by its day
+// limit only. Anything that is not the recorded window or such an extension is
+// inconsistent: eligibility refuses and the end condition is not assessed.
+export function checkWatchConsistency(record, watch) {
+  const mismatches = [];
+  const recorded = isPlainObject(record) ? record.watch_window : null;
+  if (!isValidWindow(recorded)) {
+    return { consistent: false, mismatches: ['watch_window (the record has no valid recorded watch window)'] };
+  }
+  if (!isPlainObject(watch)) return { consistent: false, mismatches: ['watch (no watch computation supplied)'] };
+  const differs = (field, a, b) => mismatches.push(`${field} (recorded ${shown(a)}, supplied ${shown(b)})`);
+  if (watch.reading !== recorded.reading) differs('reading', recorded.reading, watch.reading);
+  if (watch.counting_rule !== recorded.counting_rule) differs('counting_rule', recorded.counting_rule, watch.counting_rule);
+  if (toMs(watch.record_creation_time) !== toMs(recorded.record_creation_time)) {
+    differs('record_creation_time', recorded.record_creation_time ?? null, watch.record_creation_time ?? null);
+  }
+  if (watch.started !== recorded.started) differs('started', recorded.started, watch.started);
+
+  if (recorded.started && watch.started === true) {
+    const base = recorded.window_number ?? 1;
+    const n = watch.window_number ?? 1;
+    if (n === base) {
+      if (toMs(watch.start) !== toMs(recorded.start)) differs('start', recorded.start, watch.start);
+    } else if (n > base) {
+      checkExtensionChain(recorded, base, watch, n, mismatches);
+    } else {
+      differs('window_number', base, n);
+    }
+    checkEndArithmetic(watch, mismatches);
+  } else if (watch.started !== true && watch.end_condition_reached === true) {
+    mismatches.push('end_condition_reached (a not-started watch cannot have reached its end condition)');
+  }
+  return { consistent: mismatches.length === 0, mismatches };
+}
+
+function checkExtensionChain(recorded, base, watch, n, mismatches) {
+  const prior = watch.prior_windows;
+  if (!Array.isArray(prior) || prior.length < n - base) {
+    mismatches.push(`prior_windows (window ${n} is not a full-window extension chain of recorded window ${base}; the earlier windows are not listed)`);
+    return;
+  }
+  const chain = prior.slice(prior.length - (n - base));
+  let expectedStart = toMs(recorded.start);
+  chain.forEach((p, i) => {
+    const s = toMs(p?.start);
+    const e = toMs(p?.end_time);
+    if (p?.window_number !== base + i) mismatches.push(`prior_windows[${i}].window_number (expected ${base + i}, supplied ${shown(p?.window_number)})`);
+    if (s === null || s !== expectedStart) mismatches.push(`prior_windows[${i}].start (expected ${expectedStart === null ? 'unknown' : iso(expectedStart)}, supplied ${shown(p?.start)})`);
+    if (e === null || s === null || e <= s || e > s + WATCH_DAYS * DAY_MS) mismatches.push(`prior_windows[${i}].end_time (not within its window's 30-day limit, WAT-1)`);
+    expectedStart = e;
+  });
+  if (toMs(watch.start) === null || toMs(watch.start) !== expectedStart) {
+    mismatches.push(`start (an extension starts at the previous window's end_time ${expectedStart === null ? 'unknown' : iso(expectedStart)}; supplied ${shown(watch.start)}, WAT-5)`);
+  }
+  if (toMs(watch.extends_window_starting) !== toMs(chain.at(-1)?.start)) {
+    mismatches.push('extends_window_starting (does not name the previous window in the chain)');
+  }
+}
+
+function checkEndArithmetic(watch, mismatches) {
+  const start = toMs(watch.start);
+  if (start === null) { mismatches.push('start (not a valid date)'); return; }
+  const dayLimit = start + WATCH_DAYS * DAY_MS;
+  if (toMs(watch.day_limit) !== dayLimit) mismatches.push(`day_limit (expected start + 30 days = ${iso(dayLimit)}, supplied ${shown(watch.day_limit)})`);
+  let expectedEnd = dayLimit;
+  if (watch.task_limit !== null && watch.task_limit !== undefined) {
+    const tl = toMs(watch.task_limit);
+    if (tl === null || tl <= start) mismatches.push('task_limit (not a valid instant after the window start)');
+    else expectedEnd = Math.min(dayLimit, tl);
+    if (!Number.isInteger(watch.tasks_counted) || watch.tasks_counted < WATCH_TASKS) mismatches.push(`task_limit (set with fewer than ${WATCH_TASKS} tasks counted)`);
+  }
+  if (toMs(watch.end_time) !== expectedEnd) mismatches.push(`end_time (expected ${iso(expectedEnd)} from the day and task limits, supplied ${shown(watch.end_time)})`);
+  const asOf = toMs(watch.as_of);
+  const reached = asOf !== null && asOf >= expectedEnd;
+  if (watch.end_condition_reached !== reached) {
+    mismatches.push(`end_condition_reached (supplied ${shown(watch.end_condition_reached)}; as of ${watch.as_of ?? 'not given'} the end ${iso(expectedEnd)} is ${reached ? '' : 'not '}reached)`);
+  }
+}
 // ---- §8 VAL-1 eligibility (conjunctive) ----
 
 // Returns each element satisfied / not satisfied with its reason. `watch` is a
-// watchEnd() result for this record. An incomplete record gets no verdict.
+// watchEnd() result for this record's RECORDED watch_window (or a WAT-5
+// extension of it). An incomplete record gets no verdict.
+// F-T2-1: the supplied watch is checked against the recorded window
+// (checkWatchConsistency) BEFORE element (a) is assessed and before any
+// exposure is filtered through it. An inconsistent watch satisfies nothing:
+// the end condition is not assessed and no exposure is counted.
 export function checkValidationEligibility(record, watch, { sufficiency_judgment } = {}) {
   const v = validateRecord(record);
   if (!v.complete) return { verdict: null, incomplete: true, eligible: false, problems: v.problems };
@@ -779,23 +959,32 @@ export function checkValidationEligibility(record, watch, { sufficiency_judgment
   const el = {};
   const set = (name, satisfied, reason, extra = {}) => { el[name] = { satisfied, reason, ...extra }; };
   let rule = null;
-  let exposure = { exposure: [], excluded: [] };
   try {
     rule = ruleOf(watch);
-    exposure = exposureInWindow(watch, record.exposure_evidence_link);
   } catch {
     rule = null;
   }
+  const consistency = rule
+    ? checkWatchConsistency(record, watch)
+    : { consistent: false, mismatches: ['no named watch computation supplied (WAT-4)'] };
+  let exposure = { exposure: [], excluded: [] };
+  if (consistency.consistent) exposure = exposureInWindow(watch, record.exposure_evidence_link);
+  const notAssessed = 'not assessed: no watch computation consistent with the recorded watch_window (F-T2-1)';
 
-  // (a) window end condition reached (§7; CR-01; DV-6)
+  // (a) window end condition reached (§7; CR-01; DV-6), for the recorded window only
   if (!rule) set('a_window_end_reached', false, 'no named watch computation supplied (WAT-4)');
-  else if (!watch.started) set('a_window_end_reached', false, watch.message ?? 'watch not started');
+  else if (!consistency.consistent) {
+    set('a_window_end_reached', false, `supplied watch computation is inconsistent with the recorded watch_window; end condition not assessed (F-T2-1): ${consistency.mismatches.join('; ')}`, { mismatches: consistency.mismatches });
+  } else if (!watch.started) set('a_window_end_reached', false, watch.message ?? 'watch not started');
   else if (watch.end_condition_reached !== true) set('a_window_end_reached', false, `window end condition not reached (end ${watch.end_time}, as of ${watch.as_of ?? 'not given'}); absence of recurrence alone is never sufficient (CR-01, DV-6)`);
   else set('a_window_end_reached', true, `end reached (${watch.governed_by})`);
 
   // (b) operational evidence inside the window (EXP-1, EXP-2, §10)
   const n = exposure.exposure.length;
-  set('b_operational_exposure_in_window', n > 0, n > 0 ? `${n} in-window operational item(s)` : 'no in-window operational evidence (EXP-1, EXP-2)', { excluded: exposure.excluded });
+  let bReason = 'no in-window operational evidence (EXP-1, EXP-2)';
+  if (n > 0) bReason = `${n} in-window operational item(s)`;
+  else if (!consistency.consistent) bReason = notAssessed;
+  set('b_operational_exposure_in_window', n > 0, bReason, { excluded: exposure.excluded });
 
   // (c1) reproduced failure (DV-4: documented analysis alone does not satisfy)
   const re = record.reproduction_evidence;
@@ -818,7 +1007,7 @@ export function checkValidationEligibility(record, watch, { sufficiency_judgment
   // (c4) meaningful exposure: operative rules only; DV-3 NOT ENFORCED
   set('c4_meaningful_exposure', n > 0, n > 0
     ? 'in-window operational exposure present under the operative rules (EXP-1, EXP-2); DV-3 two-user condition NOT ENFORCED'
-    : 'no in-window operational exposure', { dv3: DV3_MARKER });
+    : (consistency.consistent ? 'no in-window operational exposure' : notAssessed), { dv3: DV3_MARKER });
 
   // (c5) sufficiency judgment text (VAL-2; judge role OPEN pending D2; H6)
   const sj = sufficiency_judgment ?? record.sufficiency_judgment;
@@ -838,6 +1027,7 @@ export function checkValidationEligibility(record, watch, { sufficiency_judgment
     failing,
     independently_validated: false,
     watch_rule: rule ?? 'no named watch computation supplied',
+    watch_consistency: consistency,
     dv3: DV3_MARKER,
     note: 'Eligibility is not validation (VAL-2). No incident reaches VALIDATED in Stage 3 (VAL-6).',
   };
