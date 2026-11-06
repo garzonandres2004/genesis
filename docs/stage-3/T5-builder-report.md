@@ -17,7 +17,7 @@ says and nothing more.
 | Task and project identity | Stage 3, task T5 — Seed records; project Genesis (`garzonandres2004/genesis`) |
 | Builder identity | Claude Code, builder role ("Claude (builder)") |
 | Model/tool version (D6 addition) | Claude Opus 5.5 (`claude-opus-5-5`) via Claude Code. This is the builder's own declaration. The T5 task brief named no model restriction |
-| Starting commit | `374928e` (branch `stage-3/sie-milestone-a`; T4 fix round 2; PR #36 open, not merged). Working tree clean at start |
+| Starting commit | Work began at `374928e` (branch `stage-3/sie-milestone-a`; T4 fix round 2; PR #36 open, not merged), working tree clean. While T5 was being drafted, the DV-2 builder committed `34a12bc` and `f710b1a` to the same branch in the shared clone. The T5 commit's parent is therefore **`f710b1a`**. T5 touched none of those commits' files |
 | Resulting commit | "Stage 3 T5: seed records for the ten corpus items plus the truncated-base-SHA candidate (AC-T5-1..AC-T5-3)" on `stage-3/sie-milestone-a`. The verifier must take the exact SHA from the branch, not from this report |
 | Risk class | **Routine** (Brief §9 T5) |
 | Authorization reference | Founder approval of the Stage 3 Execution Brief §11 boundary, 2026-11-06 ~09:40 MST (coordinator record); Founder Amendment 2026-11-06 ~10:39 MST |
@@ -142,9 +142,11 @@ Result: 9/9 caught.
 
 ## Tests and results (builder-observed; re-run required by the verifier)
 
-Run from the repo root on the uncommitted T5 tree just before committing.
-The shared clone was clean apart from the T5 files, so no isolated worktree
-was needed.
+Run from the repo root on the uncommitted T5 tree just before committing,
+and again on the clean tree at the T5 commit (parent `f710b1a`, so the
+DV-2 builder's commits were included in both runs) with the same results.
+The shared clone held no uncommitted files from other builders, so no
+isolated worktree was needed.
 
 - `node --test scripts/sie-seed.test.mjs`: **37 tests, 37 pass, 0 fail,
   0 skipped.**
@@ -233,7 +235,9 @@ complete (11 entries). **Claimed met, as drafts.**
   fixtures, `tasks/`, `events.jsonl`, CI, and the Runner scripts.
 - **Concurrency.** `git status` at start was clean. Before commit it showed
   only the T5 files. No other builder's files were staged, stashed, or
-  touched.
+  touched. The DV-2 builder's commits `34a12bc` and `f710b1a` landed on the
+  shared local branch during T5. The T5 commit sits on top of them. They
+  were not modified.
 - **Not done:** no PR opened or closed, no PR comment, no merge, no deploy,
   no provisioning, no spending, no database, no production contact, no
   Runner/CI change, no new dependency, provider, server, or agent. No
@@ -267,11 +271,13 @@ met on the draft files. The builder does not assign a verification outcome.
 
 ## Verification method (to be run by the coordinator/verifier)
 
-1. `git diff --stat 374928e..<head>` should list only new files: the 12
-   files under `docs/stage-3/seed/`, `scripts/sie-seed.test.mjs`, and
-   `docs/stage-3/T5-builder-report.md`. `git diff --diff-filter=MD
-   374928e..<head>` should be empty, unless rebased-in commits from other
-   builders appear. In that case, restrict the diff to the T5 commit.
+1. Diff the T5 commits only. Use `git diff --stat f710b1a..<head>`, not
+   `374928e..<head>`: that range also contains the DV-2 builder's
+   `34a12bc` and `f710b1a`. The T5 range should list only the 12 files
+   under `docs/stage-3/seed/`, `scripts/sie-seed.test.mjs`, and
+   `docs/stage-3/T5-builder-report.md`. `git diff --diff-filter=D
+   f710b1a..<head>` should be empty. The only modification after the first
+   T5 commit is to this report (commit-reference correction).
 2. Re-run at that commit: `node --test scripts/sie-seed.test.mjs` (expect
    37/37); `npm test` (expect 0 fail, 1 pre-existing skip); and
    `node scripts/status.mjs` (exit 0).
