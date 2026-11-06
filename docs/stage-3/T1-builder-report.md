@@ -146,6 +146,65 @@ So no field is both an event identifier and capable of meaningful
 recurrence across tasks. Choosing one would be an invented semantic, and
 the T1 brief says to stop and report in that case.
 
+### Observed inventory of `events.jsonl` (fix round 2, finding 7)
+
+These are observed counts only, so the analysis above can be checked. They
+come from the repository's `events.jsonl` as of this commit: 14 lines, 14
+events, git blob `f5f93c4d144c430c3423ad6b6a96e5e1a2a3bb38`, last changed in
+`a33059a`. The file was read read-only, by parsing each line as JSON and
+counting. It was not modified, and the detector was not run on it.
+
+**Field inventory.** 14 events. Every event has the same five top-level
+keys, and no event has any other key:
+
+| Key | Events carrying it |
+|---|---|
+| `type` | 14 |
+| `task_id` | 14 |
+| `run_id` | 14 |
+| `timestamp` | 14 |
+| `detail` | 14 |
+
+**Per-`type` counts.** 4 distinct values.
+
+| `type` | Events | Distinct `task_id` | Distinct `run_id` |
+|---|---|---|---|
+| `task_started` | 8 | 7 | 8 |
+| `task_completed` | 4 | 4 | 4 |
+| `run_interrupted` | 1 | 1 | 1 |
+| `task_requeued` | 1 | 1 | 1 |
+
+**`detail`.** 11 distinct values. 9 values appear on exactly 1 event. Two
+values appear on events from ≥ 2 distinct tasks:
+
+| `detail` value | Events | Distinct `task_id` |
+|---|---|---|
+| `"m10 series tick started run"` | 3 | 3 |
+| `"overnight runner tick started run"` | 2 | 2 |
+
+No other `detail` value appears on more than one task.
+
+**`run_id` and `task_id` grouping.**
+
+- `task_id`: 7 distinct values. Events per task: `overnight-03` 5,
+  `overnight-01` 2, `overnight-02` 2, `runner-live-test-01` 2,
+  `m10-01-f4-reliability` 1, `m10-02-series-status` 1,
+  `m10-03-overnight-plan` 1.
+- `run_id`: 8 distinct values. Each `run_id` appears with exactly 1
+  `task_id`. No `run_id` spans 2 tasks. `overnight-03` is the only task with
+  more than one `run_id` (2 runs). The other 6 tasks have 1 each.
+- `timestamp`: 13 distinct values. The only repeated value
+  (`2026-10-29T07:47:28.415Z`, on 2 events) is within a single task
+  (`overnight-03`).
+
+**What the data can and cannot show.** These counts describe how values are
+distributed in this file. They cannot establish what WP-04 intended as the
+event key. The judgments in the table above (for example, that `detail` is
+log wording rather than an identifier, or that `type` is lifecycle rather
+than signal) are the builder's semantic readings, not observations. Settling
+the key is a semantic question. It needs either the WP-04 passage or a
+Founder decision.
+
 - **What the detector does.** It evaluates the blocker dimension only.
   Every scan reports the event dimension under `not_evaluated`, so a null
   result is not mistaken for a completed check. This is tested.
@@ -156,6 +215,10 @@ the T1 brief says to stop and report in that case.
   - a Founder scope/acceptance amendment explicitly permitting the omission.
 
   Until one of those happens, AC-T1-1 is not met.
+- **Downstream consequence.** T1 acceptance is BLOCKED on the R4-events
+  decision, and T2 entry requires T1 complete (brief §9), so the stage
+  pauses at T1 until the parent decides (retrieve WP-04 v1.1 vs. Founder
+  scope/acceptance amendment permitting the omission).
 
 ## Implementation summary
 
