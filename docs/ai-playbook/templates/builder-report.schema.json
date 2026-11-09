@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "task_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["done", "blocked", "partial"] },
+    "branch": { "type": "string" },
+    "commit_sha": { "type": "string" },
+    "files_changed": { "type": "array", "items": { "type": "string" } },
+    "verify_command": { "type": "string" },
+    "verify_result": { "type": "string", "enum": ["pass", "fail", "not_run"] },
+    "verify_output_tail": { "type": "string" },
+    "acceptance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": { "type": "string" },
+          "met": { "type": "boolean" },
+          "evidence": { "type": "string" }
+        },
+        "required": ["criterion", "met", "evidence"]
+      }
+    },
+    "untested": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "questions_for_muse": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["task_id", "status", "branch", "files_changed", "verify_result", "acceptance", "blockers"]
+}

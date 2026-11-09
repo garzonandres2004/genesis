@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "verdict": { "type": "string", "enum": ["PASS", "NEEDS FIXES", "FAIL"] },
+    "commit_reviewed": { "type": "string" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "severity": { "type": "string", "enum": ["blocker", "major", "minor"] },
+          "location": { "type": "string" },
+          "problem": { "type": "string" },
+          "failing_scenario": { "type": "string" },
+          "suggested_fix": { "type": "string" }
+        },
+        "required": ["id", "severity", "location", "problem", "failing_scenario"]
+      }
+    },
+    "acceptance_check": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": { "type": "string" },
+          "met": { "type": "boolean" },
+          "how_checked": { "type": "string" }
+        },
+        "required": ["criterion", "met", "how_checked"]
+      }
+    },
+    "not_checked": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["verdict", "commit_reviewed", "findings", "acceptance_check", "not_checked"]
+}
